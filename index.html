@@ -85,7 +85,7 @@
                 🤖 CPU対戦
             </div>
             <div class="deck-btn mode" :class="{'active': gameMode === 'online'}" @click="gameMode = 'online'" style="flex: 1; margin-bottom: 0;">
-                🌐 ｵﾝﾗｲﾝ対戦
+                🌐 ｵﾝライ対戦
             </div>
         </div>
         <p style="text-align:center; font-size:12px; color:#666;">
@@ -191,7 +191,7 @@ const { createApp, ref, nextTick } = Vue;
 const cardPool = [
     { name: "ナギソ 試作品", cost: 1, power: 3, abilities: [], abilityText: "" },
     { name: "ナギソの返り血", cost: 1, power: 1, abilities: [{ type: "draw", value: 1 }], abilityText: "【流水1:1ドロー】" },
-    { name: "ナギソ使役", cost: 1, power: 1, abilities: [{ type: "kenko", value: 1 }], abilityText: "【剣呼:剣検索】" },
+    { name: "ナギソ使役", cost: 1, power: 1, abilities: [{ type: "kenko", value: 1 }], abilityText: "【剣呼:ランダム生成】" },
     { name: "ナギソ指南書", cost: 2, power: 0, abilities: [{ type: "saidaimanahueru", value: 2 }, { type: "draw", value: 1 }], abilityText: "【恵沢2:最大マナ+2】 【流水1:1ドロー]" },
     { name: "ナギソの研磨", cost: 2, power: 3, abilities: [{ type: "manahueru", value: 2 }], abilityText: "【還元2:マナ2回復】" },
     { name: "ナギソの分割", cost: 6, power: 3, abilities: [{ type: "costheru", value: 1 }, { type: "draw", value: 1 }], abilityText: "【縮化:コスト下方】【流水1:1ドロー】" },
@@ -397,8 +397,23 @@ createApp({
                 if(isPlayerTrigger) { this.playerMaxMana = Math.min(this.totalMaxManaLimit, this.playerMaxMana + value); this.addLog(`  └【恵沢】最大マナが${value}増加！`); }
                 else { this.cpuMaxMana = Math.min(this.totalMaxManaLimit, this.cpuMaxMana + value); this.addLog(`  └【恵沢】${enemyName}の最大マナが${value}増加！`); }
             } else if(type === "kenko") {
-                for (let i = 0; i < value; i++) { this.drawCard(isPlayerTrigger); }
-                this.addLog(isPlayerTrigger ? "  └【剣呼】剣カードを検索して手札に加えた！" : `  └【剣呼】${enemyName}が剣カードを手札に加えた！`);
+                // 【修正箇所】山札からではなく、カードプール全体からランダムに1枚生成して手札に加える
+                for (let i = 0; i < value; i++) {
+                    const randomIndex = Math.floor(Math.random() * this.cardPool.length);
+                    const generatedCard = createCardInstance(this.cardPool[randomIndex]);
+                    
+                    if (isPlayerTrigger) {
+                        if (this.playerHand.length < this.maxHandSize) {
+                            this.playerHand.push(generatedCard);
+                            this.addLog(`  └【剣呼】カードプールから【${generatedCard.name}】を生成して手札に加えた！`);
+                        }
+                    } else {
+                        if (this.cpuHand.length < this.maxHandSize) {
+                            this.cpuHand.push(generatedCard);
+                            this.addLog(`  └【剣呼】${enemyName}がカードプールからランダムなカードを手札に加えた！`);
+                        }
+                    }
+                }
             } else if(type === "karyokuhueru") {
                 let combo = isPlayerTrigger ? this.playerPlayedCountThisTurn : this.cpuPlayedCountThisTurn;
                 let damage = combo * value;
