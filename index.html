@@ -1,3 +1,4 @@
+<!DOCTYPE html>
 <html lang="ja">
 <head>
     <meta charset="UTF-8">
@@ -42,7 +43,6 @@
         .scroll-grid { display: flex; gap: 8px; overflow-x: auto; padding: 10px 0; border-bottom: 1px dashed #ddd; }
         .alert-text { color: red; font-size: 12px; font-weight: bold; text-align: center; }
 
-        /* ーーー 新規追加：マッチング待機画面のスタイル ーーー */
         .matching-overlay {
             position: absolute; top: 0; left: 0; width: 100%; height: 100%;
             background: rgba(0, 0, 0, 0.85); color: white;
@@ -151,7 +151,7 @@
         
         <div class="status-box" :class="gameMode === 'cpu' ? 'cpu-box' : 'online-enemy-box'">
             <h3 v-if="gameMode === 'cpu'">🤖 CPU HP: {{ cpuHP }} (マナ: {{ cpuCurrentMana }}/{{ cpuMaxMana }})</h3>
-            <h3 v-else>👤 対戦相手 HP: {{ cpuHP }} (マナ: {{ cpuCurrentMana }}/{{ cpuMaxMana }})</h3>
+            <h3 v-else>👤 对戦相手 HP: {{ cpuHP }} (マナ: {{ cpuCurrentMana }}/{{ cpuMaxMana }})</h3>
             <p>山札: {{ cpuDeck.length }} 枚 / 手札: {{ cpuHand.length }} 枚</p>
         </div>
 
@@ -223,7 +223,7 @@ createApp({
             gameMode: 'cpu', 
             isGameStarted: false, isGameOver: false, isPlayerTurn: true,
             isEditMode: false,
-            isMatching: false, // ーーー 新規追加：マッチング中フラグ ーーー
+            isMatching: false, 
             customDeckPoolIds: null,
             editingDeck: [],
             editAlert: "",
@@ -244,12 +244,10 @@ createApp({
             try { this.customDeckPoolIds = JSON.parse(savedDeck); } catch(e) { console.error(e); }
         }
 
-        // Socket.ioの初期化設定
         socket = io("https://nagiso-server.onrender.com/");
 
-        // オンラインイベントのリスナー登録
         socket.on('game_start', (data) => {
-            this.isMatching = false; // ーーー マッチング成功したので待機画面を閉じる ーーー
+            this.isMatching = false; 
             this.addLog("🤝 オンライン対戦相手が見つかりました！");
             this.isPlayerTurn = data.isFirst; 
             this.setupGameField(this.selectedDeckType);
@@ -259,12 +257,18 @@ createApp({
             }
         });
 
+        // 【拡張受信】相手がカードをプレイした時（マナ変動を反映）
         socket.on('opponent_play_card', (data) => {
             this.playCard(data.card, false); 
+            if (data.currentMana !== undefined) this.cpuCurrentMana = data.currentMana;
+            if (data.maxMana !== undefined) this.cpuMaxMana = data.maxMana;
         });
 
-        socket.on('opponent_end_turn', () => {
+        // 【拡張受信】相手がターン終了した時（相手の最新マナを反映）
+        socket.on('opponent_end_turn', (data) => {
             this.endCpuTurn(); 
+            if (data && data.currentMana !== undefined) this.cpuCurrentMana = data.currentMana;
+            if (data && data.maxMana !== undefined) this.cpuMaxMana = data.maxMana;
         });
 
         socket.on('opponent_disconnected', () => {
@@ -287,7 +291,7 @@ createApp({
         handleDeckSelect(type) {
             this.selectedDeckType = type;
             if (this.gameMode === 'online') {
-                this.isMatching = true; // ーーー マッチング待機画面を表示 ーーー
+                this.isMatching = true; 
                 this.addLog("🔍 対戦相手を検索中...（サーバーの応答を待っています）");
                 socket.emit('join_matchmaking');
             } else {
@@ -297,12 +301,9 @@ createApp({
                 this.addLog("🤖 CPU対戦を開始しました！あなたは先行です。");
             }
         },
-        // ーーー 新規追加：キャンセルボタンが押された時の処理 ーーー
         cancelMatching() {
             this.isMatching = false;
             this.addLog("❌ マッチングをキャンセルしました。");
-            // もしサーバー側にキャンセル用のイベントがあれば送信
-            // socket.emit('leave_matchmaking'); 
         },
         setupGameField(type) {
             this.playerHP = 30; this.cpuHP = 30;
@@ -345,10 +346,6 @@ createApp({
                 if(card.power > 0) msg += ` ${card.power} ダメージ！`;
                 this.addLog(msg);
                 this.playerHand = this.playerHand.filter(c => c.id !== card.id);
-
-                if(this.gameMode === 'online') {
-                    socket.emit('play_card', { card: card });
-                }
             } else {
                 this.cpuCurrentMana -= card.cost;
                 this.playerHP -= card.power;
@@ -365,6 +362,15 @@ createApp({
             this.reduceCost(isPlayer);
             card.abilities.forEach(ab => this.triggerAbility(ab, isPlayer));
             this.checkWinLose();
+
+            // 【拡張送信】カードのアビリティ解決（還元・恵沢など含む）が終わった「最終数値」を送信
+            if(isPlayer && this.gameMode === 'online') {
+                socket.emit('play_card', { 
+                    card: card,
+                    currentMana: this.playerCurrentMana,
+                    maxMana: this.playerMaxMana
+                });
+            }
         },
         reduceCost(isPlayer) {
             let hand = isPlayer ? this.playerHand : this.cpuHand;
@@ -400,7 +406,7 @@ createApp({
                 else { this.playerHP -= damage; this.addLog(`  └【連撃】使用枚数分（${damage}ダメ）、あなたに追加ダメージ！`); }
             } else if(type === "jishoburn") {
                 if(isPlayerTrigger) { this.playerHP -= value; this.addLog(`  └【反動】反動で自分に${value}ダメージ！`); }
-                else { this.cpuHP -= value; this.addLog(`  └ graves └【反動】反動で${enemyName}自身に${value}ダメージ！`); }
+                else { this.cpuHP -= value; this.addLog(`  └【反動】反動で${enemyName}自身に${value}ダメージ！`); }
             }
         },
         checkWinLose() {
@@ -423,7 +429,11 @@ createApp({
                 setTimeout(() => { this.cpuAction(); }, 1000);
             } else {
                 this.addLog("=== 相手のターン ===");
-                socket.emit('end_turn'); 
+                // 【拡張送信】ターンを渡すタイミングの、自分の最新マナ情報を持たせて終了通知
+                socket.emit('end_turn', {
+                    currentMana: this.playerCurrentMana,
+                    maxMana: this.playerMaxMana
+                }); 
             }
         },
         cpuAction() {
