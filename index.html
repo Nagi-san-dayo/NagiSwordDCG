@@ -1,3 +1,4 @@
+<!DOCTYPE html>
 <html lang="ja">
 <head>
     <meta charset="UTF-8">
@@ -42,7 +43,6 @@
         .scroll-grid { display: flex; gap: 8px; overflow-x: auto; padding: 10px 0; border-bottom: 1px dashed #ddd; }
         .alert-text { color: red; font-size: 12px; font-weight: bold; text-align: center; }
 
-        /* ーーー 新規追加：マッチング待機画面のスタイル ーーー */
         .matching-overlay {
             position: absolute; top: 0; left: 0; width: 100%; height: 100%;
             background: rgba(0, 0, 0, 0.85); color: white;
@@ -85,7 +85,7 @@
                 🤖 CPU対戦
             </div>
             <div class="deck-btn mode" :class="{'active': gameMode === 'online'}" @click="gameMode = 'online'" style="flex: 1; margin-bottom: 0;">
-                🌐 ｵﾝﾗｲﾝ対戦
+                🌐 ｵﾝライ対戦
             </div>
         </div>
         <p style="text-align:center; font-size:12px; color:#666;">
@@ -191,7 +191,7 @@ const { createApp, ref, nextTick } = Vue;
 const cardPool = [
     { name: "ナギソ 試作品", cost: 1, power: 3, abilities: [], abilityText: "" },
     { name: "ナギソの返り血", cost: 1, power: 1, abilities: [{ type: "draw", value: 1 }], abilityText: "【流水1:1ドロー】" },
-    { name: "ナギソ使役", cost: 1, power: 1, abilities: [{ type: "kenko", value: 1 }], abilityText: "【剣呼:剣検索】" },
+    { name: "ナギソ使役", cost: 1, power: 1, abilities: [{ type: "kenko", value: 1 }], abilityText: "【剣呼:ランダム生成】" },
     { name: "ナギソ指南書", cost: 2, power: 0, abilities: [{ type: "saidaimanahueru", value: 2 }, { type: "draw", value: 1 }], abilityText: "【恵沢2:最大マナ+2】 【流水1:1ドロー]" },
     { name: "ナギソの研磨", cost: 2, power: 3, abilities: [{ type: "manahueru", value: 2 }], abilityText: "【還元2:マナ2回復】" },
     { name: "ナギソの分割", cost: 6, power: 3, abilities: [{ type: "costheru", value: 1 }, { type: "draw", value: 1 }], abilityText: "【縮化:コスト下方】【流水1:1ドロー】" },
@@ -223,7 +223,7 @@ createApp({
             gameMode: 'cpu', 
             isGameStarted: false, isGameOver: false, isPlayerTurn: true,
             isEditMode: false,
-            isMatching: false, // ーーー 新規追加：マッチング中フラグ ーーー
+            isMatching: false, 
             customDeckPoolIds: null,
             editingDeck: [],
             editAlert: "",
@@ -244,12 +244,10 @@ createApp({
             try { this.customDeckPoolIds = JSON.parse(savedDeck); } catch(e) { console.error(e); }
         }
 
-        // Socket.ioの初期化設定
         socket = io("https://nagiso-server.onrender.com/");
 
-        // オンラインイベントのリスナー登録
         socket.on('game_start', (data) => {
-            this.isMatching = false; // ーーー マッチング成功したので待機画面を閉じる ーーー
+            this.isMatching = false; 
             this.addLog("🤝 オンライン対戦相手が見つかりました！");
             this.isPlayerTurn = data.isFirst; 
             this.setupGameField(this.selectedDeckType);
@@ -261,9 +259,17 @@ createApp({
 
         socket.on('opponent_play_card', (data) => {
             this.playCard(data.card, false); 
+            if (data.currentMana !== undefined) this.cpuCurrentMana = data.currentMana;
+            if (data.maxMana !== undefined) this.cpuMaxMana = data.maxMana;
         });
 
-        socket.on('opponent_end_turn', () => {
+        socket.on('opponent_end_turn', (data) => {
+            if (data && data.currentMana !== undefined) this.cpuCurrentMana = data.currentMana;
+            if (data && data.maxMana !== undefined) this.cpuMaxMana = data.maxMana;
+
+            this.cpuMaxMana = Math.min(this.totalMaxManaLimit, this.cpuMaxMana + 1);
+            this.cpuCurrentMana = this.cpuMaxMana;
+
             this.endCpuTurn(); 
         });
 
@@ -287,7 +293,7 @@ createApp({
         handleDeckSelect(type) {
             this.selectedDeckType = type;
             if (this.gameMode === 'online') {
-                this.isMatching = true; // ーーー マッチング待機画面を表示 ーーー
+                this.isMatching = true; 
                 this.addLog("🔍 対戦相手を検索中...（サーバーの応答を待っています）");
                 socket.emit('join_matchmaking');
             } else {
@@ -297,12 +303,9 @@ createApp({
                 this.addLog("🤖 CPU対戦を開始しました！あなたは先行です。");
             }
         },
-        // ーーー 新規追加：キャンセルボタンが押された時の処理 ーーー
         cancelMatching() {
             this.isMatching = false;
             this.addLog("❌ マッチングをキャンセルしました。");
-            // もしサーバー側にキャンセル用のイベントがあれば送信
-            // socket.emit('leave_matchmaking'); 
         },
         setupGameField(type) {
             this.playerHP = 30; this.cpuHP = 30;
@@ -345,10 +348,6 @@ createApp({
                 if(card.power > 0) msg += ` ${card.power} ダメージ！`;
                 this.addLog(msg);
                 this.playerHand = this.playerHand.filter(c => c.id !== card.id);
-
-                if(this.gameMode === 'online') {
-                    socket.emit('play_card', { card: card });
-                }
             } else {
                 this.cpuCurrentMana -= card.cost;
                 this.playerHP -= card.power;
@@ -365,6 +364,14 @@ createApp({
             this.reduceCost(isPlayer);
             card.abilities.forEach(ab => this.triggerAbility(ab, isPlayer));
             this.checkWinLose();
+
+            if(isPlayer && this.gameMode === 'online') {
+                socket.emit('play_card', { 
+                    card: card,
+                    currentMana: this.playerCurrentMana,
+                    maxMana: this.playerMaxMana
+                });
+            }
         },
         reduceCost(isPlayer) {
             let hand = isPlayer ? this.playerHand : this.cpuHand;
@@ -391,8 +398,23 @@ createApp({
                 if(isPlayerTrigger) { this.playerMaxMana = Math.min(this.totalMaxManaLimit, this.playerMaxMana + value); this.addLog(`  └【恵沢】最大マナが${value}増加！`); }
                 else { this.cpuMaxMana = Math.min(this.totalMaxManaLimit, this.cpuMaxMana + value); this.addLog(`  └【恵沢】${enemyName}の最大マナが${value}増加！`); }
             } else if(type === "kenko") {
-                for (let i = 0; i < value; i++) { this.drawCard(isPlayerTrigger); }
-                this.addLog(isPlayerTrigger ? "  └【剣呼】剣カードを検索して手札に加えた！" : `  └【剣呼】${enemyName}が剣カードを手札に加えた！`);
+                // 【修正箇所】山札からではなく、カードプール全体からランダムに1枚生成して手札に加える
+                for (let i = 0; i < value; i++) {
+                    const randomIndex = Math.floor(Math.random() * this.cardPool.length);
+                    const generatedCard = createCardInstance(this.cardPool[randomIndex]);
+                    
+                    if (isPlayerTrigger) {
+                        if (this.playerHand.length < this.maxHandSize) {
+                            this.playerHand.push(generatedCard);
+                            this.addLog(`  └【剣呼】カードプールから【${generatedCard.name}】を生成して手札に加えた！`);
+                        }
+                    } else {
+                        if (this.cpuHand.length < this.maxHandSize) {
+                            this.cpuHand.push(generatedCard);
+                            this.addLog(`  └【剣呼】${enemyName}がカードプールからランダムなカードを手札に加えた！`);
+                        }
+                    }
+                }
             } else if(type === "karyokuhueru") {
                 let combo = isPlayerTrigger ? this.playerPlayedCountThisTurn : this.cpuPlayedCountThisTurn;
                 let damage = combo * value;
@@ -400,7 +422,7 @@ createApp({
                 else { this.playerHP -= damage; this.addLog(`  └【連撃】使用枚数分（${damage}ダメ）、あなたに追加ダメージ！`); }
             } else if(type === "jishoburn") {
                 if(isPlayerTrigger) { this.playerHP -= value; this.addLog(`  └【反動】反動で自分に${value}ダメージ！`); }
-                else { this.cpuHP -= value; this.addLog(`  └ graves └【反動】反動で${enemyName}自身に${value}ダメージ！`); }
+                else { this.cpuHP -= value; this.addLog(`  └【反動】反動で${enemyName}自身に${value}ダメージ！`); }
             }
         },
         checkWinLose() {
@@ -423,7 +445,10 @@ createApp({
                 setTimeout(() => { this.cpuAction(); }, 1000);
             } else {
                 this.addLog("=== 相手のターン ===");
-                socket.emit('end_turn'); 
+                socket.emit('end_turn', {
+                    currentMana: this.playerCurrentMana,
+                    maxMana: this.playerMaxMana
+                }); 
             }
         },
         cpuAction() {
