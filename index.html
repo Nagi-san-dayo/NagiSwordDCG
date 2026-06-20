@@ -85,7 +85,7 @@
                 🤖 CPU対戦
             </div>
             <div class="deck-btn mode" :class="{'active': gameMode === 'online'}" @click="gameMode = 'online'" style="flex: 1; margin-bottom: 0;">
-                🌐 ｵﾝﾗｲﾝ対戦
+                🌐 オンライン対戦
             </div>
         </div>
         <p style="text-align:center; font-size:12px; color:#666;">
@@ -151,7 +151,7 @@
         
         <div class="status-box" :class="gameMode === 'cpu' ? 'cpu-box' : 'online-enemy-box'">
             <h3 v-if="gameMode === 'cpu'">🤖 CPU HP: {{ cpuHP }} (マナ: {{ cpuCurrentMana }}/{{ cpuMaxMana }})</h3>
-            <h3 v-else>👤 对戦相手 HP: {{ cpuHP }} (マナ: {{ cpuCurrentMana }}/{{ cpuMaxMana }})</h3>
+            <h3 v-else>👤 対戦相手 HP: {{ cpuHP }} (マナ: {{ cpuCurrentMana }}/{{ cpuMaxMana }})</h3>
             <p>山札: {{ cpuDeck.length }} 枚 / 手札: {{ cpuHand.length }} 枚</p>
         </div>
 
@@ -191,7 +191,7 @@ const { createApp, ref, nextTick } = Vue;
 const cardPool = [
     { name: "ナギソ 試作品", cost: 1, power: 3, abilities: [], abilityText: "" },
     { name: "ナギソの返り血", cost: 1, power: 1, abilities: [{ type: "draw", value: 1 }], abilityText: "【流水1:1ドロー】" },
-    { name: "ナギソ使役", cost: 1, power: 1, abilities: [{ type: "kenko", value: 1 }], abilityText: "【剣呼:剣検索】" },
+    { name: "ナギソ使役", cost: 1, power: 1, abilities: [{ type: "kenko", value: 1 }], abilityText: "【剣呼:ランダム生成】" },
     { name: "ナギソ指南書", cost: 2, power: 0, abilities: [{ type: "saidaimanahueru", value: 2 }, { type: "draw", value: 1 }], abilityText: "【恵沢2:最大マナ+2】 【流水1:1ドロー]" },
     { name: "ナギソの研磨", cost: 2, power: 3, abilities: [{ type: "manahueru", value: 2 }], abilityText: "【還元2:マナ2回復】" },
     { name: "ナギソの分割", cost: 6, power: 3, abilities: [{ type: "costheru", value: 1 }, { type: "draw", value: 1 }], abilityText: "【縮化:コスト下方】【流水1:1ドロー】" },
@@ -257,18 +257,20 @@ createApp({
             }
         });
 
-        // 【拡張受信】相手がカードをプレイした時（マナ変動を反映）
         socket.on('opponent_play_card', (data) => {
             this.playCard(data.card, false); 
             if (data.currentMana !== undefined) this.cpuCurrentMana = data.currentMana;
             if (data.maxMana !== undefined) this.cpuMaxMana = data.maxMana;
         });
 
-        // 【拡張受信】相手がターン終了した時（相手の最新マナを反映）
         socket.on('opponent_end_turn', (data) => {
-            this.endCpuTurn(); 
             if (data && data.currentMana !== undefined) this.cpuCurrentMana = data.currentMana;
             if (data && data.maxMana !== undefined) this.cpuMaxMana = data.maxMana;
+
+            this.cpuMaxMana = Math.min(this.totalMaxManaLimit, this.cpuMaxMana + 1);
+            this.cpuCurrentMana = this.cpuMaxMana;
+
+            this.endCpuTurn(); 
         });
 
         socket.on('opponent_disconnected', () => {
@@ -363,7 +365,6 @@ createApp({
             card.abilities.forEach(ab => this.triggerAbility(ab, isPlayer));
             this.checkWinLose();
 
-            // 【拡張送信】カードのアビリティ解決（還元・恵沢など含む）が終わった「最終数値」を送信
             if(isPlayer && this.gameMode === 'online') {
                 socket.emit('play_card', { 
                     card: card,
@@ -397,8 +398,23 @@ createApp({
                 if(isPlayerTrigger) { this.playerMaxMana = Math.min(this.totalMaxManaLimit, this.playerMaxMana + value); this.addLog(`  └【恵沢】最大マナが${value}増加！`); }
                 else { this.cpuMaxMana = Math.min(this.totalMaxManaLimit, this.cpuMaxMana + value); this.addLog(`  └【恵沢】${enemyName}の最大マナが${value}増加！`); }
             } else if(type === "kenko") {
-                for (let i = 0; i < value; i++) { this.drawCard(isPlayerTrigger); }
-                this.addLog(isPlayerTrigger ? "  └【剣呼】剣カードを検索して手札に加えた！" : `  └【剣呼】${enemyName}が剣カードを手札に加えた！`);
+                // 【修正箇所】山札からではなく、カードプール全体からランダムに1枚生成して手札に加える
+                for (let i = 0; i < value; i++) {
+                    const randomIndex = Math.floor(Math.random() * this.cardPool.length);
+                    const generatedCard = createCardInstance(this.cardPool[randomIndex]);
+                    
+                    if (isPlayerTrigger) {
+                        if (this.playerHand.length < this.maxHandSize) {
+                            this.playerHand.push(generatedCard);
+                            this.addLog(`  └【剣呼】カードプールから【${generatedCard.name}】を生成して手札に加えた！`);
+                        }
+                    } else {
+                        if (this.cpuHand.length < this.maxHandSize) {
+                            this.cpuHand.push(generatedCard);
+                            this.addLog(`  └【剣呼】${enemyName}がカードプールからランダムなカードを手札に加えた！`);
+                        }
+                    }
+                }
             } else if(type === "karyokuhueru") {
                 let combo = isPlayerTrigger ? this.playerPlayedCountThisTurn : this.cpuPlayedCountThisTurn;
                 let damage = combo * value;
@@ -429,7 +445,6 @@ createApp({
                 setTimeout(() => { this.cpuAction(); }, 1000);
             } else {
                 this.addLog("=== 相手のターン ===");
-                // 【拡張送信】ターンを渡すタイミングの、自分の最新マナ情報を持たせて終了通知
                 socket.emit('end_turn', {
                     currentMana: this.playerCurrentMana,
                     maxMana: this.playerMaxMana
