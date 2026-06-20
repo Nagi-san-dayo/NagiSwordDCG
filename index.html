@@ -151,7 +151,7 @@
         
         <div class="status-box" :class="gameMode === 'cpu' ? 'cpu-box' : 'online-enemy-box'">
             <h3 v-if="gameMode === 'cpu'">🤖 CPU HP: {{ cpuHP }} (マナ: {{ cpuCurrentMana }}/{{ cpuMaxMana }})</h3>
-            <h3 v-else>👤 対戦相手 HP: {{ cpuHP }} (マナ: {{ cpuCurrentMana }}/{{ cpuMaxMana }})</h3>
+            <h3 v-else>👤 对戦相手 HP: {{ cpuHP }} (マナ: {{ cpuCurrentMana }}/{{ cpuMaxMana }})</h3>
             <p>山札: {{ cpuDeck.length }} 枚 / 手札: {{ cpuHand.length }} 枚</p>
         </div>
 
@@ -257,20 +257,18 @@ createApp({
             }
         });
 
+        // 【拡張受信】相手がカードをプレイした時（マナ変動を反映）
         socket.on('opponent_play_card', (data) => {
             this.playCard(data.card, false); 
             if (data.currentMana !== undefined) this.cpuCurrentMana = data.currentMana;
             if (data.maxMana !== undefined) this.cpuMaxMana = data.maxMana;
         });
 
+        // 【拡張受信】相手がターン終了した時（相手の最新マナを反映）
         socket.on('opponent_end_turn', (data) => {
+            this.endCpuTurn(); 
             if (data && data.currentMana !== undefined) this.cpuCurrentMana = data.currentMana;
             if (data && data.maxMana !== undefined) this.cpuMaxMana = data.maxMana;
-
-            this.cpuMaxMana = Math.min(this.totalMaxManaLimit, this.cpuMaxMana + 1);
-            this.cpuCurrentMana = this.cpuMaxMana;
-
-            this.endCpuTurn(); 
         });
 
         socket.on('opponent_disconnected', () => {
@@ -365,6 +363,7 @@ createApp({
             card.abilities.forEach(ab => this.triggerAbility(ab, isPlayer));
             this.checkWinLose();
 
+            // 【拡張送信】カードのアビリティ解決（還元・恵沢など含む）が終わった「最終数値」を送信
             if(isPlayer && this.gameMode === 'online') {
                 socket.emit('play_card', { 
                     card: card,
@@ -445,6 +444,7 @@ createApp({
                 setTimeout(() => { this.cpuAction(); }, 1000);
             } else {
                 this.addLog("=== 相手のターン ===");
+                // 【拡張送信】ターンを渡すタイミングの、自分の最新マナ情報を持たせて終了通知
                 socket.emit('end_turn', {
                     currentMana: this.playerCurrentMana,
                     maxMana: this.playerMaxMana
