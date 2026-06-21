@@ -25,18 +25,14 @@ const io = new Server(server, {
   }
 });
 
+// 【修正2】変数の宣言は1回にまとめる
 let waitingPlayer = null; 
 
-
 // Discord通知の追加の案
-// Discordでプレイヤーがオンラインキューを入れたときに通知が出るような仕組みの追加です。
-// 通知を送るDiscordのチャンネルでwebhookのURLを発行する必要があります。
-// 1. 通知を送りたいDiscordのテキストチャンネルの歯車マークを開く。
-// 2. 連携サービス→ウェブフック→新しいウェブフックから作成。
-// 3. アイコンや名前を設定したらウェブフックURLをコピー。
 const DISCORD_WEBHOOK_URL = process.env.DISCORD_WEBHOOK_URL || 'ここにコピーしたWebhookURLを貼り付ける';
 
-async function notifyDiscord() {
+// 【修正1】引数に message を追加
+async function notifyDiscord(message) {
   // URLが設定されていない場合は何もしない
   if (!DISCORD_WEBHOOK_URL || DISCORD_WEBHOOK_URL === 'ここにコピーしたWebhookURLを貼り付ける') return;
 
@@ -44,6 +40,7 @@ async function notifyDiscord() {
   // 現在時刻も表示
   const timeString = now.toLocaleString('ja-JP', { timeZone: 'Asia/Tokyo' });
 
+  // 受け取った message を組み込む
   const finalMessage = `[${timeString}]\n${message}`;
 
   try {
@@ -58,8 +55,6 @@ async function notifyDiscord() {
     console.error('Discord通知に失敗しました:', error);
   }
 }
-
-let waitingPlayer = null; 
 
 io.on('connection', (socket) => {
   console.log('接続されました:', socket.id);
