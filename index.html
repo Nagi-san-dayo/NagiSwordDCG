@@ -245,7 +245,7 @@ createApp({
             try { this.customDeckPoolIds = JSON.parse(savedDeck); } catch(e) { console.error(e); }
         }
 
-        socket = io();
+        socket = io('https://nagisworddcg-0.onrender.com/');
 
         socket.on('game_start', (data) => {
             this.isMatching = false; 
