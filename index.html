@@ -14,8 +14,6 @@
         .deck-btn.agro { background: #ffe6e6; border: 1px solid red; }
         .deck-btn.ramp { background: #e6ffe6; border: 1px solid green; }
         .deck-btn.combo { background: #e6e6ff; border: 1px solid blue; }
-        .deck-btn.custom { background: #fff3cd; border: 1px solid #ffc107; }
-        .deck-btn.edit { background: #f0f0f0; border: 1px solid #666; }
         .deck-btn.mode { background: #e2f0d9; border: 2px solid #385723; text-align: center; font-weight: bold; }
         .deck-btn.mode.active { background: #385723; color: white; }
         h1, h3, h2 { margin: 0 0 5px 0; }
@@ -42,6 +40,15 @@
         .game-over-btn { background: #6f42c1; padding: 15px; border: none; border-radius: 8px; color: white; font-weight: bold; cursor: pointer; width: 100%; margin-bottom: 10px;}
         .scroll-grid { display: flex; gap: 8px; overflow-x: auto; padding: 10px 0; border-bottom: 1px dashed #ddd; }
         .alert-text { color: red; font-size: 12px; font-weight: bold; text-align: center; }
+
+        /* 複数デッキ用のスタイル */
+        .slot-list { display: flex; flex-direction: column; gap: 6px; background: #fff3cd; border: 1px solid #ffc107; padding: 10px; border-radius: 10px; max-height: 180px; overflow-y: auto; margin-bottom: 5px; }
+        .slot-item { display: flex; gap: 6px; align-items: center; }
+        .slot-select-btn { flex: 1; padding: 8px 12px; border: 1px solid #ffc107; border-radius: 6px; text-align: left; cursor: pointer; background: white; font-size: 13px; font-weight: bold; }
+        .slot-select-btn:not(.disabled):hover { background: #fff9e6; }
+        .slot-select-btn.disabled { background: #eaeaea; border-color: #ccc; color: #888; cursor: not-allowed; }
+        .slot-edit-btn { padding: 8px 12px; background: #6c757d; color: white; border: none; border-radius: 6px; cursor: pointer; font-size: 13px; font-weight: bold; white-space: nowrap; }
+        .slot-edit-btn:hover { background: #5a6268; }
 
         .matching-overlay {
             position: absolute; top: 0; left: 0; width: 100%; height: 100%;
@@ -93,12 +100,19 @@
         </p>
 
         <hr style="width: 100%; border: 0; border-top: 1px solid #ccc; margin: 5px 0;">
-        
-        <div v-if="customDeckPoolIds" class="deck-btn custom" @click="handleDeckSelect('custom')">
-            <h3>✨ カスタムデッキで挑戦</h3>
-            <p>あなたが作成・保存したオリジナルの30枚デッキで戦います！</p>
+        <h3 style="font-size: 15px; color: #856404; margin-bottom: 5px;">✨ カスタムデッキ (最大10種類)</h3>
+        <div class="slot-list">
+            <div v-for="slotIndex in 10" :key="slotIndex" class="slot-item">
+                <button class="slot-select-btn" :class="{'disabled': !customDecks[slotIndex-1]}" :disabled="!customDecks[slotIndex-1]" @click="handleDeckSelect('custom', slotIndex-1)">
+                    🎴 デッキ {{ slotIndex }} {{ customDecks[slotIndex-1] ? '(30枚)' : '(未作成)' }}
+                </button>
+                <button class="slot-edit-btn" @click="openDeckEditor(slotIndex-1)">
+                    🛠️ 編集
+                </button>
+            </div>
         </div>
-
+        <hr style="width: 100%; border: 0; border-top: 1px solid #ccc; margin: 5px 0;">
+        
         <div class="deck-btn agro" @click="handleDeckSelect('agro')">
             <h3>🔴 ナギソアグロ（速攻）</h3>
             <p>低コストのカードで序盤から一気に敵のHPを削りきる攻撃的デッキ！</p>
@@ -111,17 +125,10 @@
             <h3>🔵 ナギソコンボ（連撃）</h3>
             <p>手札を回しつつ、連撃でワンターンキルを狙うデッキ！</p>
         </div>
-
-        <hr style="width: 100%; border: 0; border-top: 1px solid #ccc; margin: 10px 0;">
-
-        <div class="deck-btn edit" @click="openDeckEditor">
-            <h3>🛠️ デッキを編集・保存する</h3>
-            <p>カードプールから自由に30枚を選んでマイデッキを保存します（各最大5枚）。</p>
-        </div>
     </div>
 
     <div v-if="isEditMode" class="game-screen">
-        <h2>🛠️ デッキ編集 ({{ editingDeck.length }} / 30 枚)</h2>
+        <h2>🛠️ デッキ編集 [デッキ {{ currentDeckSlot + 1 }}] ({{ editingDeck.length }} / 30 枚)</h2>
         <button class="end-btn" :class="{ 'active': editingDeck.length === 30, 'disabled': editingDeck.length !== 30 }" :disabled="editingDeck.length !== 30" @click="saveAndCloseEditor">
             {{ editingDeck.length === 30 ? '💾 デッキを保存してタイトルへ' : '30枚に調整してください' }}
         </button>
@@ -229,7 +236,9 @@ createApp({
             isGameStarted: false, isGameOver: false, isPlayerTurn: true,
             isEditMode: false,
             isMatching: false, 
-            customDeckPoolIds: null,
+            customDecks: Array(10).fill(null),
+            currentDeckSlot: 0,                
+            selectedSlotIndex: null,           
             editingDeck: [],
             editAlert: "",
             cardPool: cardPool,
@@ -244,9 +253,17 @@ createApp({
         };
     },
     mounted() {
-        const savedDeck = localStorage.getItem("nagiso_custom_deck");
-        if (savedDeck) {
-            try { this.customDeckPoolIds = JSON.parse(savedDeck); } catch(e) { console.error(e); }
+        const savedDecks = localStorage.getItem("nagiso_custom_decks");
+        if (savedDecks) {
+            try { this.customDecks = JSON.parse(savedDecks); } catch(e) { console.error(e); }
+        } else {
+            const savedDeck = localStorage.getItem("nagiso_custom_deck");
+            if (savedDeck) {
+                try { 
+                    this.customDecks[0] = JSON.parse(savedDeck);
+                    localStorage.setItem("nagiso_custom_decks", JSON.stringify(this.customDecks));
+                } catch(e) { console.error(e); }
+            }
         }
 
         socket = io('https://nagisworddcg-0.onrender.com/');
@@ -275,7 +292,7 @@ createApp({
         });
 
         socket.on('opponent_disconnected', () => {
-            this.addLog("⚠️ 対戦相手の接続が切れました。不戦勝です！");
+            this.addLog("⚠️ 对戦相手の接続が切れました。不戦勝です！");
             this.isGameOver = true;
         });
     },
@@ -291,8 +308,9 @@ createApp({
             this.isGameStarted = false; this.isGameOver = false;
             this.logMessages = ["モードとデッキを選んでゲームを始めてね！"];
         },
-        handleDeckSelect(type) {
+        handleDeckSelect(type, slotIndex = null) {
             this.selectedDeckType = type;
+            this.selectedSlotIndex = slotIndex; 
             if (this.gameMode === 'online') {
                 this.isMatching = true; 
                 this.addLog("🔍 対戦相手を検索中...（サーバーの応答を待っています）");
@@ -319,9 +337,8 @@ createApp({
             if(type === 'agro') pPool = [0,0,0,0,0, 1,1,1,1,1, 4,4,4,4,4, 6,6,6,6,6, 9,9,9,9,9, 2,2,2,2,2].map(i => cardPool[i]);
             else if(type === 'ramp') pPool = [3,3,3,3,3, 1,1,1,1,1, 2,2,2,2,2, 4,4,4,4,4, 6,6,6,6,6, 10,10,10,10,10].map(i => cardPool[i]);
             else if(type === 'combo') pPool = [6,6,6,6,6, 7,7,7,7,7, 5,5,5,5,5, 8,8,8,8,8, 2,2,2,2,2, 4,4,4,4,4].map(i => cardPool[i]);
-            else if(type === 'custom') pPool = this.customDeckPoolIds.map(i => cardPool[i]);
+            else if(type === 'custom') pPool = this.customDecks[this.selectedSlotIndex].map(i => cardPool[i]); 
 
-            // 【バグ修正】相手のデッキも30枚ぴったりになるようにループで作成
             let cPool = [];
             for (let i = 0; i < 30; i++) {
                 cPool.push(cardPool[i % cardPool.length]);
@@ -491,7 +508,6 @@ createApp({
             } else {
                 this.addLog("=== 相手のターン ===");
                 
-                // 【バグ修正】オンライン対戦相手のターン開始処理（マナ増加とドロー）を自分の画面上でも同期
                 this.cpuMaxMana = Math.min(this.totalMaxManaLimit, this.cpuMaxMana + 1);
                 this.cpuCurrentMana = this.cpuMaxMana;
                 if (this.cpuMaxMana > 1) {
@@ -531,11 +547,27 @@ createApp({
                 this.addLog("※ 先行1ターン目のためドローはありません。");
             }
         },
-        openDeckEditor() { this.isEditMode = true; this.editAlert = ""; if (this.customDeckPoolIds) { this.editingDeck = this.customDeckPoolIds.map(i => ({ ...cardPool[i], poolIndex: i })); } else { this.editingDeck = []; } },
+        openDeckEditor(slotIndex) { 
+            this.isEditMode = true; 
+            this.editAlert = ""; 
+            this.currentDeckSlot = slotIndex; 
+            if (this.customDecks[slotIndex]) { 
+                this.editingDeck = this.customDecks[slotIndex].map(i => ({ ...cardPool[i], poolIndex: i })); 
+            } else { 
+                this.editingDeck = []; 
+            } 
+        },
         getCardCountInEditingDeck(poolIndex) { return this.editingDeck.filter(c => c.poolIndex === poolIndex).length; },
         addCardToEditingDeck(poolIndex) { this.editAlert = ""; if (this.editingDeck.length >= 30) { this.editAlert = "❌ デッキは最大30枚です。"; return; } if (this.getCardCountInEditingDeck(poolIndex) >= 5) { this.editAlert = `❌ 「${cardPool[poolIndex].name}」は既に5枚入っています！`; return; } this.editingDeck.push({ ...cardPool[poolIndex], poolIndex: poolIndex }); },
         removeCardFromEditingDeck(index) { this.editAlert = ""; this.editingDeck.splice(index, 1); },
-        saveAndCloseEditor() { if (this.editingDeck.length !== 30) return; const idsToSave = this.editingDeck.map(c => c.poolIndex); this.customDeckPoolIds = idsToSave; localStorage.setItem("nagiso_custom_deck", JSON.stringify(idsToSave)); this.isEditMode = false; this.addLog("🛠️ カスタムデッキをブラウザに保存しました！"); },
+        saveAndCloseEditor() { 
+            if (this.editingDeck.length !== 30) return; 
+            const idsToSave = this.editingDeck.map(c => c.poolIndex); 
+            this.customDecks[this.currentDeckSlot] = idsToSave; 
+            localStorage.setItem("nagiso_custom_decks", JSON.stringify(this.customDecks)); 
+            this.isEditMode = false; 
+            this.addLog(`🛠️ カスタムデッキ(デッキ ${this.currentDeckSlot + 1})をブラウザに保存しました！`); 
+        },
         cancelEditor() { this.isEditMode = false; }
     }
 }).mount('#app');
