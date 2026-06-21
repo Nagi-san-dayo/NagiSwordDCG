@@ -190,15 +190,15 @@ const { createApp, ref, nextTick } = Vue;
 
 const cardPool = [
     { name: "ナギソ 試作品", cost: 1, power: 3, abilities: [], abilityText: "" },
-    { name: "ナギソの返り血", cost: 1, power: 1, abilities: [{ type: "draw", value: 1 }], abilityText: "【流水1:1ドロー】" },
-    { name: "ナギソ使役", cost: 1, power: 1, abilities: [{ type: "kenko", value: 1 }], abilityText: "【剣呼:ランダム生成】" },
+    { name: "ナギソの返り血", cost: 1, power: 2, abilities: [{ type: "draw", value: 1 }], abilityText: "【流水1:1ドロー】" },
+    { name: "ナギソ使役", cost: 0, power: 0, abilities: [{ type: "kenko", value: 2 }], abilityText: "【剣呼2:ランダム2枚生成】" },
     { name: "ナギソ指南書", cost: 2, power: 0, abilities: [{ type: "saidaimanahueru", value: 2 }, { type: "draw", value: 1 }], abilityText: "【恵沢2:最大マナ+2】 【流水1:1ドロー]" },
     { name: "ナギソの研磨", cost: 2, power: 3, abilities: [{ type: "manahueru", value: 2 }], abilityText: "【還元2:マナ2回復】" },
     { name: "ナギソの分割", cost: 6, power: 3, abilities: [{ type: "costheru", value: 1 }, { type: "draw", value: 1 }], abilityText: "【縮化:コスト下方】【流水1:1ドロー】" },
     { name: "ナギソの手入れ", cost: 3, power: 0, abilities: [{ type: "costheru", value: 1},{ type: "draw", value: 1 }], abilityText: "【流水1:1ドロー】【縮化:コスト下方】 " },
     { name: "双剣ナギソ", cost: 2, power: 0, abilities: [{ type: "karyokuhueru", value: 1 }], abilityText: "【連撃:使用枚数ダメ】" },
     { name: "ナギソ指南書2", cost: 2, power: 2, abilities: [{ type: "draw", value: 1 }, { type: "manahueru", value: 1 }], abilityText: "【流水1:1ドロー】【還元1:マナ1回復】" },
-    { name: "炎剣ナギソ", cost: 2, power: 4, abilities: [{ type: "burn", value: 2 }, { type: "jishoburn", value: 3 }], abilityText: "【雄叫び2:2ダメ】【反動3:自分に3ダメ】" },
+    { name: "炎剣ナギソ", cost: 2, power: 4, abilities: [{ type: "burn", value: 3 }, { type: "jishoburn", value: 3 }], abilityText: "【雄叫び3:3ダメ】【反動3:自分に3ダメ】" },
     { name: "魔剣ナギソ", cost: 8, power: 30, abilities: [], abilityText: "" },
     { name: "ナギソ破壊", cost: 1, power: 0, abilities: [{ type: "draw", value: 2 }, { type: "jishoburn", value: 4 }], abilityText: "【流水2:2ドロー】 【反動4:自分に4ダメ】" }
 ];
