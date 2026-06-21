@@ -38,7 +38,7 @@ const DISCORD_WEBHOOK_URL = process.env.DISCORD_WEBHOOK_URL || 'https://discord.
 
 async function notifyDiscord(message) {
   // URLが設定されていない場合は何もしない
-  if (!DISCORD_WEBHOOK_URL || DISCORD_WEBHOOK_URL === 'https://discord.com/api/webhooks/1518233626033127584/afbC-V7S9t7GkEvhMV8ZADhHVWxCVFlCghw7cP6QOZTjSpD7-YUgNpkJFBfjRTyXqQQD') return;
+  if (!DISCORD_WEBHOOK_URL) return;
 
   const now = new Date();
   // 現在時刻も表示
