@@ -78,7 +78,7 @@
 <div id="app">
     <div v-if="isMatching" class="matching-overlay">
         <div class="spinner"></div>
-        <h2>🌐 対戦相手を検索中...</h2>
+        <h2>🌐 对戦相手を検索中...</h2>
         <p style="color: #bbb; margin-top: 10px;">サーバーからの応答を待っています。<br>しばらくそのままでお待ちください。</p>
         <button class="cancel-match-btn" @click="cancelMatching">キャンセル</button>
     </div>
@@ -203,17 +203,19 @@ const cardPool = [
     { name: "ナギソの研磨", cost: 2, power: 3, abilities: [{ type: "manahueru", value: 2 }], abilityText: "【還元2:マナ2回復】" },
     { name: "ナギソの分割", cost: 6, power: 3, abilities: [{ type: "costheru", value: 1 }, { type: "draw", value: 1 }], abilityText: "【縮化1:コスト1下方】【流水1:1ドロー】" },
     { name: "ナギソの手入れ", cost: 2, power: 0, abilities: [{ type: "costheru", value: 1},{ type: "draw", value: 1 }], abilityText: "【流水1:1ドロー】【縮化1:コスト1下方】 " },
-    { name: "双剣ナギソ", cost: 2, power: 0, abilities: [{ type: "karyokuhueru", value: 1 }], abilityText: "【連撃:使用枚数ダメ】" },
+    { name: "双剣ナギソ", cost: 2, power: 0, abilities: [{ type: "karyokuhueru", value: 1 }], abilityText: "【連撃1:使用枚数×1ダメ】" },
     { name: "ナギソ封印書", cost: 2, power: 3, abilities: [{ type: "draw", value: 1 }, { type: "manahueru", value: 1 }], abilityText: "【流水1:1ドロー】【還元1:マナ1回復】" },
     { name: "炎剣ナギソ", cost: 2, power: 4, abilities: [{ type: "burn", value: 3 }, { type: "jishoburn", value: 3 }], abilityText: "【雄叫び3:3ダメ】【反動3:自分に3ダメ】" },
     { name: "魔剣ナギソ", cost: 10, power: 30, abilities: [], abilityText: "" },
     { name: "ナギソ破壊", cost: 1, power: 0, abilities: [{ type: "draw", value: 2 }, { type: "jishoburn", value: 5 }], abilityText: "【流水2:2ドロー】 【反動5:自分に5ダメ】" },
     { name: "硬化したナギソ", cost: 4, power: 10, abilities: [], abilityText: "" },
     { name: "ナギソ研磨油", cost: 2, power: 0, abilities: [{ type: "heal", value: 5 }, { type: "saidaimanahueru", value: 1}], abilityText: "【神秘5:HPを5回復】【恵沢1:最大マナ+1】" },
-    { name: "執行のナギソ", cost: 6, power: 0, abilities: [{ type: "discard", value: 3 }], abilityText: "【罪3:相手の手札を3枚捨てる】" },
-    { name: "内喰みのナギソ", cost: 7, power: 0, abilities: [{ type: "manadestroy", value: 2 }], abilityText: "【崩壊2:相手の最大マナを2減らす】" },
+    { name: "執行のナギソ", cost: 6, power: 0, abilities: [{ type: "discard", value: 2 }, { type: "jishoburn", value: 4 }], abilityText: "【罪2:相手の手札を2枚捨てる】【反動4:自分に4ダメ】" },
+    { name: "内喰みのナギソ", cost: 7, power: 0, abilities: [{ type: "manadestroy", value: 3 }], abilityText: "【崩壊3:相手の最大マナを3減らす】" },
     { name: "嫌悪のナギソ", cost: 1, power: 0, abilities: [{ type: "costup", value: 1 }], abilityText: "【威圧1:相手の手札のコストを全て+1】" },
     { name: "ナギソの破片", cost: 3, power: 0, abilities: [{ type: "heal", value: 4 }, { type: "saidaimanahueru", value: 1}, { type: "draw", value: 2 }], abilityText: "【神秘5:HPを5回復】【恵沢1:最大マナ+1】【流水2:2ドロー】 " },
+    { name: "魔剣ナギソアクセサリー", cost: 15, power: 0, abilities: [{ type: "costheru", value: 1},{ type: "karyokuhueru", value: 3 }], abilityText: "【縮化1:コスト1下方】【連撃3:使用枚数×3ダメ】"},
+    { name: "ナギソブレッド", cost: 0, power: 2, abilities: [{ type: "jishoburn", value: 2 }], abilityText: "【反動2:自分に2ダメ】"}
 ];
 
 function generateId() { return Math.random().toString(36).substr(2, 9); }
@@ -293,7 +295,7 @@ createApp({
         });
 
         socket.on('opponent_disconnected', () => {
-            this.addLog("⚠️ 对戦相手の接続が切れました。不戦勝です！");
+            this.addLog("⚠️ 対戦相手の接続が切れました。不戦勝です！");
             this.isGameOver = true;
         });
     },
@@ -340,10 +342,23 @@ createApp({
             else if(type === 'combo') pPool = [6,6,6,6,6, 7,7,7,7,7, 5,5,5,5,5, 8,8,8,8,8, 2,2,2,2,2, 4,4,4,4,4].map(i => cardPool[i]);
             else if(type === 'custom') pPool = this.customDecks[this.selectedSlotIndex].map(i => cardPool[i]); 
 
+            // CPU用：カードプールからランダムに10種類を選び、それぞれ3枚ずつ追加して30枚にする
             let cPool = [];
-            for (let i = 0; i < 30; i++) {
-                cPool.push(cardPool[i % cardPool.length]);
+            let availableIndices = [...Array(cardPool.length).keys()]; // [0, 1, 2, ... 17]
+            let selectedIndices = [];
+            
+            // ランダムに10種類選出
+            for (let i = 0; i < 10 && availableIndices.length > 0; i++) {
+                const randIdx = Math.floor(Math.random() * availableIndices.length);
+                selectedIndices.push(availableIndices.splice(randIdx, 1)[0]);
             }
+            
+            // 選んだ10種類をそれぞれ3枚ずつ追加
+            selectedIndices.forEach(poolIndex => {
+                for (let k = 0; k < 3; k++) {
+                    cPool.push(cardPool[poolIndex]);
+                }
+            });
 
             this.playerDeck = shuffle(pPool.map(createCardInstance));
             this.cpuDeck = shuffle(cPool.map(createCardInstance));
@@ -439,8 +454,8 @@ createApp({
             } else if(type === "karyokuhueru") {
                 let combo = isPlayerTrigger ? this.playerPlayedCountThisTurn : this.cpuPlayedCountThisTurn;
                 let damage = combo * value;
-                if(isPlayerTrigger) { this.cpuHP -= damage; this.addLog(`  └【連撃】使用枚数分（${damage}ダメ）、${enemyName}に追加ダメージ！`); }
-                else { this.playerHP -= damage; this.addLog(`  └【連撃】使用枚数分（${damage}ダメ）、あなたに追加ダメージ！`); }
+                if(isPlayerTrigger) { this.cpuHP -= damage; this.addLog(`  └【連撃】使用枚数× ${value} 分（${damage}ダメ）、${enemyName}に追加ダメージ！`); }
+                else { this.playerHP -= damage; this.addLog(`  └【連撃】使用枚数× ${value} 分（${damage}ダメ）、あなたに追加ダメージ！`); }
             } else if(type === "jishoburn") {
                 if(isPlayerTrigger) { this.playerHP -= value; this.addLog(`  └【反動】反動で自分に${value}ダメージ！`); }
                 else { this.cpuHP -= value; this.addLog(`  └【反動】反動で${enemyName}自身に${value}ダメージ！`); }
@@ -512,6 +527,11 @@ createApp({
             this.isPlayerTurn = false;
             this.playerPlayedCountThisTurn = 0;
             
+            this.cpuHand.forEach(c => {
+                c.cost = c.baseCost;
+            });
+            this.reduceCost(false);
+            
             if (this.gameMode === 'cpu') {
                 this.addLog("=== CPUのターン ===");
                 this.cpuMaxMana = Math.min(this.totalMaxManaLimit, this.cpuMaxMana + 1);
@@ -550,6 +570,11 @@ createApp({
             this.isPlayerTurn = true;
             this.cpuPlayedCountThisTurn = 0;
             this.addLog("=== あなたのターン ===");
+            
+            this.playerHand.forEach(c => {
+                c.cost = c.baseCost;
+            });
+            this.reduceCost(true);
             
             this.playerMaxMana = Math.min(this.totalMaxManaLimit, this.playerMaxMana + 1);
             this.playerCurrentMana = this.playerMaxMana;
