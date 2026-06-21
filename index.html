@@ -151,7 +151,7 @@
         
         <div class="status-box" :class="gameMode === 'cpu' ? 'cpu-box' : 'online-enemy-box'">
             <h3 v-if="gameMode === 'cpu'">🤖 CPU HP: {{ cpuHP }} (マナ: {{ cpuCurrentMana }}/{{ cpuMaxMana }})</h3>
-            <h3 v-else>👤 对戦相手 HP: {{ cpuHP }} (マナ: {{ cpuCurrentMana }}/{{ cpuMaxMana }})</h3>
+            <h3 v-else>👤 対戦相手 HP: {{ cpuHP }} (マナ: {{ cpuCurrentMana }}/{{ cpuMaxMana }})</h3>
             <p>山札: {{ cpuDeck.length }} 枚 / 手札: {{ cpuHand.length }} 枚</p>
         </div>
 
@@ -201,7 +201,11 @@ const cardPool = [
     { name: "炎剣ナギソ", cost: 2, power: 4, abilities: [{ type: "burn", value: 3 }, { type: "jishoburn", value: 3 }], abilityText: "【雄叫び3:3ダメ】【反動3:自分に3ダメ】" },
     { name: "魔剣ナギソ", cost: 10, power: 30, abilities: [], abilityText: "" },
     { name: "ナギソ破壊", cost: 1, power: 0, abilities: [{ type: "draw", value: 2 }, { type: "jishoburn", value: 5 }], abilityText: "【流水2:2ドロー】 【反動5:自分に5ダメ】" },
-    { name: "硬化したナギソ", cost: 4, power: 10, abilities: [], abilityText: "" }
+    { name: "硬化したナギソ", cost: 4, power: 10, abilities: [], abilityText: "" },
+    { name: "ナギソ研磨油", cost: 2, power: 0, abilities: [{ type: "heal", value: 5 }, { type: "saidaimanahueru", value: 1}], abilityText: "【神秘5:HPを5回復】【恵沢1:最大マナ+1】" },
+    { name: "執行のナギソ", cost: 6, power: 0, abilities: [{ type: "discard", value: 3 }], abilityText: "【罪3:相手の手札を3枚捨てる】" },
+    { name: "内喰みのナギソ", cost: 7, power: 0, abilities: [{ type: "manadestroy", value: 2 }], abilityText: "【崩壊2:相手の最大マナを2減らす】" },
+    { name: "嫌悪のナギソ", cost: 1, power: 0, abilities: [{ type: "costup", value: 1 }], abilityText: "【威圧1:相手の手札のコストを全て+1】" }
 ];
 
 function generateId() { return Math.random().toString(36).substr(2, 9); }
@@ -258,14 +262,12 @@ createApp({
             }
         });
 
-        // 【拡張受信】相手がカードをプレイした時（マナ変動を反映）
         socket.on('opponent_play_card', (data) => {
             this.playCard(data.card, false); 
             if (data.currentMana !== undefined) this.cpuCurrentMana = data.currentMana;
             if (data.maxMana !== undefined) this.cpuMaxMana = data.maxMana;
         });
 
-        // 【拡張受信】相手がターン終了した時（相手の最新マナを反映）
         socket.on('opponent_end_turn', (data) => {
             this.endCpuTurn(); 
             if (data && data.currentMana !== undefined) this.cpuCurrentMana = data.currentMana;
@@ -364,7 +366,6 @@ createApp({
             card.abilities.forEach(ab => this.triggerAbility(ab, isPlayer));
             this.checkWinLose();
 
-            // 【拡張送信】カードのアビリティ解決（還元・恵沢など含む）が終わった「最終数値」を送信
             if(isPlayer && this.gameMode === 'online') {
                 socket.emit('play_card', { 
                     card: card,
@@ -398,7 +399,6 @@ createApp({
                 if(isPlayerTrigger) { this.playerMaxMana = Math.min(this.totalMaxManaLimit, this.playerMaxMana + value); this.addLog(`  └【恵沢】最大マナが${value}増加！`); }
                 else { this.cpuMaxMana = Math.min(this.totalMaxManaLimit, this.cpuMaxMana + value); this.addLog(`  └【恵沢】${enemyName}の最大マナが${value}増加！`); }
             } else if(type === "kenko") {
-                // 【修正箇所】山札からではなく、カードプール全体からランダムに1枚生成して手札に加える
                 for (let i = 0; i < value; i++) {
                     const randomIndex = Math.floor(Math.random() * this.cardPool.length);
                     const generatedCard = createCardInstance(this.cardPool[randomIndex]);
@@ -423,6 +423,50 @@ createApp({
             } else if(type === "jishoburn") {
                 if(isPlayerTrigger) { this.playerHP -= value; this.addLog(`  └【反動】反動で自分に${value}ダメージ！`); }
                 else { this.cpuHP -= value; this.addLog(`  └【反動】反動で${enemyName}自身に${value}ダメージ！`); }
+            
+            // 👇 ここから新能力のロジックを追加
+            } else if(type === "heal") {
+                if(isPlayerTrigger) {
+                    this.playerHP = Math.min(30, this.playerHP + value);
+                    this.addLog(`  └【神秘】あなたのHPが ${value} 回復した！`);
+                } else {
+                    this.cpuHP = Math.min(30, this.cpuHP + value);
+                    this.addLog(`  └【神秘】${enemyName}のHPが ${value} 回復した！`);
+                }
+            } else if(type === "discard") {
+                if(isPlayerTrigger) {
+                    if(this.cpuHand.length > 0) {
+                        const randomIndex = Math.floor(Math.random() * this.cpuHand.length);
+                        this.cpuHand.splice(randomIndex, 1);
+                        this.addLog(`  └【罪】${enemyName}の手札をランダムに ${value} 枚捨てさせた！`);
+                    } else {
+                        this.addLog(`  └【罪】しかし、${enemyName}の手札は0枚だった！`);
+                    }
+                } else {
+                    if(this.playerHand.length > 0) {
+                        const randomIndex = Math.floor(Math.random() * this.playerHand.length);
+                        this.playerHand.splice(randomIndex, 1);
+                        this.addLog(`  └【罪】あなたの手札がランダムに ${value} 枚捨てられた！`);
+                    }
+                }
+            } else if(type === "manadestroy") {
+                if(isPlayerTrigger) {
+                    this.cpuMaxMana = Math.max(1, this.cpuMaxMana - value);
+                    this.cpuCurrentMana = Math.max(0, this.cpuCurrentMana - value);
+                    this.addLog(`  └【崩壊】${enemyName}の最大マナを ${value} 破壊した！`);
+                } else {
+                    this.playerMaxMana = Math.max(1, this.playerMaxMana - value);
+                    this.playerCurrentMana = Math.max(0, this.playerCurrentMana - value);
+                    this.addLog(`  └【崩壊】あなたの最大マナが ${value} 破壊された！`);
+                }
+            } else if(type === "costup") {
+                if(isPlayerTrigger) {
+                    this.cpuHand.forEach(c => { c.cost += value; });
+                    this.addLog(`  └【威圧】${enemyName}の手札のコストを全て +${value} した！`);
+                } else {
+                    this.playerHand.forEach(c => { c.cost += value; });
+                    this.addLog(`  └【威圧】あなたの手札のコストが全て +${value} された！`);
+                }
             }
         },
         checkWinLose() {
@@ -445,7 +489,6 @@ createApp({
                 setTimeout(() => { this.cpuAction(); }, 1000);
             } else {
                 this.addLog("=== 相手のターン ===");
-                // 【拡張送信】ターンを渡すタイミングの、自分の最新マナ情報を持たせて終了通知
                 socket.emit('end_turn', {
                     currentMana: this.playerCurrentMana,
                     maxMana: this.playerMaxMana
