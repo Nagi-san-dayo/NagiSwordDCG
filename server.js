@@ -36,7 +36,7 @@ let waitingPlayer = null;
 // 3. アイコンや名前を設定したらウェブフックURLをコピー。
 const DISCORD_WEBHOOK_URL = process.env.DISCORD_WEBHOOK_URL || 'https://discord.com/api/webhooks/1518233626033127584/afbC-V7S9t7GkEvhMV8ZADhHVWxCVFlCghw7cP6QOZTjSpD7-YUgNpkJFBfjRTyXqQQD';
 
-async function notifyDiscord() {
+async function notifyDiscord(message) {
   // URLが設定されていない場合は何もしない
   if (!DISCORD_WEBHOOK_URL || DISCORD_WEBHOOK_URL === 'https://discord.com/api/webhooks/1518233626033127584/afbC-V7S9t7GkEvhMV8ZADhHVWxCVFlCghw7cP6QOZTjSpD7-YUgNpkJFBfjRTyXqQQD') return;
 
@@ -59,7 +59,6 @@ async function notifyDiscord() {
   }
 }
 
-let waitingPlayer = null; 
 
 io.on('connection', (socket) => {
   console.log('接続されました:', socket.id);
