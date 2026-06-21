@@ -198,13 +198,13 @@ const { createApp, ref, nextTick } = Vue;
 const cardPool = [
     { name: "ナギソ 試作品", cost: 1, power: 3, abilities: [], abilityText: "" },
     { name: "ナギソの返り血", cost: 1, power: 2, abilities: [{ type: "draw", value: 1 }], abilityText: "【流水1:1ドロー】" },
-    { name: "ナギソ使役", cost: 1, power: 0, abilities: [{ type: "kenko", value: 2 }], abilityText: "【剣呼2:ランダム2枚生成】" },
+    { name: "ナギソ使役", cost: 1, power: 0, abilities: [{ type: "kenko", value: 2 }, { type: "costheru", value: 1 }], abilityText: "【剣呼2:ランダム2枚生成】【縮化1:コスト1下方】 " },
     { name: "ナギソ指南書", cost: 2, power: 0, abilities: [{ type: "saidaimanahueru", value: 1 }, { type: "draw", value: 1 }], abilityText: "【恵沢1:最大マナ+1】 【流水1:1ドロー]" },
     { name: "ナギソの研磨", cost: 2, power: 3, abilities: [{ type: "manahueru", value: 2 }], abilityText: "【還元2:マナ2回復】" },
-    { name: "ナギソの分割", cost: 6, power: 3, abilities: [{ type: "costheru", value: 1 }, { type: "draw", value: 1 }], abilityText: "【縮化:コスト下方】【流水1:1ドロー】" },
-    { name: "ナギソの手入れ", cost: 2, power: 0, abilities: [{ type: "costheru", value: 1},{ type: "draw", value: 1 }], abilityText: "【流水1:1ドロー】【縮化:コスト下方】 " },
+    { name: "ナギソの分割", cost: 6, power: 3, abilities: [{ type: "costheru", value: 1 }, { type: "draw", value: 1 }], abilityText: "【縮化1:コスト1下方】【流水1:1ドロー】" },
+    { name: "ナギソの手入れ", cost: 2, power: 0, abilities: [{ type: "costheru", value: 1},{ type: "draw", value: 1 }], abilityText: "【流水1:1ドロー】【縮化1:コスト1下方】 " },
     { name: "双剣ナギソ", cost: 2, power: 0, abilities: [{ type: "karyokuhueru", value: 1 }], abilityText: "【連撃:使用枚数ダメ】" },
-    { name: "ナギソ指南書2", cost: 2, power: 3, abilities: [{ type: "draw", value: 1 }, { type: "manahueru", value: 1 }], abilityText: "【流水1:1ドロー】【還元1:マナ1回復】" },
+    { name: "ナギソ封印書", cost: 2, power: 3, abilities: [{ type: "draw", value: 1 }, { type: "manahueru", value: 1 }], abilityText: "【流水1:1ドロー】【還元1:マナ1回復】" },
     { name: "炎剣ナギソ", cost: 2, power: 4, abilities: [{ type: "burn", value: 3 }, { type: "jishoburn", value: 3 }], abilityText: "【雄叫び3:3ダメ】【反動3:自分に3ダメ】" },
     { name: "魔剣ナギソ", cost: 10, power: 30, abilities: [], abilityText: "" },
     { name: "ナギソ破壊", cost: 1, power: 0, abilities: [{ type: "draw", value: 2 }, { type: "jishoburn", value: 5 }], abilityText: "【流水2:2ドロー】 【反動5:自分に5ダメ】" },
@@ -212,11 +212,12 @@ const cardPool = [
     { name: "ナギソ研磨油", cost: 2, power: 0, abilities: [{ type: "heal", value: 5 }, { type: "saidaimanahueru", value: 1}], abilityText: "【神秘5:HPを5回復】【恵沢1:最大マナ+1】" },
     { name: "執行のナギソ", cost: 6, power: 0, abilities: [{ type: "discard", value: 3 }], abilityText: "【罪3:相手の手札を3枚捨てる】" },
     { name: "内喰みのナギソ", cost: 7, power: 0, abilities: [{ type: "manadestroy", value: 2 }], abilityText: "【崩壊2:相手の最大マナを2減らす】" },
-    { name: "嫌悪のナギソ", cost: 1, power: 0, abilities: [{ type: "costup", value: 1 }], abilityText: "【威圧1:相手の手札のコストを全て+1】" }
+    { name: "嫌悪のナギソ", cost: 1, power: 0, abilities: [{ type: "costup", value: 1 }], abilityText: "【威圧1:相手の手札のコストを全て+1】" },
+    { name: "ナギソの破片", cost: 3, power: 0, abilities: [{ type: "heal", value: 4 }, { type: "saidaimanahueru", value: 1}, { type: "draw", value: 2 }], abilityText: "【神秘5:HPを5回復】【恵沢1:最大マナ+1】【流水2:2ドロー】 " },
 ];
 
 function generateId() { return Math.random().toString(36).substr(2, 9); }
-function createCardInstance(baseCard) { return { ...baseCard, baseCost: baseCard.cost, id: generateId() }; }
+function createCardInstance(baseCard) { return { ...baseCard, baseCost: baseCard.cost, id: generateId() };  }
 
 function shuffle(array) {
     const clone = [...array];
@@ -453,18 +454,30 @@ createApp({
                 }
             } else if(type === "discard") {
                 if(isPlayerTrigger) {
-                    if(this.cpuHand.length > 0) {
-                        const randomIndex = Math.floor(Math.random() * this.cpuHand.length);
-                        this.cpuHand.splice(randomIndex, 1);
-                        this.addLog(`  └【罪】${enemyName}の手札をランダムに ${value} 枚捨てさせた！`);
+                    let discardedCount = 0;
+                    for (let i = 0; i < value; i++) {
+                        if(this.cpuHand.length > 0) {
+                            const randomIndex = Math.floor(Math.random() * this.cpuHand.length);
+                            this.cpuHand.splice(randomIndex, 1);
+                            discardedCount++;
+                        }
+                    }
+                    if (discardedCount > 0) {
+                        this.addLog(`  └【罪】${enemyName}の手札をランダムに ${discardedCount} 枚捨てさせた！`);
                     } else {
                         this.addLog(`  └【罪】しかし、${enemyName}の手札は0枚だった！`);
                     }
                 } else {
-                    if(this.playerHand.length > 0) {
-                        const randomIndex = Math.floor(Math.random() * this.playerHand.length);
-                        this.playerHand.splice(randomIndex, 1);
-                        this.addLog(`  └【罪】あなたの手札がランダムに ${value} 枚捨てられた！`);
+                    let discardedCount = 0;
+                    for (let i = 0; i < value; i++) {
+                        if(this.playerHand.length > 0) {
+                            const randomIndex = Math.floor(Math.random() * this.playerHand.length);
+                            this.playerHand.splice(randomIndex, 1);
+                            discardedCount++;
+                        }
+                    }
+                    if (discardedCount > 0) {
+                        this.addLog(`  └【罪】あなたの手札がランダムに ${discardedCount} 枚捨てられた！`);
                     }
                 }
             } else if(type === "manadestroy") {
