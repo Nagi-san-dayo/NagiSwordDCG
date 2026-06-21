@@ -321,8 +321,11 @@ createApp({
             else if(type === 'combo') pPool = [6,6,6,6,6, 7,7,7,7,7, 5,5,5,5,5, 8,8,8,8,8, 2,2,2,2,2, 4,4,4,4,4].map(i => cardPool[i]);
             else if(type === 'custom') pPool = this.customDeckPoolIds.map(i => cardPool[i]);
 
+            // 【バグ修正】相手のデッキも30枚ぴったりになるようにループで作成
             let cPool = [];
-            cardPool.forEach(c => { cPool.push(c,c,c); });
+            for (let i = 0; i < 30; i++) {
+                cPool.push(cardPool[i % cardPool.length]);
+            }
 
             this.playerDeck = shuffle(pPool.map(createCardInstance));
             this.cpuDeck = shuffle(cPool.map(createCardInstance));
@@ -423,8 +426,6 @@ createApp({
             } else if(type === "jishoburn") {
                 if(isPlayerTrigger) { this.playerHP -= value; this.addLog(`  └【反動】反動で自分に${value}ダメージ！`); }
                 else { this.cpuHP -= value; this.addLog(`  └【反動】反動で${enemyName}自身に${value}ダメージ！`); }
-            
-            // 👇 ここから新能力のロジックを追加
             } else if(type === "heal") {
                 if(isPlayerTrigger) {
                     this.playerHP = Math.min(30, this.playerHP + value);
@@ -489,6 +490,14 @@ createApp({
                 setTimeout(() => { this.cpuAction(); }, 1000);
             } else {
                 this.addLog("=== 相手のターン ===");
+                
+                // 【バグ修正】オンライン対戦相手のターン開始処理（マナ増加とドロー）を自分の画面上でも同期
+                this.cpuMaxMana = Math.min(this.totalMaxManaLimit, this.cpuMaxMana + 1);
+                this.cpuCurrentMana = this.cpuMaxMana;
+                if (this.cpuMaxMana > 1) {
+                    this.drawCard(false);
+                }
+
                 socket.emit('end_turn', {
                     currentMana: this.playerCurrentMana,
                     maxMana: this.playerMaxMana
