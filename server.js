@@ -27,6 +27,40 @@ const io = new Server(server, {
 
 let waitingPlayer = null; 
 
+
+// Discord通知の追加の案
+// Discordでプレイヤーがオンラインキューを入れたときに通知が出るような仕組みの追加です。
+// 通知を送るDiscordのチャンネルでwebhookのURLを発行する必要があります。
+// 1. 通知を送りたいDiscordのテキストチャンネルの歯車マークを開く。
+// 2. 連携サービス→ウェブフック→新しいウェブフックから作成。
+// 3. アイコンや名前を設定したらウェブフックURLをコピー。
+const DISCORD_WEBHOOK_URL = process.env.DISCORD_WEBHOOK_URL || 'ここにコピーしたWebhookURLを貼り付ける';
+
+async function notifyDiscord() {
+  // URLが設定されていない場合は何もしない
+  if (!DISCORD_WEBHOOK_URL || DISCORD_WEBHOOK_URL === 'ここにコピーしたWebhookURLを貼り付ける') return;
+
+  const now = new Date();
+  // 現在時刻も表示
+  const timeString = now.toLocaleString('ja-JP', { timeZone: 'Asia/Tokyo' });
+
+  const finalMessage = `[${timeString}]\n${message}`;
+
+  try {
+    await fetch(DISCORD_WEBHOOK_URL, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        content: finalMessage
+      })
+    });
+  } catch (error) {
+    console.error('Discord通知に失敗しました:', error);
+  }
+}
+
+let waitingPlayer = null; 
+
 io.on('connection', (socket) => {
   console.log('接続されました:', socket.id);
 
@@ -45,8 +79,12 @@ io.on('connection', (socket) => {
       waitingPlayer.opponent = socket;
       
       waitingPlayer = null;
+      // マッチング成立時のDiscord通知メッセージ
+      notifyDiscord('⚔️ **ナギソDCG** ⚔️\nマッチングが成立し、新しい対戦が始まりました！👀');
     } else {
       waitingPlayer = socket;
+      // マッチング待機時のDiscord通知メッセージ
+      notifyDiscord('⚔️ **ナギソDCG** ⚔️\nオンライン対戦の待機列にプレイヤーが入りました！誰か対戦しませんか？🙋');
     }
   });
 
