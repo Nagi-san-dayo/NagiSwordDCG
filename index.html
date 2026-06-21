@@ -244,7 +244,7 @@ createApp({
             try { this.customDeckPoolIds = JSON.parse(savedDeck); } catch(e) { console.error(e); }
         }
 
-        socket = io("https://NagiSwordDCG-server.onrender.com/");
+        socket = io();
 
         socket.on('game_start', (data) => {
             this.isMatching = false; 
