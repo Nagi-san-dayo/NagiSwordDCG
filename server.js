@@ -34,11 +34,11 @@ let waitingPlayer = null;
 // 1. 通知を送りたいDiscordのテキストチャンネルの歯車マークを開く。
 // 2. 連携サービス→ウェブフック→新しいウェブフックから作成。
 // 3. アイコンや名前を設定したらウェブフックURLをコピー。
-const DISCORD_WEBHOOK_URL = process.env.DISCORD_WEBHOOK_URL || 'ここにコピーしたWebhookURLを貼り付ける';
+const DISCORD_WEBHOOK_URL = process.env.DISCORD_WEBHOOK_URL || 'https://discord.com/api/webhooks/1518233626033127584/afbC-V7S9t7GkEvhMV8ZADhHVWxCVFlCghw7cP6QOZTjSpD7-YUgNpkJFBfjRTyXqQQD';
 
 async function notifyDiscord() {
   // URLが設定されていない場合は何もしない
-  if (!DISCORD_WEBHOOK_URL || DISCORD_WEBHOOK_URL === 'ここにコピーしたWebhookURLを貼り付ける') return;
+  if (!DISCORD_WEBHOOK_URL || DISCORD_WEBHOOK_URL === 'https://discord.com/api/webhooks/1518233626033127584/afbC-V7S9t7GkEvhMV8ZADhHVWxCVFlCghw7cP6QOZTjSpD7-YUgNpkJFBfjRTyXqQQD') return;
 
   const now = new Date();
   // 現在時刻も表示
@@ -80,11 +80,11 @@ io.on('connection', (socket) => {
       
       waitingPlayer = null;
       // マッチング成立時のDiscord通知メッセージ
-      notifyDiscord('⚔️ **ナギソDCG** ⚔️\nマッチングが成立し、新しい対戦が始まりました！👀');
+      notifyDiscord('⚔️ **ナギソDCG** ⚔️\nマッチングが成立したぞ！👀');
     } else {
       waitingPlayer = socket;
       // マッチング待機時のDiscord通知メッセージ
-      notifyDiscord('⚔️ **ナギソDCG** ⚔️\nオンライン対戦の待機列にプレイヤーが入りました！誰か対戦しませんか？🙋');
+      notifyDiscord('⚔️ **ナギソDCG** ⚔️\nマッチ待機中の人が現れたぞ！');
     }
   });
 
