@@ -214,21 +214,24 @@ const cardPool = [
     { name: "ナギソの研磨", cost: 2, power: 2, abilities: [{ type: "manahueru", value: 2 }], abilityText: "【還元2:マナ2回復】" },
     { name: "ナギソの分割", cost: 5, power: 3, abilities: [{ type: "costheru", value: 1 }, { type: "draw", value: 1 }], abilityText: "【縮化1:コスト1下方】【流水1:1ドロー】" },
     { name: "ナギソの手入れ", cost: 2, power: 0, abilities: [{ type: "costheru", value: 1},{ type: "draw", value: 1 }], abilityText: "【流水1:1ドロー】【縮化1:コスト1下方】 " },
-    { name: "双剣ナギソ", cost: 2, power: 0, abilities: [{ type: "karyokuhueru", value: 1 }], abilityText: "【連撃1:使用枚数×1ダメ】" },
+    { name: "双剣ナギソ", cost: 3, power: 0, abilities: [{ type: "karyokuhueru", value: 1 }], abilityText: "【連撃1:使用枚数×1ダメ】" },
     { name: "ナギソ封印書", cost: 2, power: 3, abilities: [{ type: "draw", value: 1 }, { type: "manahueru", value: 1 }], abilityText: "【流水1:1ドロー】【還元1:マナ1回復】" },
     { name: "炎剣ナギソ", cost: 2, power: 5, abilities: [{ type: "burn", value: 3 }, { type: "jishoburn", value: 3 }], abilityText: "【雄叫び3:3ダメ】【反動3:自分に3ダメ】" },
     { name: "魔剣ナギソ", cost: 10, power: 30, abilities: [], abilityText: "" },
-    { name: "ナギソ破壊", cost: 1, power: 2, abilities: [{ type: "draw", value: 2 }, { type: "jishoburn", value: 3 }], abilityText: "【流水2:2ドロー】 【反動3:自分に3ダメ】" },
+    { name: "ナギソ破壊", cost: 1, power: 0, abilities: [{ type: "draw", value: 2 }, { type: "jishoburn", value: 4 }], abilityText: "【流水2:2ドロー】 【反動3:自分に3ダメ】" },
     { name: "硬化したナギソ", cost: 4, power: 12, abilities: [], abilityText: "" },
     { name: "ナギソ研磨油", cost: 2, power: 0, abilities: [{ type: "heal", value: 5 }, { type: "saidaimanahueru", value: 1}], abilityText: "【神秘5:HPを5回復】【恵沢1:最大マナ+1】" },
     { name: "執行のナギソ", cost: 6, power: 0, abilities: [{ type: "discard", value: 2 }, { type: "jishoburn", value: 4 }], abilityText: "【罪2:相手の手札を2枚捨てる】【反動4:自分に4ダメ】" },
     { name: "内喰みのナギソ", cost: 7, power: 0, abilities: [{ type: "manadestroy", value: 3 }], abilityText: "【崩壊3:相手の最大マナを3減らす】" },
     { name: "嫌悪のナギソ", cost: 1, power: 0, abilities: [{ type: "costup", value: 1 }], abilityText: "【威圧1:相手の手札のコストを全て+1】" },
     { name: "ナギソの破片", cost: 3, power: 0, abilities: [{ type: "heal", value: 4 }, { type: "saidaimanahueru", value: 1}, { type: "draw", value: 2 }], abilityText: "【神秘5:HPを5回復】【恵沢1:最大マナ+1】【流水2:2ドロー】 " },
-    { name: "魔剣ナギソアクセサリー", cost: 15, power: 0, abilities: [{ type: "costheru", value: 1},{ type: "karyokuhueru", value: 3 }], abilityText: "【縮化1:コスト1下方】【連撃3:使用枚数×3ダメ】"},
+    { name: "魔剣ナギソアクセサリー", cost: 20, power: 0, abilities: [{ type: "costheru", value: 1},{ type: "karyokuhueru", value: 3 }], abilityText: "【縮化1:コスト1下方】【連撃3:使用枚数×3ダメ】"},
     { name: "ナギソブレッド", cost: 0, power: 2, abilities: [{ type: "jishoburn", value: 2 }], abilityText: "【反動2:自分に2ダメ】"},
     { name: "ナギソの叫び", cost: 7, power: 3, abilities: [{ type: "costheru", value: 1 }, { type: "kenko", value: 5 }],abilityText: "【縮化1:コスト1下方】【剣呼5:ランダム5枚生成】"},
-    { name: "願望のナギソ", cost: 7, power: 0, abilities: [{ type: "costheru", value: 1 }, { type: "draw", value: 3 }],abilityText: " 【縮化1:コスト1下方】【流水3:3ドロー】"}
+    { name: "願望のナギソ", cost: 7, power: 0, abilities: [{ type: "costheru", value: 1 }, { type: "draw", value: 3 }],abilityText: " 【縮化1:コスト1下方】【流水3:3ドロー】"},
+    { name: "裁きのナギソ", cost: 6, power: 0, abilities: [{ type: "deckdestroy", value: 5 }], abilityText: "【罰5:デッキ5枚破壊】"},
+    { name: "叛逆のナギソ", cost: 2, power: 2, abilities: [{ type: "revengeburn", value: 10 }], abilityText: "【逆境10:劣勢時10ダメ追加】"},
+    { name: "ナギソの祈り", cost: 2, power: 0, abilities: [{ type: "costdown_all", value: 1 }], abilityText: "【奇跡1:手札全てのコスト−1】"}
 ];
 
 function generateId() { return Math.random().toString(36).substr(2, 9); }
@@ -335,7 +338,6 @@ createApp({
                 }
                 this.isMatching = true; 
                 this.addLog(`🔑 ルーム【${this.roomName}】で待機中...`);
-                // サーバー側のルームマッチ実装に合わせてイベントを送信（一般的にはルーム名を渡す）
                 socket.emit('join_room_match', { roomName: this.roomName });
             } else {
                 this.isPlayerTurn = true;
@@ -582,6 +584,48 @@ createApp({
                 } else {
                     this.playerHand.forEach(c => { c.cost += value; });
                     this.addLog(`  └【威圧】あなたの手札のコストが全て +${value} された！`);
+                }
+            } else if (type === "deckdestroy") {
+                if (isPlayerTrigger) {
+                    if (this.isCpuMode) {
+                        this.cpuDeck.splice(0, value);
+                    } else {
+                        this.cpuDeckLength = Math.max(0, this.cpuDeckLength - value);
+                    }
+                    this.addLog(`  └【罰】${enemyName}の山札を ${value} 枚破壊した！`);
+                } else {
+                    this.playerDeck.splice(0, value);
+                    this.addLog(`  └【罰】あなたの山札が ${value} 枚破壊された！`);
+                }
+            } else if (type === "revengeburn") {
+                if (isPlayerTrigger) {
+                    if (this.playerHP < this.cpuHP) {
+                        this.cpuHP -= value;
+                        this.addLog(`  └【逆境】劣勢のため、${enemyName}に ${value} ダメージ！`);
+                    } else {
+                        this.addLog(`  └【逆境】劣勢ではないため、効果は発動しなかった。`);
+                    }
+                } else {
+                    if (this.cpuHP < this.playerHP) {
+                        this.playerHP -= value;
+                        this.addLog(`  └【逆境】劣勢のため、あなたに ${value} ダメージ！`);
+                    } else {
+                        this.addLog(`  └【逆境】相手は劣勢ではないため、効果は発動しなかった。`);
+                    }
+                }
+            } else if (type === "costdown_all") {
+                if (isPlayerTrigger) {
+                    this.playerHand.forEach(c => {
+                        c.cost = Math.max(0, c.cost - value);
+                    });
+                    this.addLog(`  └【奇跡】あなたの手札のコストが全て -${value} された！`);
+                } else {
+                    if (this.isCpuMode) {
+                        this.cpuHand.forEach(c => {
+                            c.cost = Math.max(0, c.cost - value);
+                        });
+                    }
+                    this.addLog(`  └【奇跡】${enemyName}の手札のコストが全て -${value} された！`);
                 }
             }
         },
