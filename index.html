@@ -52,6 +52,9 @@
         .room-input-box { display: flex; gap: 5px; margin-top: 5px; }
         .room-input { flex: 1; padding: 8px; border-radius: 5px; border: 1px solid #ccc; font-size: 13px; }
 
+        .profile-box { background: #eef2f7; padding: 10px; border-radius: 10px; border: 1px solid #ced4da; margin-top: 10px; }
+        .username-input { width: 100%; padding: 8px; box-sizing: border-box; border-radius: 5px; border: 1px solid #ccc; font-size: 14px; }
+
         .matching-overlay {
             position: absolute; top: 0; left: 0; width: 100%; height: 100%;
             background: rgba(0, 0, 0, 0.85); color: white;
@@ -90,6 +93,11 @@
         <h1 style="text-align:center; margin-top: 20px;">⚔️ ナギソDCG ⚔️</h1>
         <p style="text-align:center; color:gray;">30枚のデッキを構築して戦うデジタルカードゲーム</p>
         
+        <div class="profile-box">
+            <label style="font-size: 12px; font-weight: bold; color: #495057;">👤 ユーザーネーム</label>
+            <input type="text" v-model="userName" @change="saveUserName" placeholder="名無しのアドベンチャラー" class="username-input">
+        </div>
+
         <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-top: 10px;">
             <div class="deck-btn mode" :class="{'active': gameMode === 'cpu'}" @click="gameMode = 'cpu'">
                 🤖 CPU対戦
@@ -115,7 +123,7 @@
         <div class="slot-list">
             <div v-for="slotIndex in 10" :key="slotIndex" class="slot-item">
                 <button class="slot-select-btn" :class="{'disabled': !customDecks[slotIndex-1]}" :disabled="!customDecks[slotIndex-1]" @click="handleDeckSelect('custom', slotIndex-1)">
-                    🎴 デッキ {{ slotIndex }} {{ customDecks[slotIndex-1] ? '(30枚)' : '(未作成)' }}
+                    🎴 {{ getDeckName(slotIndex-1) }} {{ customDecks[slotIndex-1] ? '(30枚)' : '(未作成)' }}
                 </button>
                 <button class="slot-edit-btn" @click="openDeckEditor(slotIndex-1)">
                     🛠️ 編集
@@ -139,12 +147,21 @@
     </div>
 
     <div v-if="isEditMode" class="game-screen">
-        <h2>🛠️ デッキ編集 [デッキ {{ currentDeckSlot + 1 }}] ({{ editingDeck.length }} / 30 枚)</h2>
+        <h2>🛠️ デッキ編集 [スロット {{ currentDeckSlot + 1 }}]</h2>
+        
+        <div style="margin-bottom: 10px;">
+            <label style="font-size: 12px; font-weight: bold;">📛 デッキ名:</label>
+            <input type="text" v-model="editingDeckName" class="username-input" placeholder="デッキ名を入力してください">
+        </div>
+
+        <p style="font-weight: bold; margin-bottom: 5px;">現在の枚数: ({{ editingDeck.length }} / 30 枚)</p>
+
         <button class="end-btn" :class="{ 'active': editingDeck.length === 30, 'disabled': editingDeck.length !== 30 }" :disabled="editingDeck.length !== 30" @click="saveAndCloseEditor">
             {{ editingDeck.length === 30 ? '💾 デッキを保存してタイトルへ' : '30枚に調整してください' }}
         </button>
-        <button class="game-over-btn" @click="cancelEditor" style="background:#6c757d;">❌ 変更を破棄して戻る</button>
+        <button class="game-over-btn" @click="cancelEditor" style="background:#6c757d; margin-top: 5px;">❌ 変更を破棄して戻る</button>
         <p v-if="editAlert" class="alert-text">{{ editAlert }}</p>
+        
         <h3>📦 カードプール</h3>
         <div class="scroll-grid">
             <div v-for="(card, index) in cardPool" :key="index" class="card" :class="{'playable': getCardCountInEditingDeck(index) < 5, 'disabled': getCardCountInEditingDeck(index) >= 5}" @click="addCardToEditingDeck(index)">
@@ -182,8 +199,8 @@
         <button v-if="isGameOver" class="game-over-btn" @click="resetToTitle">↩️ タイトルに戻る</button>
 
         <div class="status-box player-box">
-            <h3>👤 あなた HP: {{ playerHP }} (マナ: {{ playerCurrentMana }}/{{ playerMaxMana }})</h3>
-            <p>山札: {{ playerDeck.length }} 枚</p>
+            <h3>👤 {{ userName || 'あなた' }} HP: {{ playerHP }} (マナ: {{ playerCurrentMana }}/{{ playerMaxMana }})</h3>
+            <p>山札: {{ playerDeck.length }} 枚 / <b>手札: {{ playerHand.length }} 枚</b></p>
         </div>
 
         <div class="hand-container">
@@ -252,15 +269,18 @@ let socket = null;
 createApp({
     data() {
         return {
+            userName: "名無しのアドベンチャラー",
             gameMode: 'cpu', 
             isGameStarted: false, isGameOver: false, isPlayerTurn: true,
             isEditMode: false,
             isMatching: false, 
             roomName: '',
             customDecks: Array(10).fill(null),
+            customDeckNames: Array(10).fill(""),
             currentDeckSlot: 0,                
             selectedSlotIndex: null,           
             editingDeck: [],
+            editingDeckName: "",
             editAlert: "",
             cardPool: cardPool,
             playerHP: 30, cpuHP: 30,
@@ -271,13 +291,22 @@ createApp({
             playerDeck: [], cpuDeck: [], playerHand: [], cpuHand: [],
             cpuHandLength: 0, cpuDeckLength: 30,
             maxHandSize: 10, totalMaxManaLimit: 10,
-            selectedDeckType: null
+            selectedDeckType: null,
+            turnCount: 0 // 先攻・後攻ドロー制御用
         };
     },
     mounted() {
+        const savedName = localStorage.getItem("nagiso_username");
+        if (savedName) this.userName = savedName;
+
         const savedDecks = localStorage.getItem("nagiso_custom_decks");
         if (savedDecks) {
             try { this.customDecks = JSON.parse(savedDecks); } catch(e) { console.error(e); }
+        }
+
+        const savedNames = localStorage.getItem("nagiso_custom_deck_names");
+        if (savedNames) {
+            try { this.customDeckNames = JSON.parse(savedNames); } catch(e) { console.error(e); }
         }
 
         socket = io('https://nagisworddcg-0.onrender.com/');
@@ -313,6 +342,12 @@ createApp({
         });
     },
     methods: {
+        saveUserName() {
+            localStorage.setItem("nagiso_username", this.userName);
+        },
+        getDeckName(index) {
+            return this.customDeckNames[index] || `デッキ ${index + 1}`;
+        },
         addLog(msg) {
             this.logMessages.push(msg);
             nextTick(() => {
@@ -344,7 +379,7 @@ createApp({
                 this.isPlayerTurn = true;
                 this.setupGameField(type);
                 this.isGameStarted = true;
-                this.addLog("🤖 CPU対戦を開始しました！あなたは先行です。");
+                this.addLog(`🤖 CPU対戦を開始しました！あなたは先攻です。`);
             }
         },
         cancelMatching() {
@@ -358,6 +393,7 @@ createApp({
             this.cpuMaxMana = 1; this.cpuCurrentMana = 1;
             this.playerPlayedCountThisTurn = 0; this.cpuPlayedCountThisTurn = 0;
             this.playerHand = []; this.cpuHand = [];
+            this.turnCount = 1; 
             
             let pPool = [];
             if(type === 'agro') pPool = [0,0,0,0,0, 1,1,1,1,1, 4,4,4,4,4, 6,6,6,6,6, 9,9,9,9,9, 2,2,2,2,2].map(i => cardPool[i]);
@@ -384,6 +420,7 @@ createApp({
             this.cpuHandLength = 0;
             this.cpuDeckLength = this.cpuDeck.length;
 
+            // 初期手札3枚の配布
             for(let i=0; i<3; i++) { 
                 this.drawCard(true); 
                 if(this.isCpuMode) {
@@ -393,12 +430,51 @@ createApp({
                     this.cpuDeckLength--;
                 }
             }
+
+            // あなたが後攻だった場合、または相手のターンから始まる場合は1ターン目ドローをここで補正
+            if (!this.isPlayerTurn && !this.isCpuMode) {
+                // 相手視点での処理を合わせるため保留
+            }
         },
         drawCard(isPlayer) {
-            if (isPlayer && this.playerDeck.length > 0 && this.playerHand.length < this.maxHandSize) {
-                this.playerHand.push(this.playerDeck.shift());
-            } else if (!isPlayer && this.isCpuMode && this.cpuDeck.length > 0 && this.cpuHand.length < this.maxHandSize) {
-                this.cpuHand.push(this.cpuDeck.shift());
+            if (this.isGameOver) return;
+
+            if (isPlayer) {
+                if (this.playerDeck.length === 0) {
+                    this.addLog(`💀 【LO】山札が0枚の状態でドローしたため、あなたの敗北です。`);
+                    this.playerHP = 0;
+                    this.checkWinLose();
+                    return;
+                }
+                let drawnCard = this.playerDeck.shift();
+                if (this.playerHand.length < this.maxHandSize) {
+                    this.playerHand.push(drawnCard);
+                } else {
+                    this.addLog(`⚠️ 手札が上限(10枚)のため、引いた【${drawnCard.name}】は破棄されました。`);
+                }
+            } else {
+                if (this.isCpuMode) {
+                    if (this.cpuDeck.length === 0) {
+                        this.addLog(`🎉 【LO】CPUの山札が0枚になったため、あなたの勝利！`);
+                        this.cpuHP = 0;
+                        this.checkWinLose();
+                        return;
+                    }
+                    let drawnCard = this.cpuDeck.shift();
+                    if (this.cpuHand.length < this.maxHandSize) {
+                        this.cpuHand.push(drawnCard);
+                    }
+                } else {
+                    // オンライン対戦時は相手から通知が来るが、手動計算用の予備減算
+                    if (this.cpuDeckLength === 0) {
+                        this.addLog(`🎉 【LO】対戦相手の山札が0枚になったため、あなたの勝利！`);
+                        this.cpuHP = 0;
+                        this.checkWinLose();
+                        return;
+                    }
+                    this.cpuHandLength++;
+                    this.cpuDeckLength--;
+                }
             }
         },
         playCard(card, isPlayer, syncData = null) {
@@ -412,7 +488,7 @@ createApp({
                 this.cpuHP -= card.power;
                 this.playerPlayedCountThisTurn++;
                 
-                let msg = `あなたが【${card.name}】を召喚！`;
+                let msg = `${this.userName || 'あなた'}が【${card.name}】を召喚！`;
                 if(card.power > 0) msg += ` ${card.power} ダメージ！`;
                 this.addLog(msg);
                 this.playerHand = this.playerHand.filter(c => c.id !== card.id);
@@ -487,8 +563,8 @@ createApp({
                     if(this.isCpuMode) {
                         for (let i = 0; i < value; i++) { this.drawCard(false); }
                     } else {
-                        this.cpuHandLength += value;
-                        this.cpuDeckLength = Math.max(0, this.cpuDeckLength - value);
+                        // オンライン同期側
+                        for (let i = 0; i < value; i++) { this.drawCard(false); }
                     }
                     this.addLog(`  └【流水${value}】${enemyName}はカードを${value}枚ドロー！`);
                 }
@@ -509,14 +585,18 @@ createApp({
                             if (this.playerHand.length < this.maxHandSize) {
                                 this.playerHand.push(generatedCard);
                                 this.addLog(`  └【剣呼】カードプールから【${generatedCard.name}】を生成して手札に加えた！`);
+                            } else {
+                                this.addLog(`  └【剣呼】手札上限のため生成された【${generatedCard.name}】は溢れて消滅した！`);
                             }
                         });
                     }
                 } else {
                     if(this.isCpuMode) {
                         for (let i = 0; i < value; i++) {
-                            const randomIndex = Math.floor(Math.random() * this.cardPool.length);
-                            this.cpuHand.push(createCardInstance(this.cardPool[randomIndex]));
+                            if (this.cpuHand.length < this.maxHandSize) {
+                                const randomIndex = Math.floor(Math.random() * this.cardPool.length);
+                                this.cpuHand.push(createCardInstance(this.cardPool[randomIndex]));
+                            }
                         }
                     } else {
                         let num = (syncData && syncData.chosenCardIndices) ? syncData.chosenCardIndices.length : value;
@@ -594,9 +674,11 @@ createApp({
                         this.cpuDeckLength = Math.max(0, this.cpuDeckLength - value);
                     }
                     this.addLog(`  └【罰】${enemyName}の山札を ${value} 枚破壊した！`);
+                    if(this.isCpuMode && this.cpuDeck.length === 0) this.checkWinLose();
                 } else {
                     this.playerDeck.splice(0, value);
                     this.addLog(`  └【罰】あなたの山札が ${value} 枚破壊された！`);
+                    if(this.playerDeck.length === 0) this.checkWinLose();
                 }
             } else if (type === "revengeburn") {
                 if (isPlayerTrigger) {
@@ -633,6 +715,8 @@ createApp({
         checkWinLose() {
             if (this.isGameOver) return;
             const enemyName = this.isCpuMode ? '敵' : '対戦相手';
+
+            // 通常のHPによる勝敗チェック
             if(this.cpuHP <= 0 && this.playerHP > 0) { this.addLog(`🎉 ${enemyName}のHPが0になった！あなたの勝利！`); this.isGameOver = true; }
             else if(this.playerHP <= 0 && this.cpuHP > 0) { this.addLog("💀 あなたのHPが0になった...敗北。"); this.isGameOver = true; }
             else if(this.playerHP <= 0 && this.cpuHP <= 0) { this.addLog("🤝 相打ち！引き分けです！"); this.isGameOver = true; }
@@ -641,11 +725,21 @@ createApp({
             if(!this.isGameStarted || this.isGameOver) return;
             this.isPlayerTurn = false;
             this.playerPlayedCountThisTurn = 0;
+            this.turnCount++;
             
             if (this.isCpuMode) {
                 this.addLog("=== CPUのターン ===");
                 this.cpuMaxMana = Math.min(this.totalMaxManaLimit, this.cpuMaxMana + 1);
                 this.cpuCurrentMana = this.cpuMaxMana;
+                
+                // CPUのターン開始時LOチェック
+                if (this.cpuDeck.length === 0) {
+                    this.addLog(`🎉 【LO】CPUのターン開始時に山札が0枚だったため、あなたの勝利！`);
+                    this.cpuHP = 0;
+                    this.isGameOver = true;
+                    return;
+                }
+
                 this.drawCard(false);
                 setTimeout(() => { this.cpuAction(); }, 1000);
             } else {
@@ -674,21 +768,32 @@ createApp({
             if(!this.isGameStarted || this.isGameOver) return;
             this.isPlayerTurn = true;
             this.cpuPlayedCountThisTurn = 0;
-            this.addLog("=== あなたのターン ===");
+            this.turnCount++;
+            this.addLog(`=== ${this.userName || 'あなた'}のターン ===`);
             
             this.playerMaxMana = Math.min(this.totalMaxManaLimit, this.playerMaxMana + 1);
             this.playerCurrentMana = this.playerMaxMana;
 
-            if (this.playerMaxMana > 1) {
-                this.drawCard(true);
+            // プレイヤーのターン開始時LOチェック
+            if (this.playerDeck.length === 0) {
+                this.addLog(`💀 【LO】ターン開始時にあなたの山札が0枚だったため、敗北。`);
+                this.playerHP = 0;
+                this.isGameOver = true;
+                return;
+            }
+
+            // 先攻第1ターン目（turnCountが1のとき）のみドローをスキップ
+            if (this.turnCount === 1) {
+                this.addLog("※ 先攻1ターン目のためドローはありません。");
             } else {
-                this.addLog("※ 先行1ターン目のためドローはありません。");
+                this.drawCard(true);
             }
         },
         openDeckEditor(slotIndex) { 
             this.isEditMode = true; 
             this.editAlert = ""; 
             this.currentDeckSlot = slotIndex; 
+            this.editingDeckName = this.customDeckNames[slotIndex] || `デッキ ${slotIndex + 1}`;
             if (this.customDecks[slotIndex]) { 
                 this.editingDeck = this.customDecks[slotIndex].map(i => ({ ...cardPool[i], poolIndex: i })); 
             } else { 
@@ -702,9 +807,13 @@ createApp({
             if (this.editingDeck.length !== 30) return; 
             const idsToSave = this.editingDeck.map(c => c.poolIndex); 
             this.customDecks[this.currentDeckSlot] = idsToSave; 
+            this.customDeckNames[this.currentDeckSlot] = this.editingDeckName.trim() || `デッキ ${this.currentDeckSlot + 1}`;
+            
             localStorage.setItem("nagiso_custom_decks", JSON.stringify(this.customDecks)); 
+            localStorage.setItem("nagiso_custom_deck_names", JSON.stringify(this.customDeckNames)); 
+            
             this.isEditMode = false; 
-            this.addLog(`🛠️ カスタムデッキ(デッキ ${this.currentDeckSlot + 1})をブラウザに保存しました！`); 
+            this.addLog(`🛠️ カスタムデッキ「${this.customDeckNames[this.currentDeckSlot]}」を保存しました！`); 
         },
         cancelEditor() { this.isEditMode = false; }
     },
