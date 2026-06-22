@@ -146,6 +146,30 @@ io.on('connection', (socket) => {
             console.log(`ルームマッチ待機中: ${roomName}`);
         }
     });
+    socket.on('play_card', (data) => {
+    if (socket.opponent) {
+      socket.opponent.emit('opponent_play_card', data);
+    }
+  });
+
+  socket.on('end_turn', () => {
+    if (socket.opponent) {
+      socket.opponent.emit('opponent_end_turn');
+    }
+  });
+
+  socket.on('disconnect', () => {
+    console.log('切断されました:', socket.id);
+    
+    if (waitingPlayer && waitingPlayer.id === socket.id) {
+      waitingPlayer = null;
+    }
+    
+    if (socket.opponent) {
+      socket.opponent.emit('opponent_disconnected');
+      socket.opponent.opponent = null; 
+    }
+  });
     
     // （割愛）切断時やキャンセル時に roomWaiting[roomName] を削除する処理も必要
 
