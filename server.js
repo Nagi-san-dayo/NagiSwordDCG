@@ -55,7 +55,8 @@ io.on('connection', (socket) => {
 
   // 1. 通常のマッチング（ランダムマッチ）
   socket.on('join_matchmaking', (data) => {
-    socket.userName = data?.userName || "一般ナギソ";
+    // 修正: data.userName -> data.name に変更
+    socket.userName = data?.name || "一般ナギソ";
 
     if (waitingPlayer && waitingPlayer.id !== socket.id) {
       const roomName = `room_${socket.id}_${waitingPlayer.id}`;
@@ -94,7 +95,8 @@ io.on('connection', (socket) => {
   // 2. ルームマッチ（合言葉 - 選手として参加）
   socket.on('join_room_match', (data) => {
     const roomName = data.roomName;
-    socket.userName = data.userName || "部屋ナギソ";
+    // 修正: data.userName -> data.name に変更
+    socket.userName = data.name || "部屋ナギソ";
     const roomId = `room_${roomName}`;
 
     if (roomWaiting[roomName] && roomWaiting[roomName].id !== socket.id) {
@@ -140,7 +142,8 @@ io.on('connection', (socket) => {
   });
 
   // 3. ルームマッチ（合言葉 - 観戦者として参加）
-  socket.on('join_room_spectator', (data) => {
+  // 修正: 'join_room_spectator' -> 'join_spectate' に変更
+  socket.on('join_spectate', (data) => {
     const roomName = data.roomName;
     socket.userName = data.userName || "観戦ナギソ";
     const roomId = `room_${roomName}`;
@@ -161,6 +164,48 @@ io.on('connection', (socket) => {
       socket.emit('spectator_game_start', { 
         player1: currentRoom.player1.userName, 
         player2: currentRoom.player2.userName 
+      });
+    }
+  });
+
+  // 追加: マッチングキャンセル処理
+  socket.on('cancel_matchmaking', () => {
+    // ランダムマッチの待機キャンセル
+    if (waitingPlayer && waitingPlayer.id === socket.id) {
+      waitingPlayer = null;
+      console.log(`ランダムマッチ待機キャンセル: ${socket.id}`);
+    }
+    // ルームマッチの待機キャンセル
+    if (socket.myWaitingRoomName && roomWaiting[socket.myWaitingRoomName] === socket) {
+      delete roomWaiting[socket.myWaitingRoomName];
+      console.log(`ルームマッチ待機キャンセル: ${socket.myWaitingRoomName}`);
+    }
+  });
+
+  // 追加: 観戦者への状態の同期・中継
+  socket.on('update_room_state', (data) => {
+    if (socket.gameRoom && rooms[socket.gameRoom]) {
+      const currentRoom = rooms[socket.gameRoom];
+      
+      // 送信元の最新状態をソケットに保持しておく（途中から入ってきた観戦者などのため）
+      socket.playerState = data;
+
+      // プレイヤー1とプレイヤー2の現在の状態を取得（まだない場合はダミー値）
+      const p1State = currentRoom.player1?.playerState || { 
+        hp: 30, currentMana: 1, maxMana: 1, handLength: 0, deckLength: 30, name: currentRoom.player1?.userName || "プレイヤー1" 
+      };
+      const p2State = currentRoom.player2?.playerState || { 
+        hp: 30, currentMana: 1, maxMana: 1, handLength: 0, deckLength: 30, name: currentRoom.player2?.userName || "プレイヤー2" 
+      };
+
+      // 観戦者全員に最新ステータスを配信する
+      currentRoom.spectators.forEach(spec => {
+        spec.emit('spectator_update', {
+          p1: p1State,
+          p2: p2State,
+          isP1Turn: data.isP1Turn,
+          latestLog: data.latestLog
+        });
       });
     }
   });
