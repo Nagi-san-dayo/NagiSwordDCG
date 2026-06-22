@@ -76,11 +76,17 @@
             transition: background 0.2s;
         }
         .cancel-match-btn:hover { background: #bd2130; }
+
+        /* 観戦モード用スタイル */
+        .spectator-screen { background: #2c3e50; color: white; padding: 10px; border-radius: 10px; }
+        .spec-log { background: #1a252f; color: #ecf0f1; border: 1px solid #34495e; height: 130px; }
+        .spec-card { min-width: 70px; height: 90px; font-size: 9px; background: #34495e; border: 1px solid #7f8c8d; }
     </style>
 </head>
 <body>
 
 <div id="app">
+    <!-- マッチング中画面 -->
     <div v-if="isMatching" class="matching-overlay">
         <div class="spinner"></div>
         <h2>🌐 対戦相手を検索中...</h2>
@@ -89,7 +95,8 @@
         <button class="cancel-match-btn" @click="cancelMatching">キャンセル</button>
     </div>
 
-    <div v-if="!isGameStarted && !isEditMode" class="title-screen">
+    <!-- タイトル画面 -->
+    <div v-if="!isGameStarted && !isEditMode && !isSpectator" class="title-screen">
         <h1 style="text-align:center; margin-top: 20px;">⚔️ ナギソDCG ⚔️</h1>
         <p style="text-align:center; color:gray;">30枚のデッキを構築して戦うデジタルカードゲーム</p>
         
@@ -146,6 +153,7 @@
         </div>
     </div>
 
+    <!-- デッキ編集画面 -->
     <div v-if="isEditMode" class="game-screen">
         <h2>🛠️ デッキ編集 [スロット {{ currentDeckSlot + 1 }}]</h2>
         
@@ -182,7 +190,57 @@
         </div>
     </div>
 
-    <div v-if="isGameStarted && !isEditMode" class="game-screen">
+    <!-- 観戦モード画面 -->
+    <div v-if="isSpectator" class="game-screen spectator-screen">
+        <h2 style="text-align: center; color: #f1c40f; margin-bottom: 0;">👁️ 観戦モード</h2>
+        <p style="text-align: center; font-size: 11px; margin-bottom: 10px;">ルーム: {{ roomName }}</p>
+
+        <!-- Player 2 領域 -->
+        <div class="status-box" style="background: rgba(255,255,255,0.1); border: 1px solid #7f8c8d;">
+            <template v-if="specP2">
+                <h3 style="color: #ff9f43;">👤 P2: {{ specP2.name }}</h3>
+                <p style="color: #ddd;">HP: <b>{{ specP2.hp }}</b> | マナ: {{ specP2.currentMana }}/{{ specP2.maxMana }} | 山札: {{ specP2.deckLength }}枚</p>
+                <div class="hand-container" style="pointer-events: none; margin-top: 5px; padding-bottom: 5px;">
+                    <div v-for="(card, i) in specP2.hand" :key="'p2'+i" class="card spec-card">
+                        <div class="card-name" style="font-size: 10px;">{{ card.name }}</div>
+                        <div style="font-size: 9px;">コ:{{ card.cost }} / 攻:{{ card.power }}</div>
+                    </div>
+                </div>
+            </template>
+            <template v-else>
+                <p style="text-align: center; color: #bbb;">P2のデータを待機中...</p>
+            </template>
+        </div>
+
+        <!-- 観戦ログ -->
+        <div class="log-box spec-log" id="spectatorLogScroll">
+            <ul class="log-list">
+                <li v-for="(log, index) in specLogs" :key="index">{{ log }}</li>
+            </ul>
+        </div>
+
+        <button v-if="specGameOver" class="game-over-btn" @click="resetToTitle">↩️ タイトルに戻る</button>
+
+        <!-- Player 1 領域 -->
+        <div class="status-box" style="background: rgba(255,255,255,0.1); border: 1px solid #7f8c8d;">
+            <template v-if="specP1">
+                <h3 style="color: #0abde3;">👤 P1: {{ specP1.name }}</h3>
+                <p style="color: #ddd;">HP: <b>{{ specP1.hp }}</b> | マナ: {{ specP1.currentMana }}/{{ specP1.maxMana }} | 山札: {{ specP1.deckLength }}枚</p>
+                <div class="hand-container" style="pointer-events: none; margin-top: 5px; padding-bottom: 5px;">
+                    <div v-for="(card, i) in specP1.hand" :key="'p1'+i" class="card spec-card">
+                        <div class="card-name" style="font-size: 10px;">{{ card.name }}</div>
+                        <div style="font-size: 9px;">コ:{{ card.cost }} / 攻:{{ card.power }}</div>
+                    </div>
+                </div>
+            </template>
+            <template v-else>
+                <p style="text-align: center; color: #bbb;">P1のデータを待機中...</p>
+            </template>
+        </div>
+    </div>
+
+    <!-- 通常ゲーム画面 -->
+    <div v-if="isGameStarted && !isEditMode && !isSpectator" class="game-screen">
         
         <div class="status-box" :class="gameMode === 'cpu' ? 'cpu-box' : 'online-enemy-box'">
             <h3 v-if="gameMode === 'cpu'">🤖 CPU HP: {{ cpuHP }} (マナ: {{ cpuCurrentMana }}/{{ cpuMaxMana }})</h3>
@@ -270,11 +328,20 @@ createApp({
     data() {
         return {
             userName: "一般ナギソ",
+            myRole: null, // P1かP2か
             gameMode: 'cpu', 
             isGameStarted: false, isGameOver: false, isPlayerTurn: true,
             isEditMode: false,
             isMatching: false, 
             roomName: '',
+            
+            // 観戦者用データ
+            isSpectator: false,
+            specP1: null,
+            specP2: null,
+            specLogs: [],
+            specGameOver: false,
+
             customDecks: Array(10).fill(null),
             customDeckNames: Array(10).fill(""),
             currentDeckSlot: 0,                
@@ -315,6 +382,7 @@ createApp({
             this.isMatching = false; 
             this.addLog("🤝 オンライン対戦相手が見つかりました！");
             this.isPlayerTurn = data.isFirst; 
+            this.myRole = data.role; // P1 または P2
             this.setupGameField(this.selectedDeckType);
             this.isGameStarted = true;
             if(!this.isPlayerTurn) {
@@ -322,10 +390,38 @@ createApp({
             }
         });
 
+        // 観戦者としてのイベント受信
+        socket.on('spectator_start', (data) => {
+            this.isMatching = false;
+            this.isSpectator = true;
+            this.isGameStarted = true;
+            this.roomName = data.roomName;
+            this.addLogSpectator(`👁️ ルーム【${data.roomName}】の観戦を開始しました。`);
+        });
+
+        // サーバーから「観戦者が来たから最新状態を送って」と言われた時
+        socket.on('request_full_state', () => {
+            this.sendFullStateToSpectator();
+        });
+
+        // 観戦者がP1やP2のステート更新を受け取った時
+        socket.on('spectator_state_updated', (data) => {
+            if (!this.isSpectator) return;
+            if (data.role === 'p1') this.specP1 = data.state;
+            if (data.role === 'p2') this.specP2 = data.state;
+        });
+
+        // 観戦者がログを受け取った時
+        socket.on('spectator_log_added', (msg) => {
+            this.addLogSpectator(msg);
+        });
+
         socket.on('opponent_play_card', (data) => {
             this.playCard(data.card, false, data.syncData); 
             if (data.currentMana !== undefined) this.cpuCurrentMana = data.currentMana;
             if (data.maxMana !== undefined) this.cpuMaxMana = data.maxMana;
+            // 相手のアクションによりこちらのHP等が減った可能性があるので状態送信
+            this.sendFullStateToSpectator();
         });
 
         socket.on('opponent_end_turn', (data) => {
@@ -337,8 +433,13 @@ createApp({
         });
 
         socket.on('opponent_disconnected', () => {
-            this.addLog("⚠️ 対戦相手の接続が切れました。不戦勝です！");
-            this.isGameOver = true;
+            if (this.isSpectator) {
+                this.addLogSpectator("⚠️ プレイヤーの接続が切れました。観戦を終了します。");
+                this.specGameOver = true;
+            } else {
+                this.addLog("⚠️ 対戦相手の接続が切れました。不戦勝です！");
+                this.isGameOver = true;
+            }
         });
     },
     methods: {
@@ -348,15 +449,48 @@ createApp({
         getDeckName(index) {
             return this.customDeckNames[index] || `デッキ ${index + 1}`;
         },
+        // 観戦者向けに自分のステートを送信
+        sendFullStateToSpectator() {
+            if (this.isCpuMode || this.isSpectator || !this.isGameStarted) return;
+            socket.emit('update_spectator_state', {
+                name: this.userName || 'プレイヤー',
+                hp: this.playerHP,
+                currentMana: this.playerCurrentMana,
+                maxMana: this.playerMaxMana,
+                hand: this.playerHand,
+                deckLength: this.playerDeck.length
+            });
+        },
         addLog(msg) {
             this.logMessages.push(msg);
             nextTick(() => {
                 const scroll = document.getElementById("logScroll");
                 if (scroll) scroll.scrollTop = scroll.scrollHeight;
             });
+
+            // オンライン対戦時、P1が代表して観戦者へログを転送する
+            if (this.myRole === 'p1' && !this.isSpectator && !this.isCpuMode) {
+                // P1目線の「あなた」「相手」を置換して送信
+                let specMsg = msg.replace(/あなた/g, this.userName || 'P1').replace(/相手|CPU|対戦相手/g, 'P2');
+                socket.emit('send_spectator_log', specMsg);
+            }
+        },
+        addLogSpectator(msg) {
+            if (!this.isSpectator) return;
+            this.specLogs.push(msg);
+            nextTick(() => {
+                const scroll = document.getElementById("spectatorLogScroll");
+                if (scroll) scroll.scrollTop = scroll.scrollHeight;
+            });
+            // 観戦中、勝敗ログが出たらタイトルに戻るボタンを出す
+            if (msg.includes('勝利') || msg.includes('敗北') || msg.includes('引き分け')) {
+                this.specGameOver = true;
+            }
         },
         resetToTitle() {
             this.isGameStarted = false; this.isGameOver = false;
+            this.isSpectator = false; this.specGameOver = false;
+            this.specP1 = null; this.specP2 = null; this.specLogs = [];
             this.logMessages = ["モードとデッキを選んでゲームを始めてね！"];
         },
         handleDeckSelect(type, slotIndex = null) {
@@ -373,7 +507,7 @@ createApp({
                     return;
                 }
                 this.isMatching = true; 
-                this.addLog(`🔑 ルーム【${this.roomName}】で待機中...`);
+                this.addLog(`🔑 ルーム【${this.roomName}】に参加リクエスト送信中...`);
                 socket.emit('join_room_match', { roomName: this.roomName });
             } else {
                 this.isPlayerTurn = true;
@@ -431,10 +565,8 @@ createApp({
                 }
             }
 
-            // あなたが後攻だった場合、または相手のターンから始まる場合は1ターン目ドローをここで補正
-            if (!this.isPlayerTurn && !this.isCpuMode) {
-                // 相手視点での処理を合わせるため保留
-            }
+            // 準備完了後に自分の状態を観戦者向けに送信
+            this.sendFullStateToSpectator();
         },
         drawCard(isPlayer) {
             if (this.isGameOver) return;
@@ -444,6 +576,7 @@ createApp({
                     this.addLog(`💀 【LO】山札が0枚の状態でドローしたため、あなたの敗北です。`);
                     this.playerHP = 0;
                     this.checkWinLose();
+                    this.sendFullStateToSpectator(); // 敗北状態を送信
                     return;
                 }
                 let drawnCard = this.playerDeck.shift();
@@ -465,7 +598,6 @@ createApp({
                         this.cpuHand.push(drawnCard);
                     }
                 } else {
-                    // オンライン対戦時は相手から通知が来るが、手動計算用の予備減算
                     if (this.cpuDeckLength === 0) {
                         this.addLog(`🎉 【LO】対戦相手の山札が0枚になったため、あなたの勝利！`);
                         this.cpuHP = 0;
@@ -541,6 +673,9 @@ createApp({
                     syncData: localSyncData
                 });
             }
+            
+            // プレイ後に状態を観戦者へ送信（自分がプレイした場合も、相手のプレイを反映した場合も）
+            this.sendFullStateToSpectator();
         },
         reduceCost(isPlayer) {
             let hand = isPlayer ? this.playerHand : this.cpuHand;
@@ -563,7 +698,6 @@ createApp({
                     if(this.isCpuMode) {
                         for (let i = 0; i < value; i++) { this.drawCard(false); }
                     } else {
-                        // オンライン同期側
                         for (let i = 0; i < value; i++) { this.drawCard(false); }
                     }
                     this.addLog(`  └【流水${value}】${enemyName}はカードを${value}枚ドロー！`);
@@ -716,10 +850,13 @@ createApp({
             if (this.isGameOver) return;
             const enemyName = this.isCpuMode ? '敵' : '対戦相手';
 
-            // 通常のHPによる勝敗チェック
             if(this.cpuHP <= 0 && this.playerHP > 0) { this.addLog(`🎉 ${enemyName}のHPが0になった！あなたの勝利！`); this.isGameOver = true; }
             else if(this.playerHP <= 0 && this.cpuHP > 0) { this.addLog("💀 あなたのHPが0になった...敗北。"); this.isGameOver = true; }
             else if(this.playerHP <= 0 && this.cpuHP <= 0) { this.addLog("🤝 相打ち！引き分けです！"); this.isGameOver = true; }
+            
+            if (this.isGameOver) {
+                this.sendFullStateToSpectator(); // 決着時の状態送信
+            }
         },
         endPlayerTurn() {
             if(!this.isGameStarted || this.isGameOver) return;
@@ -732,7 +869,6 @@ createApp({
                 this.cpuMaxMana = Math.min(this.totalMaxManaLimit, this.cpuMaxMana + 1);
                 this.cpuCurrentMana = this.cpuMaxMana;
                 
-                // CPUのターン開始時LOチェック
                 if (this.cpuDeck.length === 0) {
                     this.addLog(`🎉 【LO】CPUのターン開始時に山札が0枚だったため、あなたの勝利！`);
                     this.cpuHP = 0;
@@ -750,6 +886,7 @@ createApp({
                     handLength: this.playerHand.length,
                     deckLength: this.playerDeck.length
                 }); 
+                this.sendFullStateToSpectator(); // ターン終了時の状態送信
             }
         },
         cpuAction() {
@@ -774,20 +911,20 @@ createApp({
             this.playerMaxMana = Math.min(this.totalMaxManaLimit, this.playerMaxMana + 1);
             this.playerCurrentMana = this.playerMaxMana;
 
-            // プレイヤーのターン開始時LOチェック
             if (this.playerDeck.length === 0) {
                 this.addLog(`💀 【LO】ターン開始時にあなたの山札が0枚だったため、敗北。`);
                 this.playerHP = 0;
                 this.isGameOver = true;
+                this.sendFullStateToSpectator();
                 return;
             }
 
-            // 先攻第1ターン目（turnCountが1のとき）のみドローをスキップ
             if (this.turnCount === 1) {
                 this.addLog("※ 先攻1ターン目のためドローはありません。");
             } else {
                 this.drawCard(true);
             }
+            this.sendFullStateToSpectator(); // ターン開始時のドロー等反映
         },
         openDeckEditor(slotIndex) { 
             this.isEditMode = true; 
@@ -824,7 +961,7 @@ createApp({
         modeDescription() {
             if (this.gameMode === 'cpu') return 'サクッと練習！VS CPU';
             if (this.gameMode === 'online_random') return 'ランダムマッチ（自動で誰かと対戦）';
-            if (this.gameMode === 'online_room') return 'ルームマッチ（合言葉で友達と対戦）';
+            if (this.gameMode === 'online_room') return 'ルームマッチ（合言葉で友達と対戦・観戦）';
             return '';
         },
         cpuHandLengthComputed() {
