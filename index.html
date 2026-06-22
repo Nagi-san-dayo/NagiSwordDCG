@@ -57,7 +57,7 @@
                 max-height: 250px !important;
             }
             .log-box {
-                height: 300px !important; /* PC横画面時はログの高さをしっかり確保 */
+                height: 330px !important; /* PC横画面時はログの高さをしっかり確保 */
             }
         }
 
@@ -84,24 +84,25 @@
         .log-list { margin: 0; padding: 0; list-style: none; }
         .log-list li { margin-bottom: 4px; border-bottom: 1px solid #222; padding-bottom: 2px; }
         
-        .hand-container { display: flex; gap: 8px; overflow-x: auto; padding: 5px 5px 12px 5px; background: rgba(0,0,0,0.2); border-radius: 10px; min-height: 140px; align-items: center; }
+        /* 🃏 カードサイズ拡張に伴い、コンテナの最小高さを調整 */
+        .hand-container { display: flex; gap: 8px; overflow-x: auto; padding: 5px 5px 12px 5px; background: rgba(0,0,0,0.2); border-radius: 10px; min-height: 175px; align-items: center; }
 
-        /* 🃏 カード調整（はみ出し防止＆ゆったり配置） */
+        /* 🃏 カード調整（はみ出し防止のために横幅と高さを拡張） */
         .card { 
-            min-width: 105px; 
-            max-width: 105px; 
-            height: 125px; 
+            min-width: 135px; /* 105px から大幅アップ */
+            max-width: 135px; 
+            height: 160px;    /* 125px から拡張し、複数能力の改行に対応 */
             border-radius: 8px; 
             color: white; 
-            padding: 6px 4px; 
+            padding: 8px 6px; 
             box-sizing: border-box; 
             display: flex; 
             flex-direction: column; 
-            justify-content: flex-start; /* 上詰めに変更 */
+            justify-content: flex-start; 
             align-items: center; 
             text-align: center; 
             cursor: pointer; 
-            font-size: 11px; 
+            font-size: 12px; 
             background: #3e3e4a;
             border: 1px solid #555;
             box-shadow: 0 4px 6px rgba(0,0,0,0.3);
@@ -111,7 +112,7 @@
         .card.disabled { background: #555; border-color: #444; cursor: not-allowed; opacity: 0.6; }
         .card.edit-mode { background: #28a745; border-color: #2fb54c; }
         
-        /* 📛 カード名：絶対に「1行」固定。はみ出したら自動で『...』 */
+        /* 📛 カード名：横幅拡張により「...」になりにくく調整 */
         .card-name { 
             font-weight: bold; 
             margin-bottom: 4px; 
@@ -123,20 +124,18 @@
             padding-bottom: 2px;
         }
 
-        /* 📝 能力：能力一つにつき1行の絶対レイアウト */
+        /* 📝 能力：改行を許可し、3行目・4行目に綺麗に収まるよう配置 */
         .card-ability { 
-            font-size: 9px; 
+            font-size: 10px; 
             color: #ffd700; 
             font-weight: bold; 
-            margin-top: 3px; 
+            margin-top: 4px; 
             width: 100%;
-            line-height: 1.2;
+            line-height: 1.3;
             text-align: center;
-            
-            /* 1つの文字列内の半角スペース等で自動改行させず、1つのテキストを1行に収めるガード */
-            white-space: nowrap; 
-            overflow: hidden;
-            text-overflow: ellipsis;
+            white-space: normal; /* 自動改行・意図的改行を許可 */
+            overflow: visible;
+            text-overflow: clip;
         }
         .card-ability.edit-pool { color: #ffeb3b; }
         .card-ability.edit-deck { color: #fff; background: rgba(0,0,0,0.4); padding: 1px 3px; border-radius: 3px; }
@@ -188,7 +187,7 @@
             color: white; font-size: 18px; font-weight: bold; text-shadow: 2px 2px 4px rgba(0,0,0,0.8); margin-bottom: 15px;
         }
         .notice-card {
-            width: 160px; height: 220px; border-radius: 15px; background: #007bff;
+            width: 180px; height: 240px; border-radius: 15px; background: #007bff;
             box-shadow: 0 10px 25px rgba(0,0,0,0.5); border: 3px solid white;
             display: flex; flex-direction: column; justify-content: center; align-items: center;
             color: white; padding: 15px; text-align: center; box-sizing: border-box;
@@ -219,13 +218,13 @@
         <div class="notice-card">
             <div class="card-name">{{ activeNotice.card.name }}</div>
             <div style="font-size: 13px;">コスト: {{ activeNotice.card.cost }} / 攻撃: {{ activeNotice.card.power }}</div>
-            <div v-if="activeNotice.card.abilityText" class="card-ability">{{ activeNotice.card.abilityText }}</div>
+            <div v-if="activeNotice.card.abilityText" class="card-ability" v-html="formatAbility(activeNotice.card.abilityText)"></div>
         </div>
     </div>
 
     <div v-if="isMatching" class="matching-overlay">
         <div class="spinner"></div>
-        <h2>{{ gameMode === 'spectate' ? '👁️ ルームに接続中...' : '🌐 对戦相手を検索中...' }}</h2>
+        <h2>{{ gameMode === 'spectate' ? '👁️ ルームに接続中...' : '🌐 対戦相手を検索中...' }}</h2>
         <p v-if="gameMode === 'online_room' || gameMode === 'spectate'" style="color: #ffc107; font-weight: bold; margin-bottom: 5px;">ルーム名: {{ roomName }}</p>
         <p style="color: #bbb; margin-top: 10px;">サーバーからの応答を待っています。</p>
         <button class="cancel-match-btn" @click="cancelMatching">キャンセル</button>
@@ -305,7 +304,7 @@
             <div v-for="(card, index) in cardPool" :key="index" class="card" :class="{'playable': getCardCountInEditingDeck(index) < 5, 'disabled': getCardCountInEditingDeck(index) >= 5}" @click="addCardToEditingDeck(index)">
                 <div class="card-name">{{ card.name }}</div>
                 <div>コ:{{ card.cost }} / 攻:{{ card.power }}</div>
-                <div v-if="card.abilityText" class="card-ability edit-pool">{{ card.abilityText }}</div>
+                <div v-if="card.abilityText" class="card-ability edit-pool" v-html="formatAbility(card.abilityText)"></div>
                 <div class="card-ability" style="color: #fff; margin-top: auto;">枚数: {{ getCardCountInEditingDeck(index) }} / 5</div>
             </div>
         </div>
@@ -314,7 +313,7 @@
             <div v-for="(card, idx) in editingDeck" :key="idx" class="card edit-mode" @click="removeCardFromEditingDeck(idx)">
                 <div class="card-name">{{ card.name }}</div>
                 <div>コ:{{ card.cost }} / 攻:{{ card.power }}</div>
-                <div v-if="card.abilityText" class="card-ability edit-deck">{{ card.abilityText }}</div>
+                <div v-if="card.abilityText" class="card-ability edit-deck" v-html="formatAbility(card.abilityText)"></div>
                 <div style="font-size:9px; color:#fff; margin-top: auto;">[外す]</div>
             </div>
         </div>
@@ -343,7 +342,7 @@
                      @click="!isSpectator && playCard(card, true)">
                     <div class="card-name">{{ card.name }}</div>
                     <div>コ:{{ card.cost }} / 攻:{{ card.power }}</div>
-                    <div v-if="card.abilityText" class="card-ability">{{ card.abilityText }}</div>
+                    <div v-if="card.abilityText" class="card-ability" v-html="formatAbility(card.abilityText)"></div>
                 </div>
             </div>
         </div>
@@ -370,30 +369,30 @@ const { createApp, ref, nextTick } = Vue;
 const cardPool = [
     { name: "ナギソ 試作品", cost: 1, power: 4, abilities: [], abilityText: "" },
     { name: "ナギソの返り血", cost: 1, power: 2, abilities: [{ type: "draw", value: 1 }], abilityText: "【流水1:1ドロー】" },
-    { name: "ナギソ使役", cost: 1, power: 0, abilities: [{ type: "costheru", value: 1 }, { type: "kenko", value: 2 }], abilityText: "【縮化1:コスト1下方】【剣呼2:ランダム2枚生成】 " },
+    { name: "ナギソ使役", cost: 1, power: 0, abilities: [{ type: "costheru", value: 1 }, { type: "kenko", value: 2 }], abilityText: "【縮化1:コスト1下方】 【剣呼2:ランダム2枚生成】" },
     { name: "ナギソ指南書", cost: 2, power: 0, abilities: [{ type: "saidaimanahueru", value: 1 }, { type: "draw", value: 1 }], abilityText: "【恵沢1:最大マナ+1】 【流水1:1ドロー】" },
     { name: "ナギソの研磨", cost: 2, power: 2, abilities: [{ type: "manahueru", value: 2 }], abilityText: "【還元2:マナ2回復】" },
-    { name: "ナギソの分割", cost: 5, power: 3, abilities: [{ type: "costheru", value: 1 }, { type: "draw", value: 1 }], abilityText: "【縮化1:コスト1下方】【流水1:1ドロー】" },
-    { name: "ナギソの手入れ", cost: 2, power: 0, abilities: [{ type: "costheru", value: 1},{ type: "draw", value: 1 }], abilityText: "【流水1:1ドロー】【縮化1:コスト1下方】 " },
+    { name: "ナギソの分割", cost: 5, power: 3, abilities: [{ type: "costheru", value: 1 }, { type: "draw", value: 1 }], abilityText: "【縮化1:コスト1下方】 【流水1:1ドロー】" },
+    { name: "ナギソの手入れ", cost: 2, power: 0, abilities: [{ type: "costheru", value: 1},{ type: "draw", value: 1 }], abilityText: "【流水1:1ドロー】 【縮化1:コスト1下方】" },
     { name: "双剣ナギソ", cost: 3, power: 0, abilities: [{ type: "karyokuhueru", value: 1 }], abilityText: "【連撃1:使用枚数×1ダメ】" },
-    { name: "ナギソ封印書", cost: 2, power: 3, abilities: [{ type: "draw", value: 1 }, { type: "manahueru", value: 1 }], abilityText: "【流水1:1ドロー】【還元1:マナ1回復】" },
-    { name: "炎剣ナギソ", cost: 2, power: 5, abilities: [{ type: "burn", value: 3 }, { type: "jishoburn", value: 3 }], abilityText: "【雄叫び3:3ダメ】【反動3:自分に3ダメ】" },
+    { name: "ナギソ封印書", cost: 2, power: 3, abilities: [{ type: "draw", value: 1 }, { type: "manahueru", value: 1 }], abilityText: "【流水1:1ドロー】 【還元1:マナ1回復】" },
+    { name: "炎剣ナギソ", cost: 2, power: 5, abilities: [{ type: "burn", value: 3 }, { type: "jishoburn", value: 3 }], abilityText: "【雄叫び3:3ダメ】 【反動3:自分に3ダメ】" },
     { name: "魔剣ナギソ", cost: 10, power: 30, abilities: [], abilityText: "" },
     { name: "ナギソ破壊", cost: 1, power: 0, abilities: [{ type: "draw", value: 2 }, { type: "jishoburn", value: 4 }], abilityText: "【流水2:2ドロー】 【反動4:自分に4ダメ】" },
     { name: "硬化したナギソ", cost: 4, power: 12, abilities: [], abilityText: "" },
-    { name: "ナギソ研磨油", cost: 2, power: 0, abilities: [{ type: "heal", value: 5 }, { type: "saidaimanahueru", value: 1}], abilityText: "【神秘5:HPを5回復】【恵沢1:最大マナ+1】" },
-    { name: "執行のナギソ", cost: 6, power: 0, abilities: [{ type: "discard", value: 2 }, { type: "jishoburn", value: 4 }], abilityText: "【罪2:相手の手札を2枚捨てる】【反動4:自分に4ダメ】" },
+    { name: "ナギソ研磨油", cost: 2, power: 0, abilities: [{ type: "heal", value: 5 }, { type: "saidaimanahueru", value: 1}], abilityText: "【神秘5:HPを5回復】 【恵沢1:最大マナ+1】" },
+    { name: "執行のナギソ", cost: 6, power: 0, abilities: [{ type: "discard", value: 2 }, { type: "jishoburn", value: 4 }], abilityText: "【罪2:相手の手札を2枚捨てる】 【反動4:自分に4ダメ】" },
     { name: "内喰みのナギソ", cost: 7, power: 0, abilities: [{ type: "manadestroy", value: 3 }], abilityText: "【崩壊3:相手の最大マナを3減らす】" },
     { name: "嫌悪のナギソ", cost: 1, power: 0, abilities: [{ type: "costup", value: 1 }], abilityText: "【威圧1:相手の手札のコストを全て+1】" },
-    { name: "ナギソの破片", cost: 3, power: 0, abilities: [{ type: "heal", value: 4 }, { type: "saidaimanahueru", value: 1}, { type: "draw", value: 2 }], abilityText: "【神秘5:HPを5回復】【恵沢1:最大マナ+1】【流水2:2ドロー】 " },
-    { name: "魔剣アクセサリー", cost: 20, power: 0, abilities: [{ type: "costheru", value: 1},{ type: "karyokuhueru", value: 3 }], abilityText: "【縮化1:コスト1下方】【連撃3:使用枚数×3ダメ】"},
+    { name: "ナギソの破片", cost: 3, power: 0, abilities: [{ type: "heal", value: 4 }, { type: "saidaimanahueru", value: 1}, { type: "draw", value: 2 }], abilityText: "【神秘5:HPを5回復】 【恵沢1:最大マナ+1】 【流水2:2ドロー】" },
+    { name: "魔剣アクセサリー", cost: 20, power: 0, abilities: [{ type: "costheru", value: 1},{ type: "karyokuhueru", value: 3 }], abilityText: "【縮化1:コスト1下方】 【連撃3:使用枚数×3ダメ】"},
     { name: "ナギソブレッド", cost: 0, power: 2, abilities: [{ type: "jishoburn", value: 2 }], abilityText: "【反動2:自分に2ダメ】"},
-    { name: "ナギソの叫び", cost: 7, power: 3, abilities: [{ type: "costheru", value: 1 }, { type: "kenko", value: 5 }],abilityText: "【縮化1:コスト1下方】【剣呼5:ランダム5枚生成】"},
-    { name: "願望のナギソ", cost: 7, power: 0, abilities: [{ type: "costheru", value: 1 }, { type: "draw", value: 3 }],abilityText: " 【縮化1:コスト1下方】【流水3:3ドロー】"},
+    { name: "ナギソの叫び", cost: 7, power: 3, abilities: [{ type: "costheru", value: 1 }, { type: "kenko", value: 5 }],abilityText: "【縮化1:コスト1下方】 【剣呼5:ランダム5枚生成】"},
+    { name: "願望のナギソ", cost: 7, power: 0, abilities: [{ type: "costheru", value: 1 }, { type: "draw", value: 3 }],abilityText: "【縮化1:コスト1下方】 【流水3:3ドロー】"},
     { name: "裁きのナギソ", cost: 6, power: 0, abilities: [{ type: "deckdestroy", value: 5 }], abilityText: "【罰5:デッキ5枚破壊】"},
     { name: "叛逆のナギソ", cost: 2, power: 2, abilities: [{ type: "revengeburn", value: 10 }], abilityText: "【逆境6:劣勢時6ダメ追加】"},
     { name: "ナギソの祈り", cost: 2, power: 0, abilities: [{ type: "costdown_all", value: 1 }], abilityText: "【奇跡1:手札全てのコスト−1】"},
-    { name: "鮮血のナギソ", cost: 4, power: 5, abilities: [{ type: "heal", value: 10 }, { type: "draw", value: 2 }], abilityText: "【神秘10:HPを10回復】【流水2:2ドロー】" }
+    { name: "鮮血のナギソ", cost: 4, power: 5, abilities: [{ type: "heal", value: 10 }, { type: "draw", value: 2 }], abilityText: "【神秘10:HPを10回復】 【流水2:2ドロー】" }
 ];
 
 function generateId() { return Math.random().toString(36).substr(2, 9); }
@@ -489,12 +488,22 @@ createApp({
             }
         });
 
+        /* 🌐 相手の切断時：ログだけでなく、相手HPを0にしてあなたの勝利を確定させるよう修正 */
         socket.on('opponent_disconnected', () => {
-            this.addLog("⚠️ 対戦相手の接続が切れました。");
-            this.isGameOver = true;
+            if (!this.isGameOver) {
+                this.addLog("⚠️ 对戦相手の接続が切れました。あなたの勝利です！");
+                this.cpuHP = 0; 
+                this.isGameOver = true;
+                this.checkWinLose();
+            }
         });
     },
     methods: {
+        /* 📝 能力テキスト内の半角・全角スペースを改行コード（<br>）に置換する処理 */
+        formatAbility(text) {
+            if (!text) return "";
+            return text.replace(/[\s　]+/g, '<br>');
+        },
         addLog(msg) {
             this.logMessages.push(msg);
             this.scrollLog();
@@ -874,7 +883,13 @@ createApp({
             }
         },
         checkWinLose() {
-            if (this.isGameOver) return;
+            if (this.isGameOver) {
+                // 既にゲームが終了していても勝敗表示を正しく着地させる
+                if (this.cpuHP <= 0 && this.playerHP > 0) {
+                    if (!this.logMessages.includes(`🎉 勝利しました！`)) this.addLog(`🎉 勝利しました！`);
+                }
+                return;
+            }
             if(this.cpuHP <= 0 && this.playerHP > 0) { this.addLog(`🎉 勝利しました！`); this.isGameOver = true; }
             else if(this.playerHP <= 0 && this.cpuHP > 0) { this.addLog("💀 敗北しました。"); this.isGameOver = true; }
             else if(this.playerHP <= 0 && this.cpuHP <= 0) { this.addLog("🤝 同時撃破により引き分けです。"); this.isGameOver = true; }
@@ -893,7 +908,22 @@ createApp({
             this.editingDeck = this.customDecks[slotIndex] ? this.customDecks[slotIndex].map(i => ({ ...cardPool[i], poolIndex: i })) : []; 
         },
         getCardCountInEditingDeck(poolIndex) { return this.editingDeck.filter(c => c.poolIndex === poolIndex).length; },
-        addCardToEditingDeck(poolIndex) { if (this.editingDeck.length >= 30) return; this.editingDeck.push({ ...cardPool[poolIndex], poolIndex: poolIndex }); },
+        // 📦 カードをデッキに追加する関数（修正版）
+        addCardToEditingDeck(poolIndex) { 
+        // 1. デッキ全体の枚数が30枚なら追加しない
+        if (this.editingDeck.length >= 30) return; 
+    
+        // 2. 【追加】同じカードがすでに5枚入っているなら追加せず警告を出す
+        if (this.getCardCountInEditingDeck(poolIndex) >= 5) {
+        this.editAlert = `❌「${this.cardPool[poolIndex].name}」は5枚までしか入れられません。`;
+        return; 
+        }
+    
+        // 正常に追加できる場合は警告をクリアしてデッキに追加
+        this.editAlert = ""; 
+        this.editingDeck.push({ ...cardPool[poolIndex], poolIndex: poolIndex }); 
+},
+
         removeCardFromEditingDeck(index) { this.editingDeck.splice(index, 1); },
         saveAndCloseEditor() { 
             if (this.editingDeck.length !== 30) return; 
@@ -914,7 +944,7 @@ createApp({
             if (this.gameMode === 'spectate') return '観戦モード';
             return '';
         },
-        enemyDisplayName() { return this.isSpectator ? this.p2Name : (this.isCpuMode ? '🤖 CPU' : '👤 対戦相手'); },
+        enemyDisplayName() { return this.isSpectator ? this.p2Name : (this.isCpuMode ? '🤖 CPU' : '👤 对戦相手'); },
         playerDisplayName() { return this.isSpectator ? this.p1Name : this.userName; },
         cpuHandLengthComputed() { return this.isCpuMode ? this.cpuHand.length : this.cpuHandLength; },
         cpuDeckLengthComputed() { return this.isCpuMode ? this.cpuDeck.length : this.cpuDeckLength; },
