@@ -25,7 +25,8 @@ const io = new Server(server, {
 
 // マッチング用の管理変数
 let waitingPlayer = null; 
-let roomWaiting = {}; // ルームマッチ用
+// ルームマッチ用の管理 (P1, P2, 観戦者を管理)
+let roomGames = {}; 
 
 // Discord Webhookの設定
 const DISCORD_WEBHOOK_URL = process.env.DISCORD_WEBHOOK_URL || 'https://discord.com/api/webhooks/1518233626033127584/afbC-V7S9t7GkEvhMV8ZADhHVWxCVFlCghw7cP6QOZTjSpD7-YUgNpkJFBfjRTyXqQQD';
@@ -48,7 +49,6 @@ async function notifyDiscord(message) {
   }
 }
 
-// Socket.ioのメイン処理（1つに統合）
 io.on('connection', (socket) => {
   console.log('接続されました:', socket.id);
 
@@ -61,16 +61,17 @@ io.on('connection', (socket) => {
 
       const isFirst = Math.random() > 0.5;
 
-      socket.emit('game_start', { isFirst: isFirst });
-      waitingPlayer.emit('game_start', { isFirst: !isFirst });
+      // roleを付与してゲーム開始
+      socket.emit('game_start', { isFirst: isFirst, role: 'p2' });
+      waitingPlayer.emit('game_start', { isFirst: !isFirst, role: 'p1' });
 
-      // お互いを相手として紐付け
       socket.opponent = waitingPlayer;
       waitingPlayer.opponent = socket;
       
-      // ルーム名も保持しておく
       socket.gameRoom = roomName;
       waitingPlayer.gameRoom = roomName;
+      socket.playerRole = 'p2';
+      waitingPlayer.playerRole = 'p1';
 
       waitingPlayer = null;
       notifyDiscord('\nマッチングが成立したぞ！👀');
@@ -80,70 +81,108 @@ io.on('connection', (socket) => {
     }
   });
 
-  // 2. ルームマッチ（合言葉）
+  // 2. ルームマッチ（合言葉）と観戦機能
   socket.on('join_room_match', (data) => {
     const roomName = data.roomName;
+    const roomId = `room_${roomName}`;
 
-    if (roomWaiting[roomName] && roomWaiting[roomName].id !== socket.id) {
-      const opponent = roomWaiting[roomName];
-      delete roomWaiting[roomName]; 
+    // ルームが存在しない、または誰もいない場合
+    if (!roomGames[roomId] || (!roomGames[roomId].p1 && !roomGames[roomId].p2)) {
+      roomGames[roomId] = { p1: socket, p2: null, spectators: [], name: roomName };
+      socket.join(roomId);
+      socket.gameRoom = roomId;
+      socket.playerRole = 'p1';
+      console.log(`ルーム作成: ${roomName} (P1)`);
+    } 
+    // P2として参加
+    else if (!roomGames[roomId].p2) {
+      roomGames[roomId].p2 = socket;
+      socket.join(roomId);
+      socket.gameRoom = roomId;
+      socket.playerRole = 'p2';
+
+      // 互いを相手として紐付け
+      const p1 = roomGames[roomId].p1;
+      socket.opponent = p1;
+      p1.opponent = socket;
 
       const isFirst = Math.random() > 0.5;
-      const roomId = `room_${roomName}`;
+      p1.emit('game_start', { isFirst: isFirst, role: 'p1' });
+      socket.emit('game_start', { isFirst: !isFirst, role: 'p2' });
       
-      opponent.join(roomId);
+      console.log(`ルームマッチ成立: ${roomName} (P2参加)`);
+    } 
+    // 3人目以降は観戦者として参加
+    else {
+      roomGames[roomId].spectators.push(socket);
       socket.join(roomId);
-      
-      // 通常マッチと同様に相手とルームを紐付け
-      socket.opponent = opponent;
-      opponent.opponent = socket;
       socket.gameRoom = roomId;
-      opponent.gameRoom = roomId;
+      socket.playerRole = 'spectator';
 
-      opponent.emit('game_start', { isFirst: isFirst });
-      socket.emit('game_start', { isFirst: !isFirst });
+      socket.emit('spectator_start', { roomName: roomName });
       
-      console.log(`ルームマッチ成立: ${roomName}`);
-    } else {
-      roomWaiting[roomName] = socket;
-      socket.myWaitingRoomName = roomName; 
-      console.log(`ルームマッチ待機中: ${roomName}`);
+      // P1とP2に観戦者へ最新状態を送るよう要求
+      if (roomGames[roomId].p1) roomGames[roomId].p1.emit('request_full_state');
+      if (roomGames[roomId].p2) roomGames[roomId].p2.emit('request_full_state');
+      console.log(`観戦者が参加: ${roomName}`);
     }
   });
 
-  // 3. ゲームプレイ中の通信（通常・ルーム共通）
+  // 3. 観戦者への状態ブロードキャスト
+  socket.on('update_spectator_state', (state) => {
+    // 部屋全体（観戦者含む）に状態を通知（送信元以外）
+    socket.to(socket.gameRoom).emit('spectator_state_updated', {
+      role: socket.playerRole,
+      state: state
+    });
+  });
+
+  socket.on('send_spectator_log', (msg) => {
+    socket.to(socket.gameRoom).emit('spectator_log_added', msg);
+  });
+
+  // 4. ゲームプレイ中の通信（プレイヤー同士）
   socket.on('play_card', (data) => {
     if (socket.opponent) {
       socket.opponent.emit('opponent_play_card', data);
     }
   });
 
-  socket.on('end_turn', () => {
+  socket.on('end_turn', (data) => {
     if (socket.opponent) {
-      socket.opponent.emit('opponent_end_turn');
+      socket.opponent.emit('opponent_end_turn', data);
     }
   });
 
-  // 4. 切断時の処理（通常・ルーム共通＆待機キャンセル対応）
+  // 5. 切断時の処理
   socket.on('disconnect', () => {
     console.log('切断されました:', socket.id);
     
-    // 通常マッチの待機中に切断された場合
     if (waitingPlayer && waitingPlayer.id === socket.id) {
       waitingPlayer = null;
     }
     
-    // ルームマッチの待機中に切断された場合
-    if (socket.myWaitingRoomName && roomWaiting[socket.myWaitingRoomName] === socket) {
-      delete roomWaiting[socket.myWaitingRoomName];
-      console.log(`ルームマッチ待機キャンセル: ${socket.myWaitingRoomName}`);
-    }
-    
-    // 対戦中に切断された場合
-    if (socket.opponent) {
+    // ルームマッチ・観戦時の切断処理
+    if (socket.gameRoom && roomGames[socket.gameRoom]) {
+      const room = roomGames[socket.gameRoom];
+      
+      if (socket.playerRole === 'spectator') {
+        // 観戦者の離脱
+        room.spectators = room.spectators.filter(s => s.id !== socket.id);
+        console.log(`観戦者が離脱: ${socket.gameRoom}`);
+      } else {
+        // プレイヤーの離脱：相手に通知してルームを解散
+        if (socket.opponent) {
+          socket.opponent.emit('opponent_disconnected');
+          socket.opponent.opponent = null; 
+        }
+        delete roomGames[socket.gameRoom];
+      }
+    } 
+    // ランダムマッチ時の切断処理
+    else if (socket.opponent) {
       socket.opponent.emit('opponent_disconnected');
       socket.opponent.opponent = null; 
-      socket.opponent.gameRoom = null;
     }
   });
 });
