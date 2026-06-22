@@ -93,6 +93,15 @@
     font-size: 1.1vw; 
 }
 
+/* 可動状態（プレイ可能）のカードを青く光らせる */
+.card.playable {
+    border-color: #007bff !important; /* 青い枠線 */
+    box-shadow: 0 0 15px rgba(0, 123, 255, 0.8), 0 6px 12px rgba(0,0,0,0.4) !important; /* 青いネオン光 */
+    transform: translateY(-5px); /* 少し浮き上がらせる演出（お好みで） */
+    transition: transform 0.2s, box-shadow 0.2s;
+}
+
+
 /* 📛 カード名：フォントサイズ変更 */
 .card-name { 
     font-size: 1.3vw;   /* 少し大きめに */
