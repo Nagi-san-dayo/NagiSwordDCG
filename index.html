@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>ナギソDCG - オンライン＆CPU・観戦対応版</title>
+    <title>ナギソDCG - 完全フル同期＆観戦対応版</title>
     <script src="https://unpkg.com/vue@3/dist/vue.global.js"></script>
     <script src="https://cdn.socket.io/4.7.5/socket.io.min.js"></script>
     <style>
@@ -16,13 +16,15 @@
         .deck-btn.combo { background: #e6e6ff; border: 1px solid blue; }
         .deck-btn.mode { padding: 10px; border-radius: 10px; text-align: center; font-weight: bold; cursor: pointer; background: #e2f0d9; border: 2px solid #385723; font-size: 13px; }
         .deck-btn.mode.active { background: #385723; color: white; }
+        .deck-btn.spectate { background: #fff3cd; border: 2px solid #ffc107; color: #856404; }
+        .deck-btn.spectate.active { background: #ffc107; color: black; }
         h1, h3, h2 { margin: 0 0 5px 0; }
         p { margin: 0; font-size: 14px; color: #555; }
         .status-box { padding: 10px; border-radius: 10px; transition: background 0.3s; }
         .cpu-box { background: #ffe6e6; border: 1px solid #ffb3b3; }
         .online-enemy-box { background: #f2e6ff; border: 1px solid #d9b3ff; } 
         .player-box { background: #e6e6ff; }
-        .spectator-box { background: #fff2cc; border: 1px solid #d6b656; text-align: center; font-weight: bold; padding: 5px; border-radius: 5px; }
+        .spectator-box { background: #fff3cd; border: 1px solid #ffc107; text-align: center; font-weight: bold; font-size: 14px; padding: 8px; border-radius: 8px; }
         .log-box { flex-grow: 1; background: #f9f9f9; border-radius: 8px; padding: 10px; overflow-y: auto; height: 150px; font-size: 12px; border: 1px solid #ddd; }
         .log-list { margin: 0; padding: 0; list-style: none; }
         .log-list li { margin-bottom: 4px; }
@@ -48,11 +50,9 @@
         .slot-select-btn:not(.disabled):hover { background: #fff9e6; }
         .slot-select-btn.disabled { background: #eaeaea; border-color: #ccc; color: #888; cursor: not-allowed; }
         .slot-edit-btn { padding: 8px 12px; background: #6c757d; color: white; border: none; border-radius: 6px; cursor: pointer; font-size: 13px; font-weight: bold; white-space: nowrap; }
-        .slot-edit-btn:hover { background: #5a6268; }
 
-        .room-input-box { display: flex; flex-direction: column; gap: 8px; margin-top: 5px; }
-        .room-input { width: 100%; padding: 8px; box-sizing: border-box; border-radius: 5px; border: 1px solid #ccc; font-size: 13px; }
-
+        .room-input-box { display: flex; gap: 5px; margin-top: 5px; }
+        .room-input { flex: 1; padding: 8px; border-radius: 5px; border: 1px solid #ccc; font-size: 13px; }
         .profile-box { background: #eef2f7; padding: 10px; border-radius: 10px; border: 1px solid #ced4da; margin-top: 10px; }
         .username-input { width: 100%; padding: 8px; box-sizing: border-box; border-radius: 5px; border: 1px solid #ccc; font-size: 14px; }
 
@@ -67,16 +67,11 @@
             border: 5px solid rgba(255,255,255,0.3); border-top: 5px solid #6f42c1;
             border-radius: 50%; animation: spin 1s linear infinite; margin-bottom: 20px;
         }
-        @keyframes spin {
-            0% { transform: rotate(0deg); }
-            100% { transform: rotate(360deg); }
-        }
+        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
         .cancel-match-btn {
             margin-top: 30px; background: #dc3545; color: white; border: none;
             padding: 10px 20px; border-radius: 20px; font-weight: bold; cursor: pointer;
-            transition: background 0.2s;
         }
-        .cancel-match-btn:hover { background: #bd2130; }
     </style>
 </head>
 <body>
@@ -84,9 +79,9 @@
 <div id="app">
     <div v-if="isMatching" class="matching-overlay">
         <div class="spinner"></div>
-        <h2>{{ isSpectator ? '👁️ ルームに接続中...' : '🌐 対戦相手を検索中...' }}</h2>
-        <p v-if="gameMode === 'online_room'" style="color: #ffc107; font-weight: bold; margin-bottom: 5px;">ルーム名: {{ roomName }}</p>
-        <p style="color: #bbb; margin-top: 10px;">サーバーからの応答を待っています。<br>しばらくそのままでお待ちください。</p>
+        <h2>{{ gameMode === 'spectate' ? '👁️ ルームに接続中...' : '🌐 対戦相手を検索中...' }}</h2>
+        <p v-if="gameMode === 'online_room' || gameMode === 'spectate'" style="color: #ffc107; font-weight: bold; margin-bottom: 5px;">ルーム名: {{ roomName }}</p>
+        <p style="color: #bbb; margin-top: 10px;">サーバーからの応答を待っています。</p>
         <button class="cancel-match-btn" @click="cancelMatching">キャンセル</button>
     </div>
 
@@ -100,58 +95,49 @@
         </div>
 
         <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-top: 10px;">
-            <div class="deck-btn mode" :class="{'active': gameMode === 'cpu'}" @click="gameMode = 'cpu'; isSpectator = false;">
-                🤖 CPU対戦
-            </div>
-            <div class="deck-btn mode" :class="{'active': gameMode === 'online_random'}" @click="gameMode = 'online_random'; isSpectator = false;">
-                🌐 ﾗﾝﾀﾞ姆ﾏｯﾁ
-            </div>
-            <div class="deck-btn mode" style="grid-column: span 2;" :class="{'active': gameMode === 'online_room'}" @click="gameMode = 'online_room'">
-                🔑 ルームマッチ / 観戦 (合言葉)
-            </div>
+            <div class="deck-btn mode" :class="{'active': gameMode === 'cpu'}" @click="gameMode = 'cpu'">🤖 CPU対戦</div>
+            <div class="deck-btn mode" :class="{'active': gameMode === 'online_random'}" @click="gameMode = 'online_random'">🌐 ﾗﾝﾀﾞﾑﾏｯﾁ</div>
+            <div class="deck-btn mode" style="grid-column: span 2;" :class="{'active': gameMode === 'online_room'}" @click="gameMode = 'online_room'">🔑 ルームマッチ (合言葉)</div>
+            <div class="deck-btn mode spectate" style="grid-column: span 2;" :class="{'active': gameMode === 'spectate'}" @click="gameMode = 'spectate'">👁️ ルームを観戦する</div>
         </div>
 
-        <div v-if="gameMode === 'online_room'" class="room-input-box">
+        <div v-if="gameMode === 'online_room' || gameMode === 'spectate'" class="room-input-box">
             <input type="text" v-model="roomName" placeholder="ルーム名（例: nagiso123）" class="room-input">
-            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px;">
-                <button class="deck-btn mode" style="background: #e6f4ea; border-color: #137333; color: #137333;" @click="isSpectator = false; addLog('🔑 選手として待機します')">
-                    ⚔️ 選手として参戦
-                </button>
-                <button class="deck-btn mode" style="background: #fef7e0; border-color: #b06000; color: #b06000;" @click="joinAsSpectator">
-                    👁️ 観戦として入る
-                </button>
-            </div>
+        </div>
+
+        <div v-if="gameMode === 'spectate'" style="margin-top: 5px;">
+            <button class="end-btn active" style="background: #ffc107; color: black;" @click="startSpectating">👁️ 観戦画面へ入る</button>
         </div>
 
         <p style="text-align:center; font-size:12px; color:#666; margin-top: 5px;">
-            現在のモード: <b>{{ isSpectator ? '👁️ ルーム観戦モード' : modeDescription }}</b>
+            現在のモード: <b>{{ modeDescription }}</b>
         </p>
 
-        <hr style="width: 100%; border: 0; border-top: 1px solid #ccc; margin: 5px 0;">
-        <h3 style="font-size: 15px; color: #856404; margin-bottom: 5px;">✨ カスタムデッキ (最大10種類)</h3>
-        <div class="slot-list">
-            <div v-for="slotIndex in 10" :key="slotIndex" class="slot-item">
-                <button class="slot-select-btn" :class="{'disabled': !customDecks[slotIndex-1]}" :disabled="!customDecks[slotIndex-1]" @click="handleDeckSelect('custom', slotIndex-1)">
-                    🎴 {{ getDeckName(slotIndex-1) }} {{ customDecks[slotIndex-1] ? '(30枚)' : '(未作成)' }}
-                </button>
-                <button class="slot-edit-btn" @click="openDeckEditor(slotIndex-1)">
-                    🛠️ 編集
-                </button>
+        <div v-if="gameMode !== 'spectate'">
+            <hr style="width: 100%; border: 0; border-top: 1px solid #ccc; margin: 5px 0;">
+            <h3 style="font-size: 15px; color: #856404; margin-bottom: 5px;">✨ カスタムデッキ (最大10種類)</h3>
+            <div class="slot-list">
+                <div v-for="slotIndex in 10" :key="slotIndex" class="slot-item">
+                    <button class="slot-select-btn" :class="{'disabled': !customDecks[slotIndex-1]}" :disabled="!customDecks[slotIndex-1]" @click="handleDeckSelect('custom', slotIndex-1)">
+                        🎴 {{ getDeckName(slotIndex-1) }} {{ customDecks[slotIndex-1] ? '(30枚)' : '(未作成)' }}
+                    </button>
+                    <button class="slot-edit-btn" @click="openDeckEditor(slotIndex-1)">🛠️ 編集</button>
+                </div>
             </div>
-        </div>
-        <hr style="width: 100%; border: 0; border-top: 1px solid #ccc; margin: 5px 0;">
-        
-        <div class="deck-btn agro" @click="handleDeckSelect('agro')">
-            <h3>🔴 ナギソアグロ（速攻）</h3>
-            <p>低コストのカードで序盤から一気に敵のHPを削りきる攻撃的デッキ！</p>
-        </div>
-        <div class="deck-btn ramp" @click="handleDeckSelect('ramp')">
-            <h3>🟢 ナギソランプ（マナ加速）</h3>
-            <p>マナを高速で増やし、最強の「魔剣ナギソ」で勝利するデッキ！</p>
-        </div>
-        <div class="deck-btn combo" @click="handleDeckSelect('combo')">
-            <h3>🔵 ナギソコンボ（連撃）</h3>
-            <p>手札を回しつつ、連撃でワンターンキルを狙うデッキ！</p>
+            <hr style="width: 100%; border: 0; border-top: 1px solid #ccc; margin: 5px 0;">
+            
+            <div class="deck-btn agro" @click="handleDeckSelect('agro')">
+                <h3>🔴 ナギソアグロ（速攻）</h3>
+                <p>低コストのカードで序盤から一気に敵のHPを削りきる攻撃的デッキ！</p>
+            </div>
+            <div class="deck-btn ramp" @click="handleDeckSelect('ramp')">
+                <h3>🟢 ナギソランプ（マナ加速）</h3>
+                <p>マナを高速で増やし、最強の「魔剣ナギソ」で勝利するデッキ！</p>
+            </div>
+            <div class="deck-btn combo" @click="handleDeckSelect('combo')">
+                <h3>🔵 ナギソコンボ（連撃）</h3>
+                <p>手札を回しつつ、連撃でワンターンキルを狙うデッキ！</p>
+            </div>
         </div>
     </div>
 
@@ -189,9 +175,8 @@
     </div>
 
     <div v-if="isGameStarted && !isEditMode" class="game-screen">
-        
         <div v-if="isSpectator" class="spectator-box">
-            👁️ 現在観戦中（操作はできません）
+            👁️ 現在リアルタイム観戦中モード (操作不可)
         </div>
 
         <div class="status-box" :class="gameMode === 'cpu' ? 'cpu-box' : 'online-enemy-box'">
@@ -209,22 +194,22 @@
 
         <div class="status-box player-box">
             <h3>👤 {{ playerDisplayName }} HP: {{ playerHP }} (マナ: {{ playerCurrentMana }}/{{ playerMaxMana }})</h3>
-            <p>山札: {{ playerDeck.length }} 枚 / <b>手札: {{ playerHand.length }} 枚</b></p>
+            <p>山札: {{ playerDeckLengthComputed }} 枚 / <b>手札: {{ playerHandLengthComputed }} 枚</b></p>
         </div>
 
         <div class="hand-container">
             <div v-for="card in playerHand" :key="card.id" 
                  class="card" 
                  :class="{ 'playable': !isSpectator && isPlayerTurn && !isGameOver && playerCurrentMana >= card.cost, 'disabled': isSpectator || !isPlayerTurn || isGameOver || playerCurrentMana < card.cost }"
-                 @click="playCard(card, true)">
+                 @click="!isSpectator && playCard(card, true)">
                 <div class="card-name">{{ card.name }}</div>
                 <div>コ:{{ card.cost }} / 攻:{{ card.power }}</div>
                 <div v-if="card.abilityText" class="card-ability">{{ card.abilityText }}</div>
             </div>
         </div>
 
-        <button class="end-btn" :class="{ 'active': !isSpectator && isPlayerTurn && !isGameOver, 'disabled': isSpectator || !isPlayerTurn || isGameOver }" @click="endPlayerTurn" :disabled="isSpectator || !isPlayerTurn || isGameOver">
-            {{ isSpectator ? '観戦中' : 'ターン終了' }}
+        <button v-if="!isSpectator" class="end-btn" :class="{ 'active': isPlayerTurn && !isGameOver, 'disabled': !isPlayerTurn || isGameOver }" @click="endPlayerTurn" :disabled="!isPlayerTurn || isGameOver">
+            {{ isPlayerTurn ? 'ターン終了' : '相手のターン中' }}
         </button>
     </div>
 </div>
@@ -235,7 +220,7 @@ const { createApp, ref, nextTick } = Vue;
 const cardPool = [
     { name: "ナギソ 試作品", cost: 1, power: 4, abilities: [], abilityText: "" },
     { name: "ナギソの返り血", cost: 1, power: 2, abilities: [{ type: "draw", value: 1 }], abilityText: "【流水1:1ドロー】" },
-    { name: "ナギソ使役", cost: 1, power: 0, abilities: [{ type: "kenko", value: 2 }, { type: "costheru", value: 1 }], abilityText: "【縮化1:コスト1下方】【剣呼2:ランダム2枚生成】 " },
+    { name: "ナギソ使役", cost: 1, power: 0, abilities: [{ type: "costheru", value: 1 }, { type: "kenko", value: 2 }], abilityText: "【縮化1:コスト1下方】【剣呼2:ランダム2枚生成】 " },
     { name: "ナギソ指南書", cost: 2, power: 0, abilities: [{ type: "saidaimanahueru", value: 1 }, { type: "draw", value: 1 }], abilityText: "【恵沢1:最大マナ+1】 【流水1:1ドロー】" },
     { name: "ナギソの研磨", cost: 2, power: 2, abilities: [{ type: "manahueru", value: 2 }], abilityText: "【還元2:マナ2回復】" },
     { name: "ナギソの分割", cost: 5, power: 3, abilities: [{ type: "costheru", value: 1 }, { type: "draw", value: 1 }], abilityText: "【縮化1:コスト1下方】【流水1:1ドロー】" },
@@ -258,12 +243,11 @@ const cardPool = [
     { name: "裁きのナギソ", cost: 6, power: 0, abilities: [{ type: "deckdestroy", value: 5 }], abilityText: "【罰5:デッキ5枚破壊】"},
     { name: "叛逆のナギソ", cost: 2, power: 2, abilities: [{ type: "revengeburn", value: 10 }], abilityText: "【逆境6:劣勢時6ダメ追加】"},
     { name: "ナギソの祈り", cost: 2, power: 0, abilities: [{ type: "costdown_all", value: 1 }], abilityText: "【奇跡1:手札全てのコスト−1】"},
-    { name: "鮮血のナギソ", cost: 4, power: 5, abilities: [{ type: "heal", value: 10 }, { type: "draw", value: 2 }], abilityText: "【神秘10:HPを10回復】【流水2:2ドロー】" }
+    { name: "鮮血 of ナギソ", cost: 4, power: 5, abilities: [{ type: "heal", value: 10 }, { type: "draw", value: 2 }], abilityText: "【神秘10:HPを10回復】【流水2:2ドロー】" }
 ];
 
 function generateId() { return Math.random().toString(36).substr(2, 9); }
 function createCardInstance(baseCard) { return { ...baseCard, baseCost: baseCard.cost, id: generateId() };  }
-
 function shuffle(array) {
     const clone = [...array];
     for (let i = clone.length - 1; i > 0; i--) {
@@ -285,122 +269,95 @@ createApp({
             roomName: '',
             customDecks: Array(10).fill(null),
             customDeckNames: Array(10).fill(""),
-            currentDeckSlot: 0,                
-            selectedSlotIndex: null,           
-            editingDeck: [], editingDeckName: "", editAlert: "",
-            cardPool: cardPool,
+            currentDeckSlot: 0, selectedSlotIndex: null,           
+            editingDeck: [], editingDeckName: "", editAlert: "", cardPool: cardPool,
             playerHP: 30, cpuHP: 30,
             playerMaxMana: 1, playerCurrentMana: 1,
             cpuMaxMana: 1, cpuCurrentMana: 1,
             playerPlayedCountThisTurn: 0, cpuPlayedCountThisTurn: 0,
             logMessages: ["モードとデッキを選んでゲームを始めてね！"],
             playerDeck: [], cpuDeck: [], playerHand: [], cpuHand: [],
-            cpuHandLength: 0, cpuDeckLength: 30,
+            cpuHandLength: 0, cpuDeckLength: 30, playerHandLength: 0, playerDeckLength: 30,
             maxHandSize: 10, totalMaxManaLimit: 10,
             selectedDeckType: null,
-            turnCount: 0,
-            spectatorNames: { player1: "先攻選手", player2: "後攻選手" }
+            isFirstTurn: true, 
+            p1Name: "プレイヤー1", p2Name: "プレイヤー2"
         };
     },
     mounted() {
         const savedName = localStorage.getItem("nagiso_username");
         if (savedName) this.userName = savedName;
-
         const savedDecks = localStorage.getItem("nagiso_custom_decks");
-        if (savedDecks) {
-            try { this.customDecks = JSON.parse(savedDecks); } catch(e) { console.error(e); }
-        }
-
+        if (savedDecks) { try { this.customDecks = JSON.parse(savedDecks); } catch(e){} }
         const savedNames = localStorage.getItem("nagiso_custom_deck_names");
-        if (savedNames) {
-            try { this.customDeckNames = JSON.parse(savedNames); } catch(e) { console.error(e); }
-        }
+        if (savedNames) { try { this.customDeckNames = JSON.parse(savedNames); } catch(e){} }
 
         socket = io('https://nagisworddcg-0.onrender.com/');
 
-        // 【対戦用】ゲームスタート
         socket.on('game_start', (data) => {
             this.isMatching = false; 
             this.isSpectator = false;
             this.addLog("🤝 オンライン対戦相手が見つかりました！");
             this.isPlayerTurn = data.isFirst; 
+            this.isFirstTurn = true; 
             this.setupGameField(this.selectedDeckType);
             this.isGameStarted = true;
+            this.syncStateToServer("ゲーム開始！");
         });
 
-        // 【観戦用】ゲームスタート
-        socket.on('spectator_game_start', (data) => {
-            this.isMatching = false;
-            this.isSpectator = true;
-            this.isGameStarted = true;
-            this.isPlayerTurn = false;
-            this.spectatorNames.player1 = data.player1;
-            this.spectatorNames.player2 = data.player2;
-            this.playerHP = 30; this.cpuHP = 30;
-            this.playerMaxMana = 1; this.playerCurrentMana = 1;
-            this.cpuMaxMana = 1; this.cpuCurrentMana = 1;
-            this.playerHand = []; this.cpuHandLength = 3;
-            this.addLog(`👁️ 観戦を開始しました：[${data.player1}] vs [${data.player2}]`);
-        });
-
-        // 相手または観戦対象のカードプレイを同期
         socket.on('opponent_play_card', (data) => {
-            if(this.isSpectator) {
-                this.addLog(`📢 ${data.isPlayer1 ? this.spectatorNames.player1 : this.spectatorNames.player2}が【${data.card.name}】を召喚！`);
-                if(data.isPlayer1) {
-                    this.playerCurrentMana = data.currentMana;
-                    this.cpuHP -= data.card.power;
-                } else {
-                    this.cpuCurrentMana = data.currentMana;
-                    this.playerHP -= data.card.power;
-                }
-                this.checkWinLose();
-                return;
-            }
             this.playCard(data.card, false, data.syncData); 
             if (data.currentMana !== undefined) this.cpuCurrentMana = data.currentMana;
             if (data.maxMana !== undefined) this.cpuMaxMana = data.maxMana;
         });
 
-        // ターン終了同期
         socket.on('opponent_end_turn', (data) => {
-            if(this.isSpectator) {
-                this.addLog(`🔄 ターンが交代しました。`);
-                if(data.player1TurnNow) {
-                    this.playerMaxMana = data.p1Max;
-                    this.playerCurrentMana = data.p1Max;
-                } else {
-                    this.cpuMaxMana = data.p2Max;
-                    this.cpuCurrentMana = data.p2Max;
-                }
-                return;
-            }
-            if (data && data.currentMana !== undefined) this.cpuCurrentMana = data.currentMana;
-            if (data && data.maxMana !== undefined) this.cpuMaxMana = data.maxMana;
-            if (data && data.handLength !== undefined) this.cpuHandLength = data.handLength;
-            if (data && data.deckLength !== undefined) this.cpuDeckLength = data.deckLength;
             this.endCpuTurn(); 
         });
 
-        socket.on('opponent_disconnected', () => {
-            if(this.isSpectator) {
-                this.addLog("⚠️ 対戦者の通信が切断されました。観戦を終了します。");
-            } else {
-                this.addLog("⚠️ 対戦相手の接続が切れました。不戦勝です！");
+        socket.on('spectator_update', (state) => {
+            if (!this.isSpectator) return;
+            this.isGameStarted = true;
+            this.playerHP = state.p1.hp;
+            this.cpuHP = state.p2.hp;
+            this.playerCurrentMana = state.p1.currentMana;
+            this.playerMaxMana = state.p1.maxMana;
+            this.cpuCurrentMana = state.p2.currentMana;
+            this.cpuMaxMana = state.p2.maxMana;
+            this.playerHandLength = state.p1.handLength;
+            this.playerDeckLength = state.p1.deckLength;
+            this.cpuHandLength = state.p2.handLength;
+            this.cpuDeckLength = state.p2.deckLength;
+            this.p1Name = state.p1.name;
+            this.p2Name = state.p2.name;
+            this.isPlayerTurn = state.isP1Turn;
+            if (state.latestLog && this.logMessages[this.logMessages.length - 1] !== state.latestLog) {
+                this.logMessages.push(state.latestLog);
+                this.scrollLog();
             }
+        });
+
+        socket.on('opponent_disconnected', () => {
+            this.addLog("⚠️ 対戦相手の接続が切れました。");
             this.isGameOver = true;
         });
     },
     methods: {
-        saveUserName() { localStorage.setItem("nagiso_username", this.userName); },
-        getDeckName(index) { return this.customDeckNames[index] || `デッキ ${index + 1}`; },
         addLog(msg) {
             this.logMessages.push(msg);
+            this.scrollLog();
+            if(this.isGameStarted && !this.isSpectator && !this.isCpuMode) {
+                this.syncStateToServer(msg);
+            }
+        },
+        scrollLog() {
             nextTick(() => {
                 const scroll = document.getElementById("logScroll");
                 if (scroll) scroll.scrollTop = scroll.scrollHeight;
             });
         },
+        saveUserName() { localStorage.setItem("nagiso_username", this.userName); },
+        getDeckName(index) { return this.customDeckNames[index] || `デッキ ${index + 1}`; },
         resetToTitle() {
             this.isGameStarted = false; this.isGameOver = false; this.isSpectator = false;
             this.logMessages = ["モードとデッキを選んでゲームを始めてね！"];
@@ -408,30 +365,28 @@ createApp({
         handleDeckSelect(type, slotIndex = null) {
             this.selectedDeckType = type;
             this.selectedSlotIndex = slotIndex; 
-            this.isSpectator = false;
             
             if (this.gameMode === 'online_random') {
                 this.isMatching = true; 
-                this.addLog("🔍 ランダムマッチで対戦相手を検索中...");
-                socket.emit('join_matchmaking', { userName: this.userName });
+                socket.emit('join_matchmaking', { name: this.userName });
             } else if (this.gameMode === 'online_room') {
                 if (!this.roomName.trim()) { alert("ルーム名を入力してください。"); return; }
                 this.isMatching = true; 
-                this.addLog(`🔑 ルーム【${this.roomName}】で選手として待機中...`);
-                socket.emit('join_room_match', { roomName: this.roomName, userName: this.userName });
+                socket.emit('join_room_match', { roomName: this.roomName, name: this.userName });
             } else {
+                this.isSpectator = false;
                 this.isPlayerTurn = true;
+                this.isFirstTurn = true;
                 this.setupGameField(type);
                 this.isGameStarted = true;
+                this.addLog(`🤖 CPU対戦を開始しました！`);
             }
         },
-        joinAsSpectator() {
-            if (!this.roomName.trim()) { alert("ルーム名を入力してください。"); return; }
+        startSpectating() {
+            if (!this.roomName.trim()) { alert("観戦するルーム名を入力してください。"); return; }
             this.isMatching = true;
             this.isSpectator = true;
-            this.gameMode = 'online_room';
-            this.addLog(`👁️ ルーム【${this.roomName}】に観戦者として接続中...`);
-            socket.emit('join_room_spectator', { roomName: this.roomName, userName: this.userName });
+            socket.emit('join_spectate', { roomName: this.roomName });
         },
         cancelMatching() {
             this.isMatching = false;
@@ -442,58 +397,40 @@ createApp({
             this.playerHP = 30; this.cpuHP = 30;
             this.playerMaxMana = 1; this.playerCurrentMana = 1;
             this.cpuMaxMana = 1; this.cpuCurrentMana = 1;
+            this.playerHand = []; this.cpuHand = [];
             this.playerPlayedCountThisTurn = 0; this.cpuPlayedCountThisTurn = 0;
-            this.playerHand = []; this.cpuHand = []; this.turnCount = 1; 
-            
+
             let pPool = [];
             if(type === 'agro') pPool = [0,0,0,0,0, 1,1,1,1,1, 4,4,4,4,4, 6,6,6,6,6, 9,9,9,9,9, 2,2,2,2,2].map(i => cardPool[i]);
             else if(type === 'ramp') pPool = [3,3,3,3,3, 1,1,1,1,1, 2,2,2,2,2, 4,4,4,4,4, 6,6,6,6,6, 10,10,10,10,10].map(i => cardPool[i]);
             else if(type === 'combo') pPool = [6,6,6,6,6, 7,7,7,7,7, 5,5,5,5,5, 8,8,8,8,8, 2,2,2,2,2, 4,4,4,4,4].map(i => cardPool[i]);
             else if(type === 'custom') pPool = this.customDecks[this.selectedSlotIndex].map(i => cardPool[i]); 
 
-            let cPool = [];
-            let availableIndices = [...Array(cardPool.length).keys()];
-            let selectedIndices = [];
-            for (let i = 0; i < 10 && availableIndices.length > 0; i++) {
-                const randIdx = Math.floor(Math.random() * availableIndices.length);
-                selectedIndices.push(availableIndices.splice(randIdx, 1)[0]);
-            }
-            selectedIndices.forEach(poolIndex => {
-                for (let k = 0; k < 3; k++) { cPool.push(cardPool[poolIndex]); }
-            });
-
             this.playerDeck = shuffle(pPool.map(createCardInstance));
-            this.cpuDeck = shuffle(cPool.map(createCardInstance));
-            this.cpuHandLength = 0; this.cpuDeckLength = this.cpuDeck.length;
+            
+            for(let i=0; i<3; i++) { this.drawCard(true); }
 
-            for(let i=0; i<3; i++) { 
-                this.drawCard(true); 
-                if(this.isCpuMode) this.drawCard(false); else { this.cpuHandLength++; this.cpuDeckLength--; }
-            }
-
-            if (this.isPlayerTurn) {
-                this.addLog("=== あなたのターン（先攻） ===");
-                this.addLog("※ 先攻1ターン目のためドローはありません。");
+            if (this.isCpuMode) {
+                let cPool = [0,1,2,3,4,5,6,7,8,9,11,12,13,14,15].map(i => cardPool[i]);
+                this.cpuDeck = shuffle(cPool.map(createCardInstance));
+                for(let i=0; i<3; i++) { this.drawCard(false); }
             } else {
-                this.addLog("=== CPUのターン（先攻） ===");
-                if (this.isCpuMode) setTimeout(() => { this.cpuAction(); }, 1000);
+                this.cpuHandLength = 3;
+                this.cpuDeckLength = 27;
             }
         },
         drawCard(isPlayer) {
             if (this.isGameOver) return;
             if (isPlayer) {
                 if (this.playerDeck.length === 0) {
-                    this.addLog(`💀 【LO】山札が0枚のため敗北です。`);
+                    this.addLog(`💀 【LO】山札が0枚のため敗北しました。`);
                     this.playerHP = 0; this.checkWinLose(); return;
                 }
                 let drawnCard = this.playerDeck.shift();
                 if (this.playerHand.length < this.maxHandSize) this.playerHand.push(drawnCard);
             } else {
                 if (this.isCpuMode) {
-                    if (this.cpuDeck.length === 0) {
-                        this.addLog(`🎉 【LO】CPUの山札が0枚になったため勝利！`);
-                        this.cpuHP = 0; this.checkWinLose(); return;
-                    }
+                    if (this.cpuDeck.length === 0) { this.addLog(`💀 【LO】相手の山札が0枚のため勝利しました。`); this.cpuHP = 0; this.checkWinLose(); return; }
                     this.cpuHand.push(this.cpuDeck.shift());
                 } else {
                     this.cpuHandLength++; this.cpuDeckLength--;
@@ -501,28 +438,34 @@ createApp({
             }
         },
         playCard(card, isPlayer, syncData = null) {
-            if (this.isGameOver || this.isSpectator) return;
+            if (this.isGameOver) return;
             if (isPlayer && (!this.isPlayerTurn || this.playerCurrentMana < card.cost)) return;
-            
-            let localSyncData = { chosenCardIndices: [], discardIndices: [] };
+
+            let localSyncData = { chosenCardIndices: [], discardIndex: -1 };
 
             if (isPlayer) {
-                this.playerCurrentMana -= card.cost; this.cpuHP -= card.power; this.playerPlayedCountThisTurn++;
-                this.addLog(`${this.userName}が【${card.name}】を召喚！ ${card.power > 0 ? card.power+'ダメ！':''}`);
+                this.playerCurrentMana -= card.cost; this.cpuHP -= card.power;
+                this.playerPlayedCountThisTurn++;
+                this.addLog(`👤 ${this.userName}が【${card.name}】を召喚！`);
                 this.playerHand = this.playerHand.filter(c => c.id !== card.id);
             } else {
-                this.cpuCurrentMana -= card.cost; this.playerHP -= card.power; this.cpuPlayedCountThisTurn++;
-                this.addLog(`${this.isCpuMode ? '🤖 CPU' : '👤 相手'}が【${card.name}】を召喚！ ${card.power > 0 ? 'あなたに '+card.power+'ダメ！':''}`);
-                if(this.isCpuMode) this.cpuHand.shift(); else this.cpuHandLength = Math.max(0, this.cpuHandLength - 1);
+                this.cpuCurrentMana -= card.cost; this.playerHP -= card.power;
+                this.cpuPlayedCountThisTurn++;
+                this.addLog(`👤 相手が【${card.name}】を召喚！`);
+                if(this.isCpuMode) {
+                    this.cpuHand = this.cpuHand.filter(c => c.id !== card.id);
+                } else {
+                    this.cpuHandLength = Math.max(0, this.cpuHandLength - 1);
+                }
             }
 
+            // 能力処理
             card.abilities.forEach(ab => {
-                if (isPlayer) {
+                if (isPlayer && !this.isCpuMode) {
                     if (ab.type === "kenko") {
-                        for(let i=0; i<ab.value; i++) localSyncData.chosenCardIndices.push(Math.floor(Math.random() * this.cardPool.length));
-                    } else if (ab.type === "discard") {
-                        let targetLength = this.isCpuMode ? this.cpuHand.length : this.cpuHandLength;
-                        for(let i=0; i<ab.value; i++) if(targetLength > 0) localSyncData.discardIndices.push(Math.floor(Math.random() * targetLength));
+                        for(let i=0; i<ab.value; i++) {
+                            localSyncData.chosenCardIndices.push(Math.floor(Math.random() * this.cardPool.length));
+                        }
                     }
                 }
                 this.triggerAbility(ab, isPlayer, isPlayer ? localSyncData : syncData);
@@ -532,45 +475,177 @@ createApp({
             this.checkWinLose();
 
             if(isPlayer && !this.isCpuMode) {
-                socket.emit('play_card', { card, currentMana: this.playerCurrentMana, maxMana: this.playerMaxMana, syncData: localSyncData });
+                socket.emit('play_card', { card: card, currentMana: this.playerCurrentMana, maxMana: this.playerMaxMana, syncData: localSyncData });
             }
         },
         reduceCost(isPlayer) {
             if(!isPlayer && !this.isCpuMode) return; 
             let hand = isPlayer ? this.playerHand : this.cpuHand;
             hand.forEach(c => {
-                const hasCostReduce = c.abilities.find(ab => ab.type === "costheru");
-                if(hasCostReduce) c.cost = Math.max(0, c.cost - hasCostReduce.value);
+                const reduce = c.abilities.find(ab => ab.type === "costheru");
+                if(reduce) c.cost = Math.max(0, c.cost - reduce.value);
             });
         },
-        triggerAbility(ab, isPlayerTrigger, syncData) {
+               triggerAbility(ab, isPlayerTrigger, syncData) {
             const type = ab.type; const value = ab.value;
-            const enemyName = this.isCpuMode ? 'CPU' : '相手';
+            const currentCount = isPlayerTrigger ? this.playerPlayedCountThisTurn : this.cpuPlayedCountThisTurn;
 
             if(type === "draw") {
-                this.drawCard(isPlayerTrigger);
-                this.addLog(`  └【流水】${isPlayerTrigger ? 'あなた': enemyName}が${value}枚ドロー`);
-            } else if(type === "burn") {
+                for (let i = 0; i < value; i++) { this.drawCard(isPlayerTrigger); }
+                if (isPlayerTrigger) {
+                    this.addLog(`  └【流水${value}】カードを ${value} 枚ドローした！`);
+                } else {
+                    this.addLog(`  └【流水${value}】相手がカードを ${value} 枚ドローした！`);
+                }
+            } 
+            else if(type === "burn") {
                 if(isPlayerTrigger) this.cpuHP -= value; else this.playerHP -= value;
-                this.addLog(`  └【雄叫び】${isPlayerTrigger ? enemyName : 'あなた'}に${value}ダメ`);
-            } else if(type === "manahueru") {
-                if(isPlayerTrigger) this.playerCurrentMana = Math.min(this.playerMaxMana, this.playerCurrentMana + value);
+                if (isPlayerTrigger) {
+                    this.addLog(`  └【雄叫び${value}】相手プレイヤーに ${value} ダメージ！`);
+                } else {
+                    this.addLog(`  └【雄叫び${value}】あなたに ${value} ダメージ！`);
+                }
+            } 
+            else if(type === "manahueru") {
+                if(isPlayerTrigger) this.playerCurrentMana = Math.min(this.totalMaxManaLimit, this.playerCurrentMana + value);
                 else this.cpuCurrentMana = Math.min(this.cpuMaxMana, this.cpuCurrentMana + value);
-            } else if(type === "saidaimanahueru") {
+                if (isPlayerTrigger) {
+                    this.addLog(`  └【還元${value}】マナが ${value} 回復！`);
+                } else {
+                    this.addLog(`  └【還元${value}】相手のマナが ${value} 回復！`);
+                }
+            } 
+            else if(type === "saidaimanahueru") {
                 if(isPlayerTrigger) this.playerMaxMana = Math.min(this.totalMaxManaLimit, this.playerMaxMana + value);
                 else this.cpuMaxMana = Math.min(this.totalMaxManaLimit, this.cpuMaxMana + value);
-            } else if(type === "heal") {
+                if (isPlayerTrigger) {
+                    this.addLog(`  └【恵沢${value}】最大マナが ${value} 増加！`);
+                } else {
+                    this.addLog(`  └【恵沢${value}】相手の最大マナが ${value} 増加！`);
+                }
+            } 
+            else if(type === "jishoburn") {
+                if(isPlayerTrigger) this.playerHP -= value; else this.cpuHP -= value;
+                if (isPlayerTrigger) {
+                    this.addLog(`  └【反動${value}】自分に ${value} ダメージ！`);
+                } else {
+                    this.addLog(`  └【反動${value}】相手が自分自身に ${value} ダメージ！`);
+                }
+            } 
+            else if(type === "heal") {
                 if(isPlayerTrigger) this.playerHP = Math.min(30, this.playerHP + value); else this.cpuHP = Math.min(30, this.cpuHP + value);
+                if (isPlayerTrigger) {
+                    this.addLog(`  └【神秘${value}】HPが ${value} 回復した！`);
+                } else {
+                    this.addLog(`  └【神秘${value}】相手のHPが ${value} 回復した！`);
+                }
+            }
+            else if(type === "karyokuhueru") {
+                const dmg = currentCount * value;
+                if(isPlayerTrigger) this.cpuHP -= dmg; else this.playerHP -= dmg;
+                if (isPlayerTrigger) {
+                    this.addLog(`  └【連撃${value}】このターンに使用した枚数${currentCount}×${value}分 ${dmg} 相手に追加ダメージ！`);
+                } else {
+                    this.addLog(`  └【連撃${value}】このターンに相手が使用した枚数${currentCount}×${value}分 ${dmg} あなたに追加ダメージ！`);
+                }
+            }
+            else if(type === "kenko") {
+                if (isPlayerTrigger) {
+                    this.addLog(`  └【剣呼${value}】手札にランダムなカードを ${value} 枚生成した！`);
+                } else {
+                    this.addLog(`  └【剣呼${value}】相手の手札にランダムなカードが ${value} 枚生成された！`);
+                }
+                if (this.isCpuMode || !isPlayerTrigger) {
+                    for(let i=0; i<value; i++) {
+                        let randCard = createCardInstance(this.cardPool[Math.floor(Math.random() * this.cardPool.length)]);
+                        if(isPlayerTrigger) this.playerHand.push(randCard); else this.cpuHand.push(randCard);
+                    }
+                } else if(syncData && syncData.chosenCardIndices) {
+                    syncData.chosenCardIndices.forEach(idx => {
+                        this.playerHand.push(createCardInstance(this.cardPool[idx]));
+                    });
+                }
+            }
+            else if(type === "discard") {
+                if (isPlayerTrigger) {
+                    this.addLog(`  └【罪${value}】相手の手札をランダムに ${value} 枚捨てさせた！`);
+                } else {
+                    this.addLog(`  └【罪${value}】自分の手札がランダムに ${value} 枚捨てられた！`);
+                }
+                for(let i=0; i<value; i++){
+                    if(isPlayerTrigger) {
+                        if(this.isCpuMode && this.cpuHand.length > 0) this.cpuHand.splice(Math.floor(Math.random()*this.cpuHand.length), 1);
+                        else if(!this.isCpuMode) this.cpuHandLength = Math.max(0, this.cpuHandLength - 1);
+                    } else {
+                        if(this.playerHand.length > 0) this.playerHand.splice(Math.floor(Math.random()*this.playerHand.length), 1);
+                    }
+                }
+            }
+            else if(type === "manadestroy") {
+                if(isPlayerTrigger) this.cpuMaxMana = Math.max(1, this.cpuMaxMana - value);
+                else this.playerMaxMana = Math.max(1, this.playerMaxMana - value);
+                if (isPlayerTrigger) {
+                    this.addLog(`  └【崩壊${value}】相手の最大マナを ${value} 破壊した！`);
+                } else {
+                    this.addLog(`  └【崩壊${value}】自分の最大マナが ${value} 破壊された！`);
+                }
+            }
+            else if(type === "costup") {
+                if (isPlayerTrigger) {
+                    this.addLog(`  └【威圧${value}】相手の手札のカード全てのコストを +${value} した！`);
+                } else {
+                    this.addLog(`  └【威圧${value}】自分の手札のカード全てのコストが +${value} された！`);
+                }
+                if(!isPlayerTrigger) {
+                    this.playerHand.forEach(c => c.cost += value);
+                } else if (this.isCpuMode) {
+                    this.cpuHand.forEach(c => c.cost += value);
+                }
+            }
+            else if(type === "deckdestroy") {
+                if (isPlayerTrigger) {
+                    this.addLog(`  └【罰${value}】相手のデッキを ${value} 枚破壊した！`);
+                } else {
+                    this.addLog(`  └【罰${value}】自分のデッキが ${value} 枚破壊された！`);
+                }
+                for(let i=0; i<value; i++) {
+                    if(isPlayerTrigger) {
+                        if(this.isCpuMode) this.cpuDeck.shift(); else this.cpuDeckLength = Math.max(0, this.cpuDeckLength - 1);
+                    } else {
+                        this.playerDeck.shift();
+                    }
+                }
+            }
+            else if(type === "revengeburn") {
+                const myHP = isPlayerTrigger ? this.playerHP : this.cpuHP;
+                const enemyHP = isPlayerTrigger ? this.cpuHP : this.playerHP;
+                if(myHP < enemyHP) {
+                    if(isPlayerTrigger) this.cpuHP -= value; else this.playerHP -= value;
+                    if (isPlayerTrigger) {
+                        this.addLog(`  └【逆境${value}】逆境のため相手に追加で ${value} ダメージ！`);
+                    } else {
+                        this.addLog(`  └【逆境${value}】優勢だったため追加で ${value} ダメージを受けた！`);
+                    }
+                }
+            }
+            else if(type === "costdown_all") {
+                const hand = isPlayerTrigger ? this.playerHand : this.cpuHand;
+                if(isPlayerTrigger || this.isCpuMode) {
+                    hand.forEach(c => c.cost = Math.max(0, c.cost - value));
+                }
+                if (isPlayerTrigger) {
+                    this.addLog(`  └【奇跡${value}】自分の手札の全てのカードのコストが -${value} された！`);
+                } else {
+                    this.addLog(`  └【奇跡${value}】相手の手札の全てのカードのコストが -${value} された！`);
+                }
             }
         },
-        checkWinLose() {
-            if (this.isGameOver) return;
-            if(this.cpuHP <= 0 && this.playerHP > 0) { this.addLog(`🎉 ${this.isSpectator ? this.spectatorNames.player1+'の勝利！' : 'あなたの勝利！'}`); this.isGameOver = true; }
-            else if(this.playerHP <= 0 && this.cpuHP > 0) { this.addLog(`💀 ${this.isSpectator ? this.spectatorNames.player2+'の勝利！' : '敗北...'}`); this.isGameOver = true; }
-        },
+
         endPlayerTurn() {
-            if(!this.isGameStarted || this.isGameOver || this.isSpectator) return;
-            this.isPlayerTurn = false; this.playerPlayedCountThisTurn = 0; this.turnCount++;
+            if(!this.isGameStarted || this.isGameOver) return;
+            this.isPlayerTurn = false;
+            this.isFirstTurn = false; 
+            this.playerPlayedCountThisTurn = 0;
             
             if (this.isCpuMode) {
                 this.addLog("=== CPUのターン ===");
@@ -580,22 +655,47 @@ createApp({
                 setTimeout(() => { this.cpuAction(); }, 1000);
             } else {
                 this.addLog("=== 相手のターン ===");
-                socket.emit('end_turn', { currentMana: this.playerCurrentMana, maxMana: this.playerMaxMana, handLength: this.playerHand.length, deckLength: this.playerDeck.length }); 
+                socket.emit('end_turn'); 
             }
         },
         cpuAction() {
-            if(!this.isCpuMode || this.isPlayerTurn || this.isGameOver) return;
             let playableCard = this.cpuHand.find(c => c.cost <= this.cpuCurrentMana);
-            if(playableCard) { this.playCard(playableCard, false); setTimeout(() => { this.cpuAction(); }, 1000); } 
-            else this.endCpuTurn();
+            if(playableCard) {
+                this.playCard(playableCard, false);
+                setTimeout(() => { this.cpuAction(); }, 1000);
+            } else {
+                this.endCpuTurn();
+            }
         },
         endCpuTurn() {
             if(!this.isGameStarted || this.isGameOver) return;
-            this.isPlayerTurn = true; this.cpuPlayedCountThisTurn = 0; this.turnCount++;
+            this.isPlayerTurn = true;
+            this.cpuPlayedCountThisTurn = 0;
             this.addLog(`=== あなたのターン ===`);
+            
             this.playerMaxMana = Math.min(this.totalMaxManaLimit, this.playerMaxMana + 1);
             this.playerCurrentMana = this.playerMaxMana;
-            this.drawCard(true);
+
+            if (this.isFirstTurn) {
+                this.addLog("※先攻1ターン目のためドローはありません。");
+                this.isFirstTurn = false;
+            } else {
+                this.drawCard(true);
+            }
+        },
+        checkWinLose() {
+            if (this.isGameOver) return;
+            if(this.cpuHP <= 0 && this.playerHP > 0) { this.addLog(`🎉 勝利しました！`); this.isGameOver = true; }
+            else if(this.playerHP <= 0 && this.cpuHP > 0) { this.addLog("💀 敗北しました。"); this.isGameOver = true; }
+            else if(this.playerHP <= 0 && this.cpuHP <= 0) { this.addLog("🤝 同時撃破により引き分けです。"); this.isGameOver = true; }
+        },
+        syncStateToServer(latestLog = "") {
+            if (this.isCpuMode || this.isSpectator) return;
+            socket.emit('update_room_state', {
+                hp: this.playerHP, maxMana: this.playerMaxMana, currentMana: this.playerCurrentMana,
+                handLength: this.playerHand.length, deckLength: this.playerDeck.length,
+                name: this.userName, latestLog: latestLog, isP1Turn: this.isPlayerTurn
+            });
         },
         openDeckEditor(slotIndex) { 
             this.isEditMode = true; this.editAlert = ""; this.currentDeckSlot = slotIndex; 
@@ -617,16 +717,19 @@ createApp({
     },
     computed: {
         isCpuMode() { return this.gameMode === 'cpu'; },
-        playerDisplayName() { return this.isSpectator ? this.spectatorNames.player1 : (this.userName || 'あなた'); },
-        enemyDisplayName() { return this.isSpectator ? this.spectatorNames.player2 : (this.isCpuMode ? 'CPU' : '対戦相手'); },
         modeDescription() {
             if (this.gameMode === 'cpu') return 'VS CPU';
             if (this.gameMode === 'online_random') return 'ランダムマッチ';
             if (this.gameMode === 'online_room') return 'ルームマッチ';
+            if (this.gameMode === 'spectate') return '観戦モード';
             return '';
         },
+        enemyDisplayName() { return this.isSpectator ? this.p2Name : (this.isCpuMode ? '🤖 CPU' : '👤 对戦相手'); },
+        playerDisplayName() { return this.isSpectator ? this.p1Name : this.userName; },
         cpuHandLengthComputed() { return this.isCpuMode ? this.cpuHand.length : this.cpuHandLength; },
-        cpuDeckLengthComputed() { return this.isCpuMode ? this.cpuDeck.length : this.cpuDeckLength; }
+        cpuDeckLengthComputed() { return this.isCpuMode ? this.cpuDeck.length : this.cpuDeckLength; },
+        playerHandLengthComputed() { return this.isSpectator ? this.playerHandLength : this.playerHand.length; },
+        playerDeckLengthComputed() { return this.isSpectator ? this.playerDeckLength : this.playerDeck.length; }
     }
 }).mount('#app');
 </script>
