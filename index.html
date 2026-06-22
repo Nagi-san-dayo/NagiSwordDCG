@@ -209,7 +209,7 @@ const { createApp, ref, nextTick } = Vue;
 const cardPool = [
     { name: "ナギソ 試作品", cost: 1, power: 4, abilities: [], abilityText: "" },
     { name: "ナギソの返り血", cost: 1, power: 2, abilities: [{ type: "draw", value: 1 }], abilityText: "【流水1:1ドロー】" },
-    { name: "ナギソ使役", cost: 0, power: 0, abilities: [{ type: "kenko", value: 2 }, { type: "jishoburn", value: 4 }], abilityText: "【剣呼2:ランダム2枚生成】【反動4:自分に4ダメ】 " },
+    { name: "ナギソ使役", cost: 1, power: 0, abilities: [{ type: "kenko", value: 2 }, { type: "costheru", value: 1 }], abilityText: "【縮化1:コスト1下方】【剣呼2:ランダム2枚生成】 " },
     { name: "ナギソ指南書", cost: 2, power: 0, abilities: [{ type: "saidaimanahueru", value: 1 }, { type: "draw", value: 1 }], abilityText: "【恵沢1:最大マナ+1】 【流水1:1ドロー】" },
     { name: "ナギソの研磨", cost: 2, power: 2, abilities: [{ type: "manahueru", value: 2 }], abilityText: "【還元2:マナ2回復】" },
     { name: "ナギソの分割", cost: 5, power: 3, abilities: [{ type: "costheru", value: 1 }, { type: "draw", value: 1 }], abilityText: "【縮化1:コスト1下方】【流水1:1ドロー】" },
