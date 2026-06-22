@@ -740,8 +740,9 @@ createApp({
                 this.drawCard(false);
                 setTimeout(() => { this.cpuAction(); }, 1200); // 演出時間を考慮し少しウェイトを長く調整
             } else {
-                this.addLog("=== 相手のターン ===");
-                socket.emit('end_turn'); 
+            this.addLog("=== 相手のターン ===");
+            // ルーム名を一緒に送ることで、サーバー側が迷わないようにする
+            socket.emit('end_turn', { roomName: this.roomName }); 
             }
         },
         cpuAction() {
