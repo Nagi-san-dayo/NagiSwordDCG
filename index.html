@@ -10,113 +10,115 @@
         /* 🖥️ PC横画面対応 & 統一感のあるダークモダン背景 */
         body { font-family: sans-serif; background-color: #1e1e24; margin: 0; display: flex; justify-content: center; align-items: center; min-height: 100vh; }
         
-/* 🖥️ アプリ全体のコンテナを画面いっぱいに広げる */
-#app { 
-    width: 100vw;       /* 画面の横幅100% */
-    height: 100vh;      /* 画面の縦幅100% */
-    background: #2c2c35; 
-    padding: 2vh 2vw;   /* 画面サイズに合わせた余白 */
-    box-sizing: border-box; 
-    display: flex; 
-    flex-direction: column; 
-    position: relative; 
-    overflow: hidden;   /* スクロールバーを強制非表示にして全画面に収める */
-    color: #f5f5f5;
-    font-size: 1.2vw;   /* 基準フォントサイズを画面幅に依存させる */
-}
+        /* 🖥️ アプリ全体のコンテナを画面いっぱいに広げる */
+        #app { 
+            width: 100vw;       /* 画面の横幅100% */
+            height: 100vh;      /* 画面の縦幅100% */
+            background: #2c2c35; 
+            padding: 2vh 2vw;   /* 画面サイズに合わせた余白 */
+            box-sizing: border-box; 
+            display: flex; 
+            flex-direction: column; 
+            position: relative; 
+            overflow: hidden;   /* スクロールバーを強制非表示にして全画面に収める */
+            color: #f5f5f5;
+            font-size: 1.2vw;   /* 基準フォントサイズを画面幅に依存させる */
+        }
 
-/* 🔄 PC横画面時のレイアウト配置調整（画面幅768px以上） */
-@media (min-width: 768px) {
-    .game-screen {
-        display: grid !important;
-        /* 💡 画面幅を 2:1（3分の2 と 3分の1）の比率に分割 */
-        grid-template-columns: 2fr 1fr; 
-        gap: 2vh;
-        /* 💡 画面の縦幅いっぱいに広げる */
-        height: 96vh; 
-        align-items: stretch;
-    }
-    
-    /* 💡 左側の戦闘エリア（ステータスや手札）を縦長に保ちつつ縦いっぱいに広げる */
-    .game-screen > div:first-child {
-        display: flex;
-        flex-direction: column;
-        justify-content: space-between;
-        height: 100%;
-    }
-    
-    .title-screen h1 {
-        font-size: 4vw;
-    }
-    
-    /* 💡 右側のログボックスも縦いっぱいに使えるように調整 */
-    .log-box {
-        height: 100% !important; 
-        max-height: 80vh; /* ボタン等との兼ね合いで縦幅を最大化 */
-    }
-}
+        /* 🔄 PC横画面時のレイアウト配置調整（画面幅768px以上） */
+        @media (min-width: 768px) {
+            .game-screen {
+                display: grid !important;
+                /* 💡 画面幅を 2:1（3分の2 と 3分の1）の比率に分割 */
+                grid-template-columns: 2fr 1fr; 
+                gap: 2vh;
+                /* 💡 画面の縦幅いっぱいに広げる */
+                height: 96vh; 
+                align-items: stretch;
+            }
+            
+            /* 💡 左側の戦闘エリア（ステータスや手札）を縦長に保ちつつ縦いっぱいに広げる */
+            .game-screen > div:first-child {
+                display: flex;
+                flex-direction: column;
+                justify-content: space-between;
+                height: 100%;
+            }
+            
+            .title-screen h1 {
+                font-size: 4vw;
+            }
+            
+            /* 💡 右側のログボックスも縦いっぱいに使えるように調整 */
+            .log-box {
+                height: 100% !important; 
+                max-height: 80vh; /* ボタン等との兼ね合いで縦幅を最大化 */
+            }
+        }
 
+        /* 🃏 カードコンテナの調整（高さを固定し、横スクロールを強制） */
+        .hand-container { 
+            display: flex; 
+            gap: 1vw; 
+            overflow-x: auto;       /* 横スクロールを有効にする */
+            overflow-y: hidden;     /* 縦スクロールは非表示 */
+            padding: 1.5vh 1vw; 
+            background: rgba(0,0,0,0.3); 
+            border-radius: 8px; 
+            height: 36vh;           /* コンテナ全体の高さを完全に固定 */
+            box-sizing: border-box;
+            align-items: center; 
+            white-space: nowrap;    /* 子要素の折り返しを禁止 */
+        }
 
-/* 🃏 カードコンテナの調整（縦幅に余裕を持たせる） */
-.hand-container { 
-    display: flex; 
-    gap: 1vw; 
-    overflow-x: auto; 
-    padding: 1vh; 
-    background: rgba(0,0,0,0.2); 
-    border-radius: 0; 
-    min-height: 38vh; /* 画面全体の約38%をカードエリアにする */
-    align-items: center; 
-}
+        /* 🃏 カード自体のサイズを画面の大きさに連動 */
+        .card { 
+            flex-shrink: 0;         /* 👈 重要：子要素がコンテナ内で潰れないように固定 */
+            width: 14vw;            /* 横幅を固定 */
+            height: 32vh;           /* 縦幅を固定 */
+            border-radius: 12px; 
+            color: white; 
+            padding: 1.5vh 1vw; 
+            box-sizing: border-box; 
+            display: flex; 
+            flex-direction: column; 
+            justify-content: flex-start; 
+            align-items: center; 
+            text-align: center; 
+            cursor: pointer; 
+            background: #3e3e4a;
+            border: 2px solid #555;
+            box-shadow: 0 6px 12px rgba(0,0,0,0.4);
+            position: relative;
+            
+            /* 💥 文字サイズをカードの大きさに合わせてダイナミックに変える */
+            font-size: 1.1vw; 
+        }
 
-/* 🃏 カード自体のサイズを画面の大きさに連動（重要） */
-.card { 
-    min-width: 15vw;    /* 画面横幅の15%（PCで約5〜6枚が綺麗に並ぶサイズ） */
-    max-width: 18vw; 
-    height: 34vh;       /* 画面縦幅の34%（縦に潰れないように制限） */
-    border-radius: 12px; 
-    color: white; 
-    padding: 1.5vh 1vw; 
-    box-sizing: border-box; 
-    display: flex; 
-    flex-direction: column; 
-    justify-content: flex-start; 
-    align-items: center; 
-    text-align: center; 
-    cursor: pointer; 
-    background: #3e3e4a;
-    border: 2px solid #555;
-    box-shadow: 0 6px 12px rgba(0,0,0,0.4);
-    position: relative;
-    
-    /* 💥 文字サイズをカードの大きさに合わせてダイナミックに変える */
-    font-size: 1.1vw; 
-}
+        /* 📛 カード名：フォントサイズ変更 */
+        .card-name { 
+            font-size: 1.3vw;   /* 少し大きめに */
+            font-weight: bold; 
+            margin-bottom: 0.8vh; 
+            width: 100%;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            border-bottom: 2px solid rgba(255,255,255,0.2);
+            padding-bottom: 0.4vh;
+        }
 
-/* 📛 カード名：フォントサイズ変更 */
-.card-name { 
-    font-size: 1.3vw;   /* 少し大きめに */
-    font-weight: bold; 
-    margin-bottom: 0.8vh; 
-    width: 100%;
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
-    border-bottom: 2px solid rgba(255,255,255,0.2);
-    padding-bottom: 0.4vh;
-}
-
-/* 📝 能力：改行を維持しつつフォントサイズを調整 */
-.card-ability { 
-    font-size: 1vw; 
-    color: #ffd700; 
-    font-weight: bold; 
-    margin-top: 1vh; 
-    width: 100%;
-    line-height: 1.4;
-    text-align: center;
-    white-space: normal;
-}
+        /* 📝 能力：改行を維持しつつフォントサイズを調整 */
+        .card-ability { 
+            font-size: 1vw; 
+            color: #ffd700; 
+            font-weight: bold; 
+            margin-top: 1vh; 
+            width: 100%;
+            line-height: 1.4;
+            text-align: center;
+            white-space: normal;
+        }
 
         .card-ability.edit-pool { color: #ffeb3b; }
         .card-ability.edit-deck { color: #fff; background: rgba(0,0,0,0.4); padding: 1px 3px; border-radius: 3px; }
@@ -126,8 +128,15 @@
         .end-btn.active:active { transform: translateY(4px); box-shadow: none; }
         .end-btn.disabled { background: #555; color: #aaa; cursor: not-allowed; box-shadow: none; }
         .game-over-btn { background: #6f42c1; padding: 15px; border: none; border-radius: 8px; color: white; font-weight: bold; cursor: pointer; width: 100%; margin-bottom: 10px;}
-        .scroll-grid { display: flex; gap: 8px; overflow-x: auto; padding: 10px 0; border-bottom: 1px dashed #444; }
-        .alert-text { color: #ff6b6b; font-size: 12px; font-weight: bold; text-align: center; }
+        
+        .scroll-grid { 
+            display: flex; 
+            gap: 8px; 
+            overflow-x: auto; 
+            padding: 10px 0; 
+            border-bottom: 1px dashed #444; 
+            flex-shrink: 0; /* 👈 中身の増減で全体の高さが勝手に変わるのを防ぐ */
+        }
 
         .slot-list { display: flex; flex-direction: column; gap: 6px; background: #3a3528; border: 1px solid #ffc107; padding: 10px; border-radius: 10px; max-height: 180px; overflow-y: auto; margin-bottom: 5px; }
         .slot-item { display: flex; gap: 6px; align-items: center; }
@@ -191,17 +200,44 @@
         }
         /* 可動状態（プレイ可能）のカードを青く光らせる */
         .card.playable {
-         border-color: #007bff !important; /* 青い枠線 */
-         box-shadow: 0 0 15px rgba(0, 123, 255, 0.8), 0 6px 12px rgba(0,0,0,0.4) !important; /* 青いネオン光 */
-        transform: translateY(-5px); /* 少し浮き上がらせる演出（お好みで） */
-        transition: transform 0.2s, box-shadow 0.2s;
+            border-color: #007bff !important; /* 青い枠線 */
+            box-shadow: 0 0 15px rgba(0, 123, 255, 0.8), 0 6px 12px rgba(0,0,0,0.4) !important; /* 青いネオン光 */
+            transform: translateY(-5px); /* 少し浮き上がらせる演出 */
+            transition: transform 0.2s, box-shadow 0.2s;
         }
 
+        /* 🍞 トースト通知のスタイリング */
+        .toast-notification {
+            position: fixed;
+            top: 10%;            /* 画面上部から10%の位置に表示 */
+            left: 50%;
+            transform: translate(-50%, -20px); /* 最初は少し上に配置して隠す */
+            background: rgba(220, 53, 69, 0.95); /* 深みのある赤色 */
+            color: white;
+            padding: 12px 24px;
+            border-radius: 50px;
+            font-weight: bold;
+            font-size: 14px;
+            box-shadow: 0 8px 24px rgba(0,0,0,0.5);
+            z-index: 9999;       /* 一番手前に表示 */
+            opacity: 0;
+            pointer-events: none;
+            transition: transform 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275), opacity 0.3s ease;
+        }
+        /* 🔔 表示状態のクラス */
+        .toast-notification.show {
+            opacity: 1;
+            transform: translate(-50%, 0); /* 定位置にスライドダウン */
+        }
     </style>
 </head>
 <body>
 
 <div id="app">
+    <div class="toast-notification" :class="{ 'show': editAlert }">
+        {{ editAlert }}
+    </div>
+
     <div v-if="activeNotice" class="card-notice-overlay" :key="noticeKey">
         <div class="notice-user">{{ activeNotice.user }}</div>
         <div class="notice-card">
@@ -213,7 +249,7 @@
 
     <div v-if="isMatching" class="matching-overlay">
         <div class="spinner"></div>
-        <h2>{{ gameMode === 'spectate' ? '👁️ ルームに接続中...' : '🌐 対戦相手を検索中...' }}</h2>
+        <h2>{{ gameMode === 'spectate' ? '👁️ ルームに接続中...' : '🌐 对戦相手を検索中...' }}</h2>
         <p v-if="gameMode === 'online_room' || gameMode === 'spectate'" style="color: #ffc107; font-weight: bold; margin-bottom: 5px;">ルーム名: {{ roomName }}</p>
         <p style="color: #bbb; margin-top: 10px;">サーバーからの応答を待っています。</p>
         <button class="cancel-match-btn" @click="cancelMatching">キャンセル</button>
@@ -286,7 +322,6 @@
             {{ editingDeck.length === 30 ? '💾 デッキを保存してタイトルへ' : '30枚に調整してください' }}
         </button>
         <button class="game-over-btn" @click="cancelEditor" style="background:#6c757d; margin-top: 5px;">❌ 変更を破棄して戻る</button>
-        <p v-if="editAlert" class="alert-text">{{ editAlert }}</p>
         
         <h3>📦 カードプール</h3>
         <div class="scroll-grid">
@@ -408,7 +443,7 @@ createApp({
             customDecks: Array(10).fill(null),
             customDeckNames: Array(10).fill(""),
             currentDeckSlot: 0, selectedSlotIndex: null,           
-            editingDeck: [], editingDeckName: "", editAlert: "", cardPool: cardPool,
+            editingDeck: [], editingDeckName: "", editAlert: "", toastTimer: null, cardPool: cardPool,
             playerHP: 30, cpuHP: 30,
             playerMaxMana: 1, playerCurrentMana: 1,
             cpuMaxMana: 1, cpuCurrentMana: 1,
@@ -477,10 +512,9 @@ createApp({
             }
         });
 
-        /* 🌐 相手の切断時：ログだけでなく、相手HPを0にしてあなたの勝利を確定させるよう修正 */
         socket.on('opponent_disconnected', () => {
             if (!this.isGameOver) {
-                this.addLog("⚠️ 对戦相手の接続が切れました。あなたの勝利です！");
+                this.addLog("⚠️ 対戦相手の接続が切れました。あなたの勝利です！");
                 this.cpuHP = 0; 
                 this.isGameOver = true;
                 this.checkWinLose();
@@ -488,7 +522,6 @@ createApp({
         });
     },
     methods: {
-        /* 📝 能力テキスト内の半角・全角スペースを改行コード（<br>）に置換する処理 */
         formatAbility(text) {
             if (!text) return "";
             return text.replace(/[\s　]+/g, '<br>');
@@ -873,7 +906,6 @@ createApp({
         },
         checkWinLose() {
             if (this.isGameOver) {
-                // 既にゲームが終了していても勝敗表示を正しく着地させる
                 if (this.cpuHP <= 0 && this.playerHP > 0) {
                     if (!this.logMessages.includes(`🎉 勝利しました！`)) this.addLog(`🎉 勝利しました！`);
                 }
@@ -897,21 +929,25 @@ createApp({
             this.editingDeck = this.customDecks[slotIndex] ? this.customDecks[slotIndex].map(i => ({ ...cardPool[i], poolIndex: i })) : []; 
         },
         getCardCountInEditingDeck(poolIndex) { return this.editingDeck.filter(c => c.poolIndex === poolIndex).length; },
-        // 📦 カードをデッキに追加する関数（修正版）
+        
+        // 📦 カードをデッキに追加する関数（トーストタイマー＆バグ修正版）
         addCardToEditingDeck(poolIndex) { 
-        // 1. デッキ全体の枚数が30枚なら追加しない
-        if (this.editingDeck.length >= 30) return; 
-    
-        // 2. 【追加】同じカードがすでに5枚入っているなら追加せず警告を出す
-        if (this.getCardCountInEditingDeck(poolIndex) >= 5) {
-        this.editAlert = `❌「${this.cardPool[poolIndex].name}」は5枚までしか入れられません。`;
-        return; 
-        }
-    
-        // 正常に追加できる場合は警告をクリアしてデッキに追加
-        this.editAlert = ""; 
-        this.editingDeck.push({ ...cardPool[poolIndex], poolIndex: poolIndex }); 
-},
+            if (this.editingDeck.length >= 30) return; 
+        
+            if (this.getCardCountInEditingDeck(poolIndex) >= 5) {
+                if (this.toastTimer) clearTimeout(this.toastTimer);
+                
+                this.editAlert = `❌「${this.cardPool[poolIndex].name}」は5枚までしか入れられません。`;
+                
+                this.toastTimer = setTimeout(() => {
+                    this.editAlert = "";
+                }, 2500);
+                return; 
+            }
+        
+            this.editAlert = ""; 
+            this.editingDeck.push({ ...cardPool[poolIndex], poolIndex: poolIndex }); 
+        },
 
         removeCardFromEditingDeck(index) { this.editingDeck.splice(index, 1); },
         saveAndCloseEditor() { 
@@ -933,7 +969,7 @@ createApp({
             if (this.gameMode === 'spectate') return '観戦モード';
             return '';
         },
-        enemyDisplayName() { return this.isSpectator ? this.p2Name : (this.isCpuMode ? '🤖 CPU' : '👤 对戦相手'); },
+        enemyDisplayName() { return this.isSpectator ? this.p2Name : (this.isCpuMode ? '🤖 CPU' : '👤 対戦相手'); },
         playerDisplayName() { return this.isSpectator ? this.p1Name : this.userName; },
         cpuHandLengthComputed() { return this.isCpuMode ? this.cpuHand.length : this.cpuHandLength; },
         cpuDeckLengthComputed() { return this.isCpuMode ? this.cpuDeck.length : this.cpuDeckLength; },
