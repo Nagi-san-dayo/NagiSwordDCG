@@ -49,7 +49,6 @@ io.on('connection', (socket) => {
       waitingPlayer = socket;
     }
   });
-
   socket.on('play_card', (data) => {
     if (socket.opponent) {
       socket.opponent.emit('opponent_play_card', data);
@@ -74,6 +73,7 @@ io.on('connection', (socket) => {
       socket.opponent.opponent = null; 
     }
   });
+});
   // サーバー側（Node.js）の管理オブジェクト
 let roomWaiting = {}; 
 
