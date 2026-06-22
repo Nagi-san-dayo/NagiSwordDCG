@@ -8,7 +8,7 @@
     <script src="https://cdn.socket.io/4.7.5/socket.io.min.js"></script>
     <style>
         body { font-family: sans-serif; background-color: #f0f0f5; margin: 0; display: flex; justify-content: center; }
-        #app { width: 100%; max-width: 400px; background: white; min-height: 100vh; padding: 15px; box-sizing: border-box; display: flex; flex-direction: column; position: relative; }
+        #app { width: 100%; max-width: 400px; background: white; min-height: 100vh; padding: 15px; box-sizing: border-box; display: flex; flex-direction: column; position: relative; overflow: hidden; }
         .title-screen, .game-screen { display: flex; flex-direction: column; gap: 15px; flex-grow: 1; }
         .deck-btn { padding: 15px; border-radius: 10px; text-align: left; cursor: pointer; margin-bottom: 10px; }
         .deck-btn.agro { background: #ffe6e6; border: 1px solid red; }
@@ -72,11 +72,53 @@
             margin-top: 30px; background: #dc3545; color: white; border: none;
             padding: 10px 20px; border-radius: 20px; font-weight: bold; cursor: pointer;
         }
+
+        /* ─── 新規追加: カードプレイ演出用のスタイル ─── */
+        .card-notice-overlay {
+            position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0,0,0,0.4); display: flex; flex-direction: column;
+            justify-content: center; align-items: center; z-index: 90;
+            pointer-events: none; animation: fadeInOut 1.2s ease-in-out forwards;
+        }
+        .notice-user {
+            color: white; font-size: 18px; font-weight: bold; text-shadow: 2px 2px 4px rgba(0,0,0,0.8); margin-bottom: 15px;
+        }
+        .notice-card {
+            width: 160px; height: 220px; border-radius: 15px; background: #007bff;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.5); border: 3px solid white;
+            display: flex; flex-direction: column; justify-content: center; align-items: center;
+            color: white; padding: 15px; text-align: center; box-sizing: border-box;
+            transform: scale(0.5); animation: popUp 1.2s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
+        }
+        .notice-card .card-name { font-size: 16px; margin-bottom: 10px; }
+        .notice-card .card-ability { font-size: 12px; }
+        @keyframes fadeInOut {
+            0% { background: rgba(0,0,0,0); }
+            15% { background: rgba(0,0,0,0.4); }
+            80% { background: rgba(0,0,0,0.4); opacity: 1; }
+            100% { background: rgba(0,0,0,0); opacity: 0; }
+        }
+        @keyframes popUp {
+            0% { transform: scale(0.5); opacity: 0; }
+            15% { transform: scale(1.1); opacity: 1; }
+            25% { transform: scale(1.0); }
+            80% { transform: scale(1.0); opacity: 1; }
+            100% { transform: scale(0.8); opacity: 0; }
+        }
     </style>
 </head>
 <body>
 
 <div id="app">
+    <div v-if="activeNotice" class="card-notice-overlay" :key="noticeKey">
+        <div class="notice-user">{{ activeNotice.user }}</div>
+        <div class="notice-card">
+            <div class="card-name">{{ activeNotice.card.name }}</div>
+            <div style="font-size: 13px;">コスト: {{ activeNotice.card.cost }} / 攻撃: {{ activeNotice.card.power }}</div>
+            <div v-if="activeNotice.card.abilityText" class="card-ability">{{ activeNotice.card.abilityText }}</div>
+        </div>
+    </div>
+
     <div v-if="isMatching" class="matching-overlay">
         <div class="spinner"></div>
         <h2>{{ gameMode === 'spectate' ? '👁️ ルームに接続中...' : '🌐 対戦相手を検索中...' }}</h2>
@@ -280,8 +322,10 @@ createApp({
             cpuHandLength: 0, cpuDeckLength: 30, playerHandLength: 0, playerDeckLength: 30,
             maxHandSize: 10, totalMaxManaLimit: 10,
             selectedDeckType: null,
-            isFirstTurn: true, 
-            p1Name: "プレイヤー1", p2Name: "プレイヤー2"
+            isFirstTurn: true, // 先攻1ターン目判定用
+            p1Name: "プレイヤー1", p2Name: "プレイヤー2",
+            activeNotice: null, // ポップアップ演出用データ
+            noticeKey: 0 // アニメーション連続再生用キー
         };
     },
     mounted() {
@@ -299,7 +343,7 @@ createApp({
             this.isSpectator = false;
             this.addLog("🤝 オンライン対戦相手が見つかりました！");
             this.isPlayerTurn = data.isFirst; 
-            this.isFirstTurn = true; 
+            this.isFirstTurn = data.isFirst; // 自分が先攻なら先攻1ターン目フラグをtrueに
             this.setupGameField(this.selectedDeckType);
             this.isGameStarted = true;
             this.syncStateToServer("ゲーム開始！");
@@ -376,7 +420,7 @@ createApp({
             } else {
                 this.isSpectator = false;
                 this.isPlayerTurn = true;
-                this.isFirstTurn = true;
+                this.isFirstTurn = true; // CPU戦ではプレイヤーが先攻
                 this.setupGameField(type);
                 this.isGameStarted = true;
                 this.addLog(`🤖 CPU対戦を開始しました！`);
@@ -427,21 +471,60 @@ createApp({
                     this.playerHP = 0; this.checkWinLose(); return;
                 }
                 let drawnCard = this.playerDeck.shift();
-                if (this.playerHand.length < this.maxHandSize) this.playerHand.push(drawnCard);
+                if (this.playerHand.length < this.maxHandSize) {
+                    this.playerHand.push(drawnCard);
+                } else {
+                    this.addLog(`🔥 手札が上限(10枚)を超えているため、【${drawnCard.name}】は燃破した！`);
+                }
             } else {
                 if (this.isCpuMode) {
                     if (this.cpuDeck.length === 0) { this.addLog(`💀 【LO】相手の山札が0枚のため勝利しました。`); this.cpuHP = 0; this.checkWinLose(); return; }
-                    this.cpuHand.push(this.cpuDeck.shift());
+                    let drawnCard = this.cpuDeck.shift();
+                    if (this.cpuHand.length < this.maxHandSize) {
+                        this.cpuHand.push(drawnCard);
+                    } else {
+                        this.addLog(`🔥 相手の手札が上限(10枚)を超えているため、カードが1枚燃破した！`);
+                    }
                 } else {
-                    this.cpuHandLength++; this.cpuDeckLength--;
+                    if (this.cpuHandLength < this.maxHandSize) {
+                        this.cpuHandLength++;
+                    } else {
+                        this.addLog(`🔥 相手の手札が上限(10枚)を超えているため、カードが1枚燃破した！`);
+                    }
+                    this.cpuDeckLength--;
                 }
             }
+        },
+        showCardNotice(userName, card) {
+            this.activeNotice = { user: userName, card: card };
+            this.noticeKey++;
+            setTimeout(() => {
+                // 1.2秒後にポップアップをクリア（アニメーション時間と同等）
+                if (this.activeNotice && this.activeNotice.card.id === card.id) {
+                    this.activeNotice = null;
+                }
+            }, 1200);
         },
         playCard(card, isPlayer, syncData = null) {
             if (this.isGameOver) return;
             if (isPlayer && (!this.isPlayerTurn || this.playerCurrentMana < card.cost)) return;
 
             let localSyncData = { chosenCardIndices: [], discardIndex: -1 };
+
+            // 演出ポップアップの発火
+            const activeName = isPlayer ? this.userName : (this.isCpuMode ? '🤖 CPU' : '👤 相手');
+            this.showCardNotice(activeName, card);
+
+            // 事前の能力同期準備 (オンライン時の「剣呼」不具合の修正)
+            if (isPlayer && !this.isCpuMode) {
+                card.abilities.forEach(ab => {
+                    if (ab.type === "kenko") {
+                        for(let i=0; i<ab.value; i++) {
+                            localSyncData.chosenCardIndices.push(Math.floor(Math.random() * this.cardPool.length));
+                        }
+                    }
+                });
+            }
 
             if (isPlayer) {
                 this.playerCurrentMana -= card.cost; this.cpuHP -= card.power;
@@ -461,13 +544,6 @@ createApp({
 
             // 能力処理
             card.abilities.forEach(ab => {
-                if (isPlayer && !this.isCpuMode) {
-                    if (ab.type === "kenko") {
-                        for(let i=0; i<ab.value; i++) {
-                            localSyncData.chosenCardIndices.push(Math.floor(Math.random() * this.cardPool.length));
-                        }
-                    }
-                }
                 this.triggerAbility(ab, isPlayer, isPlayer ? localSyncData : syncData);
             });
 
@@ -486,7 +562,7 @@ createApp({
                 if(reduce) c.cost = Math.max(0, c.cost - reduce.value);
             });
         },
-               triggerAbility(ab, isPlayerTrigger, syncData) {
+        triggerAbility(ab, isPlayerTrigger, syncData) {
             const type = ab.type; const value = ab.value;
             const currentCount = isPlayerTrigger ? this.playerPlayedCountThisTurn : this.cpuPlayedCountThisTurn;
 
@@ -507,7 +583,8 @@ createApp({
                 }
             } 
             else if(type === "manahueru") {
-                if(isPlayerTrigger) this.playerCurrentMana = Math.min(this.totalMaxManaLimit, this.playerCurrentMana + value);
+                // 還元のマナ回復上限のタイポ修正 (自身の最大マナを上限値にする)
+                if(isPlayerTrigger) this.playerCurrentMana = Math.min(this.playerMaxMana, this.playerCurrentMana + value);
                 else this.cpuCurrentMana = Math.min(this.cpuMaxMana, this.cpuCurrentMana + value);
                 if (isPlayerTrigger) {
                     this.addLog(`  └【還元${value}】マナが ${value} 回復！`);
@@ -527,9 +604,9 @@ createApp({
             else if(type === "jishoburn") {
                 if(isPlayerTrigger) this.playerHP -= value; else this.cpuHP -= value;
                 if (isPlayerTrigger) {
-                    this.addLog(`  └【反動${value}】自分に ${value} ダメージ！`);
+                    this.addLog(`  └【反動${value}】反動で自分に ${value} ダメージ！`);
                 } else {
-                    this.addLog(`  └【反動${value}】相手が自分自身に ${value} ダメージ！`);
+                    this.addLog(`  └【反動${value}】反動で相手に ${value} ダメージ！`);
                 }
             } 
             else if(type === "heal") {
@@ -558,11 +635,20 @@ createApp({
                 if (this.isCpuMode || !isPlayerTrigger) {
                     for(let i=0; i<value; i++) {
                         let randCard = createCardInstance(this.cardPool[Math.floor(Math.random() * this.cardPool.length)]);
-                        if(isPlayerTrigger) this.playerHand.push(randCard); else this.cpuHand.push(randCard);
+                        if(isPlayerTrigger) {
+                            if (this.playerHand.length < this.maxHandSize) this.playerHand.push(randCard);
+                            else this.addLog(`🔥 手札満杯のため生成カードが燃破した！`);
+                        } else {
+                            if (this.cpuHand.length < this.maxHandSize) this.cpuHand.push(randCard);
+                        }
                     }
                 } else if(syncData && syncData.chosenCardIndices) {
                     syncData.chosenCardIndices.forEach(idx => {
-                        this.playerHand.push(createCardInstance(this.cardPool[idx]));
+                        if (this.playerHand.length < this.maxHandSize) {
+                            this.playerHand.push(createCardInstance(this.cardPool[idx]));
+                        } else {
+                            this.addLog(`🔥 手札満杯のため生成カードが燃破した！`);
+                        }
                     });
                 }
             }
@@ -644,7 +730,7 @@ createApp({
         endPlayerTurn() {
             if(!this.isGameStarted || this.isGameOver) return;
             this.isPlayerTurn = false;
-            this.isFirstTurn = false; 
+            this.isFirstTurn = false; // 自分の先攻ターンが終われば確実にfalse
             this.playerPlayedCountThisTurn = 0;
             
             if (this.isCpuMode) {
@@ -652,17 +738,18 @@ createApp({
                 this.cpuMaxMana = Math.min(this.totalMaxManaLimit, this.cpuMaxMana + 1);
                 this.cpuCurrentMana = this.cpuMaxMana;
                 this.drawCard(false);
-                setTimeout(() => { this.cpuAction(); }, 1000);
+                setTimeout(() => { this.cpuAction(); }, 1200); // 演出時間を考慮し少しウェイトを長く調整
             } else {
                 this.addLog("=== 相手のターン ===");
                 socket.emit('end_turn'); 
             }
         },
         cpuAction() {
+            if (this.isGameOver) return;
             let playableCard = this.cpuHand.find(c => c.cost <= this.cpuCurrentMana);
             if(playableCard) {
                 this.playCard(playableCard, false);
-                setTimeout(() => { this.cpuAction(); }, 1000);
+                setTimeout(() => { this.cpuAction(); }, 1400); // ポップアップアニメ終了を待って次の一手
             } else {
                 this.endCpuTurn();
             }
@@ -676,6 +763,7 @@ createApp({
             this.playerMaxMana = Math.min(this.totalMaxManaLimit, this.playerMaxMana + 1);
             this.playerCurrentMana = this.playerMaxMana;
 
+            // 後攻時の不具合を解消した厳密な先攻第1ターン制限
             if (this.isFirstTurn) {
                 this.addLog("※先攻1ターン目のためドローはありません。");
                 this.isFirstTurn = false;
@@ -724,7 +812,7 @@ createApp({
             if (this.gameMode === 'spectate') return '観戦モード';
             return '';
         },
-        enemyDisplayName() { return this.isSpectator ? this.p2Name : (this.isCpuMode ? '🤖 CPU' : '👤 对戦相手'); },
+        enemyDisplayName() { return this.isSpectator ? this.p2Name : (this.isCpuMode ? '🤖 CPU' : '👤 対戦相手'); },
         playerDisplayName() { return this.isSpectator ? this.p1Name : this.userName; },
         cpuHandLengthComputed() { return this.isCpuMode ? this.cpuHand.length : this.cpuHandLength; },
         cpuDeckLengthComputed() { return this.isCpuMode ? this.cpuDeck.length : this.cpuDeckLength; },
