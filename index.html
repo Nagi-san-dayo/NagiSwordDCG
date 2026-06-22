@@ -29,22 +29,33 @@
 @media (min-width: 768px) {
     .game-screen {
         display: grid !important;
-        grid-template-columns: 1fr 320px; /* 右側のログ幅を固定、左側を全画面に広げる */
+        /* 💡 画面幅を 2:1（3分の2 と 3分の1）の比率に分割 */
+        grid-template-columns: 2fr 1fr; 
         gap: 2vh;
-        height: 100%; /* 高さを一杯に使う */
+        /* 💡 画面の縦幅いっぱいに広げる */
+        height: 96vh; 
         align-items: stretch;
     }
     
-    /* タイトル画面のフォントも大きく */
+    /* 💡 左側の戦闘エリア（ステータスや手札）を縦長に保ちつつ縦いっぱいに広げる */
+    .game-screen > div:first-child {
+        display: flex;
+        flex-direction: column;
+        justify-content: space-between;
+        height: 100%;
+    }
+    
     .title-screen h1 {
         font-size: 4vw;
     }
     
+    /* 💡 右側のログボックスも縦いっぱいに使えるように調整 */
     .log-box {
-        height: 100% !important; /* 右側サイドバーの高さに合わせる */
-        max-height: 55vh;        /* 他のボタンとの兼ね合いで調整 */
+        height: 100% !important; 
+        max-height: 80vh; /* ボタン等との兼ね合いで縦幅を最大化 */
     }
 }
+
 
 /* 🃏 カードコンテナの調整（縦幅に余裕を持たせる） */
 .hand-container { 
@@ -53,7 +64,7 @@
     overflow-x: auto; 
     padding: 1vh; 
     background: rgba(0,0,0,0.2); 
-    border-radius: 15px; 
+    border-radius: 0; 
     min-height: 38vh; /* 画面全体の約38%をカードエリアにする */
     align-items: center; 
 }
