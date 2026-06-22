@@ -2,20 +2,18 @@ const express = require('express');
 const http = require('http');
 const { Server } = require('socket.io');
 const cors = require('cors');
-const path = require('path'); // ファイルのパスを扱うための標準モジュール
+const path = require('path');
 
 const app = express();
 app.use(cors());
 
-// ーーー 追加部分：index.html を配信する設定 ーーー
-// publicフォルダ内（今回は同じ階層を想定）の静的ファイルを配信
+// 静的ファイルの配信設定
 app.use(express.static(__dirname));
 
 // ルートURLにアクセスがあったら index.html を返す
 app.get('/', (req, res) => {
   res.sendFile(path.join(__dirname, 'index.html'));
 });
-// ーーーーーーーーーーーーーーーーーーーーーーーーー
 
 const server = http.createServer(app);
 const io = new Server(server, {
@@ -25,44 +23,36 @@ const io = new Server(server, {
   }
 });
 
+// マッチング用の管理変数
 let waitingPlayer = null; 
+let roomWaiting = {}; // ルームマッチ用
 
-
-// Discord通知の追加の案
-// Discordでプレイヤーがオンラインキューを入れたときに通知が出るような仕組みの追加です。
-// 通知を送るDiscordのチャンネルでwebhookのURLを発行する必要があります。
-// 1. 通知を送りたいDiscordのテキストチャンネルの歯車マークを開く。
-// 2. 連携サービス→ウェブフック→新しいウェブフックから作成。
-// 3. アイコンや名前を設定したらウェブフックURLをコピー。
+// Discord Webhookの設定
 const DISCORD_WEBHOOK_URL = process.env.DISCORD_WEBHOOK_URL || 'https://discord.com/api/webhooks/1518233626033127584/afbC-V7S9t7GkEvhMV8ZADhHVWxCVFlCghw7cP6QOZTjSpD7-YUgNpkJFBfjRTyXqQQD';
 
 async function notifyDiscord(message) {
-  // URLが設定されていない場合は何もしない
   if (!DISCORD_WEBHOOK_URL) return;
 
   const now = new Date();
-  // 現在時刻も表示
   const timeString = now.toLocaleString('ja-JP', { timeZone: 'Asia/Tokyo' });
-
   const finalMessage = `[${timeString}]\n${message}`;
 
   try {
     await fetch(DISCORD_WEBHOOK_URL, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        content: finalMessage
-      })
+      body: JSON.stringify({ content: finalMessage })
     });
   } catch (error) {
     console.error('Discord通知に失敗しました:', error);
   }
 }
 
-
+// Socket.ioのメイン処理（1つに統合）
 io.on('connection', (socket) => {
   console.log('接続されました:', socket.id);
 
+  // 1. 通常のマッチング（ランダムマッチ）
   socket.on('join_matchmaking', () => {
     if (waitingPlayer && waitingPlayer.id !== socket.id) {
       const roomName = `room_${socket.id}_${waitingPlayer.id}`;
@@ -74,18 +64,55 @@ io.on('connection', (socket) => {
       socket.emit('game_start', { isFirst: isFirst });
       waitingPlayer.emit('game_start', { isFirst: !isFirst });
 
+      // お互いを相手として紐付け
       socket.opponent = waitingPlayer;
       waitingPlayer.opponent = socket;
       
+      // ルーム名も保持しておく
+      socket.gameRoom = roomName;
+      waitingPlayer.gameRoom = roomName;
+
       waitingPlayer = null;
-      // マッチング成立時のDiscord通知メッセージ
       notifyDiscord('⚔️ **ナギソDCG** ⚔️\nマッチングが成立したぞ！👀');
     } else {
       waitingPlayer = socket;
-      // マッチング待機時のDiscord通知メッセージ
       notifyDiscord('⚔️ **ナギソDCG** ⚔️\nマッチ待機中の人が現れたぞ！');
     }
   });
+
+  // 2. ルームマッチ（合言葉）
+  socket.on('join_room_match', (data) => {
+    const roomName = data.roomName;
+
+    if (roomWaiting[roomName] && roomWaiting[roomName].id !== socket.id) {
+      const opponent = roomWaiting[roomName];
+      delete roomWaiting[roomName]; 
+
+      const isFirst = Math.random() > 0.5;
+      const roomId = `room_${roomName}`;
+      
+      opponent.join(roomId);
+      socket.join(roomId);
+      
+      // 通常マッチと同様に相手とルームを紐付け
+      socket.opponent = opponent;
+      opponent.opponent = socket;
+      socket.gameRoom = roomId;
+      opponent.gameRoom = roomId;
+
+      opponent.emit('game_start', { isFirst: isFirst });
+      socket.emit('game_start', { isFirst: !isFirst });
+      
+      console.log(`ルームマッチ成立: ${roomName}`);
+      notifyDiscord(`⚔️ **ナギソDCG** ⚔️\nルームマッチ【${roomName}】が成立したぞ！`);
+    } else {
+      roomWaiting[roomName] = socket;
+      socket.myWaitingRoomName = roomName; 
+      console.log(`ルームマッチ待機中: ${roomName}`);
+    }
+  });
+
+  // 3. ゲームプレイ中の通信（通常・ルーム共通）
   socket.on('play_card', (data) => {
     if (socket.opponent) {
       socket.opponent.emit('opponent_play_card', data);
@@ -98,81 +125,28 @@ io.on('connection', (socket) => {
     }
   });
 
+  // 4. 切断時の処理（通常・ルーム共通＆待機キャンセル対応）
   socket.on('disconnect', () => {
     console.log('切断されました:', socket.id);
     
+    // 通常マッチの待機中に切断された場合
     if (waitingPlayer && waitingPlayer.id === socket.id) {
       waitingPlayer = null;
     }
     
+    // ルームマッチの待機中に切断された場合
+    if (socket.myWaitingRoomName && roomWaiting[socket.myWaitingRoomName] === socket) {
+      delete roomWaiting[socket.myWaitingRoomName];
+      console.log(`ルームマッチ待機キャンセル: ${socket.myWaitingRoomName}`);
+    }
+    
+    // 対戦中に切断された場合
     if (socket.opponent) {
       socket.opponent.emit('opponent_disconnected');
       socket.opponent.opponent = null; 
+      socket.opponent.gameRoom = null;
     }
   });
-});
-  // サーバー側（Node.js）の管理オブジェクト
-let roomWaiting = {}; 
-
-io.on('connection', (socket) => {
-    
-    socket.on('join_room_match', (data) => {
-        const roomName = data.roomName;
-
-        // すでに同じ合言葉で待っている人（1人目）がいる場合
-        if (roomWaiting[roomName] && roomWaiting[roomName].id !== socket.id) {
-            const opponent = roomWaiting[roomName];
-            delete roomWaiting[roomName]; // 待機枠をクリア
-
-            // 先攻・後攻をランダムに決定
-            const isFirst = Math.random() > 0.5;
-            const roomId = `room_${roomName}`;
-            
-            // 2人を同じSocketの部屋に入れる
-            opponent.join(roomId);
-            socket.join(roomId);
-            opponent.gameRoom = roomId;
-            socket.gameRoom = roomId;
-
-            // 互いにゲーム開始イベントを送る（ここでクライアントが反応する）
-            opponent.emit('game_start', { isFirst: isFirst });
-            socket.emit('game_start', { isFirst: !isFirst });
-            
-            console.log(`ルームマッチ成立: ${roomName}`);
-        } else {
-            // まだ誰も待っていない場合、自分が1人目として待機
-            roomWaiting[roomName] = socket;
-            socket.myWaitingRoomName = roomName; 
-            console.log(`ルームマッチ待機中: ${roomName}`);
-        }
-    });
-    socket.on('play_card', (data) => {
-    if (socket.opponent) {
-      socket.opponent.emit('opponent_play_card', data);
-    }
-  });
-
-  socket.on('end_turn', () => {
-    if (socket.opponent) {
-      socket.opponent.emit('opponent_end_turn');
-    }
-  });
-
-  socket.on('disconnect', () => {
-    console.log('切断されました:', socket.id);
-    
-    if (waitingPlayer && waitingPlayer.id === socket.id) {
-      waitingPlayer = null;
-    }
-    
-    if (socket.opponent) {
-      socket.opponent.emit('opponent_disconnected');
-      socket.opponent.opponent = null; 
-    }
-  });
-    
-    // （割愛）切断時やキャンセル時に roomWaiting[roomName] を削除する処理も必要
-
 });
 
 const PORT = process.env.PORT || 3000;
