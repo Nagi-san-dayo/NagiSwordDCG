@@ -73,10 +73,10 @@ io.on('connection', (socket) => {
       waitingPlayer.gameRoom = roomName;
 
       waitingPlayer = null;
-      notifyDiscord('⚔️ **ナギソDCG** ⚔️\nマッチングが成立したぞ！👀');
+      notifyDiscord('\nマッチングが成立したぞ！👀');
     } else {
       waitingPlayer = socket;
-      notifyDiscord('⚔️ **ナギソDCG** ⚔️\nマッチ待機中の人が現れたぞ！');
+      notifyDiscord('\nマッチ待機中の人が現れたぞ！');
     }
   });
 
@@ -104,7 +104,6 @@ io.on('connection', (socket) => {
       socket.emit('game_start', { isFirst: !isFirst });
       
       console.log(`ルームマッチ成立: ${roomName}`);
-      notifyDiscord(`⚔️ **ナギソDCG** ⚔️\nルームマッチ【${roomName}】が成立したぞ！`);
     } else {
       roomWaiting[roomName] = socket;
       socket.myWaitingRoomName = roomName; 
