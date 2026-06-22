@@ -7,54 +7,159 @@
     <script src="https://unpkg.com/vue@3/dist/vue.global.js"></script>
     <script src="https://cdn.socket.io/4.7.5/socket.io.min.js"></script>
     <style>
-        body { font-family: sans-serif; background-color: #f0f0f5; margin: 0; display: flex; justify-content: center; }
-        #app { width: 100%; max-width: 400px; background: white; min-height: 100vh; padding: 15px; box-sizing: border-box; display: flex; flex-direction: column; position: relative; overflow: hidden; }
+        /* 🖥️ PC横画面対応 & 統一感のあるダークモダン背景 */
+        body { font-family: sans-serif; background-color: #1e1e24; margin: 0; display: flex; justify-content: center; align-items: center; min-height: 100vh; }
+        
+        /* 横長（最大1100px）に対応したアプリコンテナ */
+        #app { 
+            width: 100%; 
+            max-width: 1100px; 
+            background: #2c2c35; 
+            min-height: 100vh; 
+            padding: 15px; 
+            box-sizing: border-box; 
+            display: flex; 
+            flex-direction: column; 
+            position: relative; 
+            overflow: hidden; 
+            color: #f5f5f5;
+        }
+        
+        @media (min-height: 700px) {
+            #app {
+                min-height: 90vh;
+                border-radius: 12px;
+                box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+                border: 1px solid #444;
+            }
+        }
+
+        /* 🔄 横画面時のレイアウト配置調整（画面幅768px以上で発動） */
+        @media (min-width: 768px) {
+            .game-screen {
+                display: grid !important;
+                grid-template-columns: 1fr 300px; /* 左側に戦場・手札、右側に情報ログ・ボタン */
+                gap: 15px;
+                align-items: start;
+            }
+            .title-screen {
+                display: grid !important;
+                grid-template-columns: 1fr 1fr;
+                gap: 15px;
+            }
+            .title-screen h1, .title-screen > p, .title-screen > .profile-box, .title-screen > div:nth-of-type(1), .title-screen > p:nth-of-type(2) {
+                grid-column: span 2;
+            }
+            .slot-list {
+                display: grid !important;
+                grid-template-columns: 1fr 1fr;
+                gap: 6px;
+                max-height: 250px !important;
+            }
+            .log-box {
+                height: 300px !important; /* PC横画面時はログの高さをしっかり確保 */
+            }
+        }
+
         .title-screen, .game-screen { display: flex; flex-direction: column; gap: 15px; flex-grow: 1; }
-        .deck-btn { padding: 15px; border-radius: 10px; text-align: left; cursor: pointer; margin-bottom: 10px; }
+        .deck-btn { padding: 15px; border-radius: 10px; text-align: left; cursor: pointer; margin-bottom: 10px; color: #333; }
         .deck-btn.agro { background: #ffe6e6; border: 1px solid red; }
         .deck-btn.ramp { background: #e6ffe6; border: 1px solid green; }
         .deck-btn.combo { background: #e6e6ff; border: 1px solid blue; }
-        .deck-btn.mode { padding: 10px; border-radius: 10px; text-align: center; font-weight: bold; cursor: pointer; background: #e2f0d9; border: 2px solid #385723; font-size: 13px; }
+        .deck-btn.mode { padding: 10px; border-radius: 10px; text-align: center; font-weight: bold; cursor: pointer; background: #e2f0d9; border: 2px solid #385723; font-size: 13px; color: #333; }
         .deck-btn.mode.active { background: #385723; color: white; }
         .deck-btn.spectate { background: #fff3cd; border: 2px solid #ffc107; color: #856404; }
         .deck-btn.spectate.active { background: #ffc107; color: black; }
         h1, h3, h2 { margin: 0 0 5px 0; }
-        p { margin: 0; font-size: 14px; color: #555; }
-        .status-box { padding: 10px; border-radius: 10px; transition: background 0.3s; }
-        .cpu-box { background: #ffe6e6; border: 1px solid #ffb3b3; }
-        .online-enemy-box { background: #f2e6ff; border: 1px solid #d9b3ff; } 
-        .player-box { background: #e6e6ff; }
-        .spectator-box { background: #fff3cd; border: 1px solid #ffc107; text-align: center; font-weight: bold; font-size: 14px; padding: 8px; border-radius: 8px; }
-        .log-box { flex-grow: 1; background: #f9f9f9; border-radius: 8px; padding: 10px; overflow-y: auto; height: 150px; font-size: 12px; border: 1px solid #ddd; }
+        p { margin: 0; font-size: 14px; color: #ddd; }
+        
+        /* ステータスボックスの視認性アップ */
+        .status-box { padding: 12px; border-radius: 10px; transition: background 0.3s; }
+        .cpu-box { background: #4a2828; border: 1px solid #733c3c; }
+        .online-enemy-box { background: #3c284a; border: 1px solid #633c73; } 
+        .player-box { background: #28374a; border: 1px solid #3c5373; }
+        .spectator-box { background: #fff3cd; border: 1px solid #ffc107; text-align: center; font-weight: bold; font-size: 14px; padding: 8px; border-radius: 8px; color: #333; }
+        
+        .log-box { background: #151518; border-radius: 8px; padding: 10px; overflow-y: auto; height: 140px; font-size: 12px; border: 1px solid #333; color: #ccc; }
         .log-list { margin: 0; padding: 0; list-style: none; }
-        .log-list li { margin-bottom: 4px; }
-        .hand-container { display: flex; gap: 8px; overflow-x: auto; padding-bottom: 10px; }
-        .card { min-width: 90px; height: 110px; border-radius: 8px; color: white; padding: 5px; box-sizing: border-box; display: flex; flex-direction: column; justify-content: center; align-items: center; text-align: center; cursor: pointer; font-size: 11px; }
-        .card.playable { background: #007bff; }
-        .card.disabled { background: #999; cursor: not-allowed; }
-        .card.edit-mode { background: #28a745; }
-        .card-name { font-weight: bold; margin-bottom: 5px; }
-        .card-ability { font-size: 9px; color: yellow; font-weight: bold; margin-top: 5px; }
-        .card-ability.edit-pool { color: #ffeb3b; }
-        .card-ability.edit-deck { color: #fff; background: rgba(0,0,0,0.2); padding: 1px 3px; border-radius: 3px; }
-        .end-btn { padding: 15px; border: none; border-radius: 8px; color: white; font-weight: bold; cursor: pointer; width: 100%; }
-        .end-btn.active { background: #28a745; }
-        .end-btn.disabled { background: #999; cursor: not-allowed; }
-        .game-over-btn { background: #6f42c1; padding: 15px; border: none; border-radius: 8px; color: white; font-weight: bold; cursor: pointer; width: 100%; margin-bottom: 10px;}
-        .scroll-grid { display: flex; gap: 8px; overflow-x: auto; padding: 10px 0; border-bottom: 1px dashed #ddd; }
-        .alert-text { color: red; font-size: 12px; font-weight: bold; text-align: center; }
+        .log-list li { margin-bottom: 4px; border-bottom: 1px solid #222; padding-bottom: 2px; }
+        
+        .hand-container { display: flex; gap: 8px; overflow-x: auto; padding: 5px 5px 12px 5px; background: rgba(0,0,0,0.2); border-radius: 10px; min-height: 140px; align-items: center; }
 
-        .slot-list { display: flex; flex-direction: column; gap: 6px; background: #fff3cd; border: 1px solid #ffc107; padding: 10px; border-radius: 10px; max-height: 180px; overflow-y: auto; margin-bottom: 5px; }
+        /* 🃏 カード調整（はみ出し防止＆ゆったり配置） */
+        .card { 
+            min-width: 105px; 
+            max-width: 105px; 
+            height: 125px; 
+            border-radius: 8px; 
+            color: white; 
+            padding: 6px 4px; 
+            box-sizing: border-box; 
+            display: flex; 
+            flex-direction: column; 
+            justify-content: flex-start; /* 上詰めに変更 */
+            align-items: center; 
+            text-align: center; 
+            cursor: pointer; 
+            font-size: 11px; 
+            background: #3e3e4a;
+            border: 1px solid #555;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.3);
+            position: relative;
+        }
+        .card.playable { background: #007bff; border: 2px solid #00bcff; box-shadow: 0 0 10px rgba(0,188,255,0.5); }
+        .card.disabled { background: #555; border-color: #444; cursor: not-allowed; opacity: 0.6; }
+        .card.edit-mode { background: #28a745; border-color: #2fb54c; }
+        
+        /* 📛 カード名：絶対に「1行」固定。はみ出したら自動で『...』 */
+        .card-name { 
+            font-weight: bold; 
+            margin-bottom: 4px; 
+            width: 100%;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            border-bottom: 1px solid rgba(255,255,255,0.2);
+            padding-bottom: 2px;
+        }
+
+        /* 📝 能力：能力一つにつき1行の絶対レイアウト */
+        .card-ability { 
+            font-size: 9px; 
+            color: #ffd700; 
+            font-weight: bold; 
+            margin-top: 3px; 
+            width: 100%;
+            line-height: 1.2;
+            text-align: center;
+            
+            /* 1つの文字列内の半角スペース等で自動改行させず、1つのテキストを1行に収めるガード */
+            white-space: nowrap; 
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+        .card-ability.edit-pool { color: #ffeb3b; }
+        .card-ability.edit-deck { color: #fff; background: rgba(0,0,0,0.4); padding: 1px 3px; border-radius: 3px; }
+        
+        .end-btn { padding: 15px; border: none; border-radius: 8px; color: white; font-weight: bold; cursor: pointer; width: 100%; font-size: 15px; box-shadow: 0 4px 0 #1e7e34; transition: transform 0.1s; }
+        .end-btn.active { background: #28a745; }
+        .end-btn.active:active { transform: translateY(4px); box-shadow: none; }
+        .end-btn.disabled { background: #555; color: #aaa; cursor: not-allowed; box-shadow: none; }
+        .game-over-btn { background: #6f42c1; padding: 15px; border: none; border-radius: 8px; color: white; font-weight: bold; cursor: pointer; width: 100%; margin-bottom: 10px;}
+        .scroll-grid { display: flex; gap: 8px; overflow-x: auto; padding: 10px 0; border-bottom: 1px dashed #444; }
+        .alert-text { color: #ff6b6b; font-size: 12px; font-weight: bold; text-align: center; }
+
+        .slot-list { display: flex; flex-direction: column; gap: 6px; background: #3a3528; border: 1px solid #ffc107; padding: 10px; border-radius: 10px; max-height: 180px; overflow-y: auto; margin-bottom: 5px; }
         .slot-item { display: flex; gap: 6px; align-items: center; }
-        .slot-select-btn { flex: 1; padding: 8px 12px; border: 1px solid #ffc107; border-radius: 6px; text-align: left; cursor: pointer; background: white; font-size: 13px; font-weight: bold; }
-        .slot-select-btn:not(.disabled):hover { background: #fff9e6; }
-        .slot-select-btn.disabled { background: #eaeaea; border-color: #ccc; color: #888; cursor: not-allowed; }
+        .slot-select-btn { flex: 1; padding: 8px 12px; border: 1px solid #ffc107; border-radius: 6px; text-align: left; cursor: pointer; background: #2c2519; color: #fff; font-size: 13px; font-weight: bold; }
+        .slot-select-btn:not(.disabled):hover { background: #473d2b; }
+        .slot-select-btn.disabled { background: #444; border-color: #666; color: #888; cursor: not-allowed; }
         .slot-edit-btn { padding: 8px 12px; background: #6c757d; color: white; border: none; border-radius: 6px; cursor: pointer; font-size: 13px; font-weight: bold; white-space: nowrap; }
 
         .room-input-box { display: flex; gap: 5px; margin-top: 5px; }
-        .room-input { flex: 1; padding: 8px; border-radius: 5px; border: 1px solid #ccc; font-size: 13px; }
-        .profile-box { background: #eef2f7; padding: 10px; border-radius: 10px; border: 1px solid #ced4da; margin-top: 10px; }
-        .username-input { width: 100%; padding: 8px; box-sizing: border-box; border-radius: 5px; border: 1px solid #ccc; font-size: 14px; }
+        .room-input { flex: 1; padding: 8px; border-radius: 5px; border: 1px solid #555; background: #151518; color: white; font-size: 13px; }
+        .profile-box { background: #232730; padding: 10px; border-radius: 10px; border: 1px solid #444; margin-top: 10px; }
+        .username-input { width: 100%; padding: 8px; box-sizing: border-box; border-radius: 5px; border: 1px solid #555; background: #151518; color: white; font-size: 14px; }
 
         .matching-overlay {
             position: absolute; top: 0; left: 0; width: 100%; height: 100%;
@@ -73,7 +178,6 @@
             padding: 10px 20px; border-radius: 20px; font-weight: bold; cursor: pointer;
         }
 
-        /* ─── 新規追加: カードプレイ演出用のスタイル ─── */
         .card-notice-overlay {
             position: absolute; top: 0; left: 0; width: 100%; height: 100%;
             background: rgba(0,0,0,0.4); display: flex; flex-direction: column;
@@ -90,8 +194,8 @@
             color: white; padding: 15px; text-align: center; box-sizing: border-box;
             transform: scale(0.5); animation: popUp 1.2s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
         }
-        .notice-card .card-name { font-size: 16px; margin-bottom: 10px; }
-        .notice-card .card-ability { font-size: 12px; }
+        .notice-card .card-name { font-size: 16px; margin-bottom: 10px; white-space: normal; overflow: visible; }
+        .notice-card .card-ability { font-size: 12px; white-space: normal; overflow: visible; color: yellow; }
         @keyframes fadeInOut {
             0% { background: rgba(0,0,0,0); }
             15% { background: rgba(0,0,0,0.4); }
@@ -121,7 +225,7 @@
 
     <div v-if="isMatching" class="matching-overlay">
         <div class="spinner"></div>
-        <h2>{{ gameMode === 'spectate' ? '👁️ ルームに接続中...' : '🌐 対戦相手を検索中...' }}</h2>
+        <h2>{{ gameMode === 'spectate' ? '👁️ ルームに接続中...' : '🌐 对戦相手を検索中...' }}</h2>
         <p v-if="gameMode === 'online_room' || gameMode === 'spectate'" style="color: #ffc107; font-weight: bold; margin-bottom: 5px;">ルーム名: {{ roomName }}</p>
         <p style="color: #bbb; margin-top: 10px;">サーバーからの応答を待っています。</p>
         <button class="cancel-match-btn" @click="cancelMatching">キャンセル</button>
@@ -132,13 +236,13 @@
         <p style="text-align:center; color:gray;">30枚のデッキを構築して戦うデジタルカードゲーム</p>
         
         <div class="profile-box">
-            <label style="font-size: 12px; font-weight: bold; color: #495057;">👤 ユーザーネーム</label>
+            <label style="font-size: 12px; font-weight: bold; color: #a9b0b7;">👤 ユーザーネーム</label>
             <input type="text" v-model="userName" @change="saveUserName" placeholder="一般ナギソ" class="username-input">
         </div>
 
         <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-top: 10px;">
             <div class="deck-btn mode" :class="{'active': gameMode === 'cpu'}" @click="gameMode = 'cpu'">🤖 CPU対戦</div>
-            <div class="deck-btn mode" :class="{'active': gameMode === 'online_random'}" @click="gameMode = 'online_random'">🌐 ﾗﾝﾀﾞﾑﾏｯﾁ</div>
+            <div class="deck-btn mode" :class="{'active': gameMode === 'online_random'}" @click="gameMode = 'online_random'">🌐 ﾗﾝﾀﾞ幕ﾏｯﾁ</div>
             <div class="deck-btn mode" style="grid-column: span 2;" :class="{'active': gameMode === 'online_room'}" @click="gameMode = 'online_room'">🔑 ルームマッチ (合言葉)</div>
             <div class="deck-btn mode spectate" style="grid-column: span 2;" :class="{'active': gameMode === 'spectate'}" @click="gameMode = 'spectate'">👁️ ルームを観戦する</div>
         </div>
@@ -151,13 +255,13 @@
             <button class="end-btn active" style="background: #ffc107; color: black;" @click="startSpectating">👁️ 観戦画面へ入る</button>
         </div>
 
-        <p style="text-align:center; font-size:12px; color:#666; margin-top: 5px;">
+        <p style="text-align:center; font-size:12px; color:#aaa; margin-top: 5px;">
             現在のモード: <b>{{ modeDescription }}</b>
         </p>
 
         <div v-if="gameMode !== 'spectate'">
-            <hr style="width: 100%; border: 0; border-top: 1px solid #ccc; margin: 5px 0;">
-            <h3 style="font-size: 15px; color: #856404; margin-bottom: 5px;">✨ カスタムデッキ (最大10種類)</h3>
+            <hr style="width: 100%; border: 0; border-top: 1px solid #444; margin: 5px 0;">
+            <h3 style="font-size: 15px; color: #ffc107; margin-bottom: 5px;">✨ カスタムデッキ (最大10種類)</h3>
             <div class="slot-list">
                 <div v-for="slotIndex in 10" :key="slotIndex" class="slot-item">
                     <button class="slot-select-btn" :class="{'disabled': !customDecks[slotIndex-1]}" :disabled="!customDecks[slotIndex-1]" @click="handleDeckSelect('custom', slotIndex-1)">
@@ -166,7 +270,7 @@
                     <button class="slot-edit-btn" @click="openDeckEditor(slotIndex-1)">🛠️ 編集</button>
                 </div>
             </div>
-            <hr style="width: 100%; border: 0; border-top: 1px solid #ccc; margin: 5px 0;">
+            <hr style="width: 100%; border: 0; border-top: 1px solid #444; margin: 5px 0;">
             
             <div class="deck-btn agro" @click="handleDeckSelect('agro')">
                 <h3>🔴 ナギソアグロ（速攻）</h3>
@@ -217,42 +321,46 @@
     </div>
 
     <div v-if="isGameStarted && !isEditMode" class="game-screen">
-        <div v-if="isSpectator" class="spectator-box">
-            👁️ 現在リアルタイム観戦中モード (操作不可)
-        </div>
+        <div style="display: flex; flex-direction: column; gap: 15px; flex-grow: 1;">
+            <div v-if="isSpectator" class="spectator-box">
+                👁️ 現在リアルタイム観戦中モード (操作不可)
+            </div>
 
-        <div class="status-box" :class="gameMode === 'cpu' ? 'cpu-box' : 'online-enemy-box'">
-            <h3>👤 {{ enemyDisplayName }} HP: {{ cpuHP }} (マナ: {{ cpuCurrentMana }}/{{ cpuMaxMana }})</h3>
-            <p>山札: {{ cpuDeckLengthComputed }} 枚 / 手札: {{ cpuHandLengthComputed }} 枚</p>
-        </div>
+            <div class="status-box" :class="gameMode === 'cpu' ? 'cpu-box' : 'online-enemy-box'">
+                <h3>👤 {{ enemyDisplayName }} HP: {{ cpuHP }} (マナ: {{ cpuCurrentMana }}/{{ cpuMaxMana }})</h3>
+                <p>山札: {{ cpuDeckLengthComputed }} 枚 / 手札: {{ cpuHandLengthComputed }} 枚</p>
+            </div>
 
-        <div class="log-box" id="logScroll">
-            <ul class="log-list">
-                <li v-for="(log, index) in logMessages" :key="index">{{ log }}</li>
-            </ul>
-        </div>
+            <div class="status-box player-box">
+                <h3>👤 {{ playerDisplayName }} HP: {{ playerHP }} (マナ: {{ playerCurrentMana }}/{{ playerMaxMana }})</h3>
+                <p>山札: {{ playerDeckLengthComputed }} 枚 / <b>手札: {{ playerHandLengthComputed }} 枚</b></p>
+            </div>
 
-        <button v-if="isGameOver" class="game-over-btn" @click="resetToTitle">↩️ タイトルに戻る</button>
-
-        <div class="status-box player-box">
-            <h3>👤 {{ playerDisplayName }} HP: {{ playerHP }} (マナ: {{ playerCurrentMana }}/{{ playerMaxMana }})</h3>
-            <p>山札: {{ playerDeckLengthComputed }} 枚 / <b>手札: {{ playerHandLengthComputed }} 枚</b></p>
-        </div>
-
-        <div class="hand-container">
-            <div v-for="card in playerHand" :key="card.id" 
-                 class="card" 
-                 :class="{ 'playable': !isSpectator && isPlayerTurn && !isGameOver && playerCurrentMana >= card.cost, 'disabled': isSpectator || !isPlayerTurn || isGameOver || playerCurrentMana < card.cost }"
-                 @click="!isSpectator && playCard(card, true)">
-                <div class="card-name">{{ card.name }}</div>
-                <div>コ:{{ card.cost }} / 攻:{{ card.power }}</div>
-                <div v-if="card.abilityText" class="card-ability">{{ card.abilityText }}</div>
+            <div class="hand-container">
+                <div v-for="card in playerHand" :key="card.id" 
+                     class="card" 
+                     :class="{ 'playable': !isSpectator && isPlayerTurn && !isGameOver && playerCurrentMana >= card.cost, 'disabled': isSpectator || !isPlayerTurn || isGameOver || playerCurrentMana < card.cost }"
+                     @click="!isSpectator && playCard(card, true)">
+                    <div class="card-name">{{ card.name }}</div>
+                    <div>コ:{{ card.cost }} / 攻:{{ card.power }}</div>
+                    <div v-if="card.abilityText" class="card-ability">{{ card.abilityText }}</div>
+                </div>
             </div>
         </div>
 
-        <button v-if="!isSpectator" class="end-btn" :class="{ 'active': isPlayerTurn && !isGameOver, 'disabled': !isPlayerTurn || isGameOver }" @click="endPlayerTurn" :disabled="!isPlayerTurn || isGameOver">
-            {{ isPlayerTurn ? 'ターン終了' : '相手のターン中' }}
-        </button>
+        <div style="display: flex; flex-direction: column; gap: 15px;">
+            <div class="log-box" id="logScroll">
+                <ul class="log-list">
+                    <li v-for="(log, index) in logMessages" :key="index">{{ log }}</li>
+                </ul>
+            </div>
+
+            <button v-if="isGameOver" class="game-over-btn" @click="resetToTitle">↩️ タイトルに戻る</button>
+
+            <button v-if="!isSpectator" class="end-btn" :class="{ 'active': isPlayerTurn && !isGameOver, 'disabled': !isPlayerTurn || isGameOver }" @click="endPlayerTurn" :disabled="!isPlayerTurn || isGameOver">
+                {{ isPlayerTurn ? 'ターン終了' : '相手のターン中' }}
+            </button>
+        </div>
     </div>
 </div>
 
@@ -285,7 +393,7 @@ const cardPool = [
     { name: "裁きのナギソ", cost: 6, power: 0, abilities: [{ type: "deckdestroy", value: 5 }], abilityText: "【罰5:デッキ5枚破壊】"},
     { name: "叛逆のナギソ", cost: 2, power: 2, abilities: [{ type: "revengeburn", value: 10 }], abilityText: "【逆境6:劣勢時6ダメ追加】"},
     { name: "ナギソの祈り", cost: 2, power: 0, abilities: [{ type: "costdown_all", value: 1 }], abilityText: "【奇跡1:手札全てのコスト−1】"},
-    { name: "鮮血 of ナギソ", cost: 4, power: 5, abilities: [{ type: "heal", value: 10 }, { type: "draw", value: 2 }], abilityText: "【神秘10:HPを10回復】【流水2:2ドロー】" }
+    { name: "鮮血のナギソ", cost: 4, power: 5, abilities: [{ type: "heal", value: 10 }, { type: "draw", value: 2 }], abilityText: "【神秘10:HPを10回復】【流水2:2ドロー】" }
 ];
 
 function generateId() { return Math.random().toString(36).substr(2, 9); }
@@ -322,10 +430,10 @@ createApp({
             cpuHandLength: 0, cpuDeckLength: 30, playerHandLength: 0, playerDeckLength: 30,
             maxHandSize: 10, totalMaxManaLimit: 10,
             selectedDeckType: null,
-            isFirstTurn: true, // 先攻1ターン目判定用
+            isFirstTurn: true,
             p1Name: "プレイヤー1", p2Name: "プレイヤー2",
-            activeNotice: null, // ポップアップ演出用データ
-            noticeKey: 0 // アニメーション連続再生用キー
+            activeNotice: null,
+            noticeKey: 0
         };
     },
     mounted() {
@@ -343,7 +451,7 @@ createApp({
             this.isSpectator = false;
             this.addLog("🤝 オンライン対戦相手が見つかりました！");
             this.isPlayerTurn = data.isFirst; 
-            this.isFirstTurn = data.isFirst; // 自分が先攻なら先攻1ターン目フラグをtrueに
+            this.isFirstTurn = data.isFirst;
             this.setupGameField(this.selectedDeckType);
             this.isGameStarted = true;
             this.syncStateToServer("ゲーム開始！");
@@ -420,7 +528,7 @@ createApp({
             } else {
                 this.isSpectator = false;
                 this.isPlayerTurn = true;
-                this.isFirstTurn = true; // CPU戦ではプレイヤーが先攻
+                this.isFirstTurn = true;
                 this.setupGameField(type);
                 this.isGameStarted = true;
                 this.addLog(`🤖 CPU対戦を開始しました！`);
@@ -499,7 +607,6 @@ createApp({
             this.activeNotice = { user: userName, card: card };
             this.noticeKey++;
             setTimeout(() => {
-                // 1.2秒後にポップアップをクリア（アニメーション時間と同等）
                 if (this.activeNotice && this.activeNotice.card.id === card.id) {
                     this.activeNotice = null;
                 }
@@ -511,11 +618,9 @@ createApp({
 
             let localSyncData = { chosenCardIndices: [], discardIndex: -1 };
 
-            // 演出ポップアップの発火
             const activeName = isPlayer ? this.userName : (this.isCpuMode ? '🤖 CPU' : '👤 相手');
             this.showCardNotice(activeName, card);
 
-            // 事前の能力同期準備 (オンライン時の「剣呼」不具合の修正)
             if (isPlayer && !this.isCpuMode) {
                 card.abilities.forEach(ab => {
                     if (ab.type === "kenko") {
@@ -542,7 +647,6 @@ createApp({
                 }
             }
 
-            // 能力処理
             card.abilities.forEach(ab => {
                 this.triggerAbility(ab, isPlayer, isPlayer ? localSyncData : syncData);
             });
@@ -583,7 +687,6 @@ createApp({
                 }
             } 
             else if(type === "manahueru") {
-                // 還元のマナ回復上限のタイポ修正 (自身の最大マナを上限値にする)
                 if(isPlayerTrigger) this.playerCurrentMana = Math.min(this.playerMaxMana, this.playerCurrentMana + value);
                 else this.cpuCurrentMana = Math.min(this.cpuMaxMana, this.cpuCurrentMana + value);
                 if (isPlayerTrigger) {
@@ -730,7 +833,7 @@ createApp({
         endPlayerTurn() {
             if(!this.isGameStarted || this.isGameOver) return;
             this.isPlayerTurn = false;
-            this.isFirstTurn = false; // 自分の先攻ターンが終われば確実にfalse
+            this.isFirstTurn = false;
             this.playerPlayedCountThisTurn = 0;
             
             if (this.isCpuMode) {
@@ -738,11 +841,10 @@ createApp({
                 this.cpuMaxMana = Math.min(this.totalMaxManaLimit, this.cpuMaxMana + 1);
                 this.cpuCurrentMana = this.cpuMaxMana;
                 this.drawCard(false);
-                setTimeout(() => { this.cpuAction(); }, 1200); // 演出時間を考慮し少しウェイトを長く調整
+                setTimeout(() => { this.cpuAction(); }, 1200);
             } else {
-            this.addLog("=== 相手のターン ===");
-            // ルーム名を一緒に送ることで、サーバー側が迷わないようにする
-            socket.emit('end_turn', { roomName: this.roomName }); 
+                this.addLog("=== 相手のターン ===");
+                socket.emit('end_turn', { roomName: this.roomName }); 
             }
         },
         cpuAction() {
@@ -750,7 +852,7 @@ createApp({
             let playableCard = this.cpuHand.find(c => c.cost <= this.cpuCurrentMana);
             if(playableCard) {
                 this.playCard(playableCard, false);
-                setTimeout(() => { this.cpuAction(); }, 1400); // ポップアップアニメ終了を待って次の一手
+                setTimeout(() => { this.cpuAction(); }, 1400);
             } else {
                 this.endCpuTurn();
             }
@@ -764,7 +866,6 @@ createApp({
             this.playerMaxMana = Math.min(this.totalMaxManaLimit, this.playerMaxMana + 1);
             this.playerCurrentMana = this.playerMaxMana;
 
-            // 後攻時の不具合を解消した厳密な先攻第1ターン制限
             if (this.isFirstTurn) {
                 this.addLog("※先攻1ターン目のためドローはありません。");
                 this.isFirstTurn = false;
