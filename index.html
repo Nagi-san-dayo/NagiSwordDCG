@@ -972,12 +972,19 @@ createApp({
                 }
                 if (this.isCpuMode || !isPlayerTrigger) {
                     for(let i=0; i<value; i++) {
-                        let randCard = createCardInstance(this.cardPool[Math.floor(Math.random() * this.cardPool.length)]);
                         if(isPlayerTrigger) {
+                            let randCard = createCardInstance(this.cardPool[Math.floor(Math.random() * this.cardPool.length)]);
                             if (this.playerHand.length < this.maxHandSize) this.playerHand.push(randCard);
                             else this.addLog(`🔥 手札満杯のため生成カードが燃破した！`);
                         } else {
-                            if (this.cpuHand.length < this.maxHandSize) this.cpuHand.push(randCard);
+                            // オンライン対戦相手とCPU戦で処理を分ける
+                            if (this.isCpuMode) {
+                                let randCard = createCardInstance(this.cardPool[Math.floor(Math.random() * this.cardPool.length)]);
+                                if (this.cpuHand.length < this.maxHandSize) this.cpuHand.push(randCard);
+                            } else {
+                                if (this.cpuHandLength < this.maxHandSize) this.cpuHandLength++;
+                                else this.addLog(`🔥 相手の手札が上限(10枚)を超えているため、カードが1枚燃破した！`);
+                            }
                         }
                     }
                 } else if(syncData && syncData.chosenCardIndices) {
@@ -990,6 +997,7 @@ createApp({
                     });
                 }
             }
+
             else if(type === "discard") {
                 if (isPlayerTrigger) {
                     this.addLog(`  └【罪${value}】相手の手札をランダムに ${value} 枚捨てさせた！`);
@@ -1072,7 +1080,7 @@ createApp({
                 }
             }
         },
-        endPlayerTurn() {
+                endPlayerTurn() {
             if(!this.isGameStarted || this.isGameOver) return;
             this.isPlayerTurn = false;
             this.isFirstTurn = false;
@@ -1086,10 +1094,17 @@ createApp({
                 setTimeout(() => { this.cpuAction(); }, 1200);
             } else {
                 this.addLog("=== 相手のターン ===");
+                
+                // 🔄 オンライン対戦時も、ローカル画面上の相手のターン開始処理（マナ回復＆ドロー）を先んじて行う
+                this.cpuMaxMana = Math.min(this.totalMaxManaLimit, this.cpuMaxMana + 1);
+                this.cpuCurrentMana = this.cpuMaxMana;
+                this.drawCard(false);
+                
                 this.syncStateToServer("ターン終了");
                 socket.emit('end_turn', { roomName: this.roomName }); 
             }
         },
+
         cpuAction() {
             if (this.isGameOver) return;
             let playableCard = this.cpuHand.find(c => this.getCardCost(c, false) <= this.cpuCurrentMana);
