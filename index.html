@@ -13,7 +13,7 @@ body { font-family: sans-serif; background-color: #1e1e24; margin: 0; display: f
 /* 🖥️ アプリ全体のコンテナ */
 #app { 
     width: 100vw;       
-    height: 100vh;      
+    height: 100dvh; /* vh から dvh に変更（スマホのバー対策） */
     background: #2c2c35; 
     padding: 2vh 2vw;   
     box-sizing: border-box; 
@@ -22,7 +22,7 @@ body { font-family: sans-serif; background-color: #1e1e24; margin: 0; display: f
     position: relative; 
     overflow: hidden;   
     color: #f5f5f5;
-    font-size: 1.2vw;   
+    font-size: clamp(12px, 1.2vw, 18px); /* 文字が小さくなりすぎるのを防ぐ */
 }
 
 /* 🔄 PC横画面時のレイアウト配置調整（画面幅768px以上） */
@@ -71,7 +71,7 @@ body { font-family: sans-serif; background-color: #1e1e24; margin: 0; display: f
     flex-shrink: 0;         
 }
 
-/* 📦 カードプール（デッキ編集画面の横スクロール用）★ここを修正 */
+/* 📦 カードプール（デッキ編集画面の横スクロール用） */
 .scroll-grid { 
     display: flex; 
     gap: 12px; 
@@ -117,7 +117,7 @@ body { font-family: sans-serif; background-color: #1e1e24; margin: 0; display: f
 
 /* 📛 カード名 */
 .card-name { 
-    font-size: 1.3vw;   
+    font-size: clamp(12px, 1.3vw, 16px); /* 最小12pxを保証 */
     font-weight: bold; 
     margin-bottom: 0.8vh; 
     width: 100%;
@@ -258,6 +258,67 @@ body { font-family: sans-serif; background-color: #1e1e24; margin: 0; display: f
 .game-screen > div:last-child > div[style*="max-height"] {
     max-height: 45vh !important; /* 高さを少し削り、はみ出しを防止 */
     overflow-y: auto !important;  /* 縦スクロールを強制 */
+}
+
+/* 🔘 デッキ選択・モード選択ボタン */
+.deck-btn {
+    background: #3e3e4a;
+    border: 2px solid #555;
+    padding: 15px;
+    border-radius: 8px;
+    cursor: pointer;
+    text-align: center;
+    transition: 0.2s;
+    user-select: none;
+}
+.deck-btn:hover { background: #4a4a5a; border-color: #ffc107; }
+.deck-btn.active { border-color: #28a745; background: rgba(40, 167, 69, 0.2); }
+.deck-btn h3 { margin: 0 0 5px 0; font-size: 16px; color: #ffc107; }
+.deck-btn p { margin: 0; font-size: 12px; color: #ccc; }
+
+/* 📊 プレイヤー＆CPUステータスボックス */
+.status-box {
+    background: rgba(0, 0, 0, 0.4);
+    padding: 10px 15px;
+    border-radius: 8px;
+    border: 1px solid #555;
+    margin-bottom: 10px;
+}
+.status-box h3 { margin: 0 0 5px 0; font-size: 16px; color: #fff; }
+.status-box p { margin: 0; font-size: 13px; color: #aaa; }
+
+/* 📜 ログボックスとリスト */
+.log-box {
+    background: rgba(0, 0, 0, 0.5);
+    padding: 10px;
+    border-radius: 8px;
+    border: 1px solid #444;
+    overflow-y: auto;
+    flex-grow: 1;
+    min-height: 150px; /* スマホ時の最低高さ */
+}
+.log-list {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+}
+.log-list li {
+    font-size: 13px;
+    line-height: 1.5;
+    color: #ddd;
+    border-bottom: 1px solid rgba(255,255,255,0.05);
+    padding: 4px 0;
+}
+
+/* 👁️ 観戦中バッジ */
+.spectator-box {
+    background: #17a2b8;
+    color: white;
+    padding: 10px;
+    text-align: center;
+    font-weight: bold;
+    border-radius: 8px;
+    margin-bottom: 10px;
 }
 
     </style>
@@ -566,10 +627,17 @@ createApp({
 
         socket.on('opponent_disconnected', () => {
             if (!this.isGameOver) {
-                this.addLog("⚠️ 対戦相手の接続が切れました。あなたの勝利です！");
-                this.cpuHP = 0; 
-                this.isGameOver = true;
-                this.checkWinLose();
+                if (this.isSpectator) {
+                    // 観戦者用の処理
+                    this.addLog("⚠️ 選手の接続が切れました。ルームは解散されました。");
+                    this.isGameOver = true;
+                } else {
+                    // プレイヤー用の処理
+                    this.addLog("⚠️ 対戦相手の接続が切れました。あなたの勝利です！");
+                    this.cpuHP = 0; 
+                    this.isGameOver = true;
+                    this.checkWinLose();
+                }
             }
         });
     },
@@ -984,7 +1052,12 @@ createApp({
         
         // 📦 カードを追加（枚数管理・バグ対策トースト連動）
         addCardToEditingDeck(poolIndex) { 
-            if (this.editingDeck.length >= 30) return; 
+            if (this.editingDeck.length >= 30) {
+                if (this.toastTimer) clearTimeout(this.toastTimer);
+                this.editAlert = `❌ デッキは最大30枚です。`;
+                this.toastTimer = setTimeout(() => { this.editAlert = ""; }, 2500);
+                return; 
+            }
         
             if (this.getCardCountInEditingDeck(poolIndex) >= 5) {
                 if (this.toastTimer) clearTimeout(this.toastTimer);
