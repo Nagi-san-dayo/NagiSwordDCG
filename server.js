@@ -85,10 +85,10 @@ io.on('connection', (socket) => {
       waitingPlayer.emit('game_start', { isFirst: !isFirst, enemyName: socket.userName });
 
       waitingPlayer = null;
-      notifyDiscord(`\nランダムマッチが成立したぞ！👀 (${socket.userName} vs 相手)`);
+      notifyDiscord(`\nランダムマッチが成立したぞ！👀`);
     } else {
       waitingPlayer = socket;
-      notifyDiscord(`\nランダムマッチ待機中の人が現れたぞ！ (${socket.userName})`);
+      notifyDiscord(`\nランダムマッチ待機中の人が現れたぞ！`);
     }
   });
 
