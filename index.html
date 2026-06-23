@@ -875,9 +875,9 @@ createApp({
                 const dmg = currentCount * value;
                 if(isPlayerTrigger) this.cpuHP -= dmg; else this.playerHP -= dmg;
                 if (isPlayerTrigger) {
-                    this.addLog(`  └【連撃${value}】このターンに使用した枚数${currentCount}×${value}分 ${dmg} 相手に追加ダメージ！`);
+                    this.addLog(`  └【連撃${value}】このターンに使用した枚数(${currentCount}枚×${value}＝${dmg})相手に追加ダメージ！`);
                 } else {
-                    this.addLog(`  └【連撃${value}】このターンに相手が使用した枚数${currentCount}×${value}分 ${dmg} あなたに追加ダメージ！`);
+                    this.addLog(`  └【連撃${value}】このターンに相手が使用した枚数(${currentCount}枚×${value}=${dmg})あなたに追加ダメージ！`);
                 }
             }
             else if(type === "kenko") {
