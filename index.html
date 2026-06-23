@@ -8,317 +8,317 @@
     <script src="https://cdn.socket.io/4.7.5/socket.io.min.js"></script>
     <style>
         /* 🖥️ PC横画面対応 & 統一感のあるダークモダン背景 */
-body { font-family: sans-serif; background-color: #1e1e24; margin: 0; display: flex; justify-content: center; align-items: center; min-height: 100vh; }
+        body { font-family: sans-serif; background-color: #1e1e24; margin: 0; display: flex; justify-content: center; align-items: center; min-height: 100vh; }
 
-/* 🖥️ アプリ全体のコンテナ */
-#app { 
-    width: 100vw;       
-    height: 100dvh;
-    background: #2c2c35; 
-    padding: 2vh 2vw;   
-    box-sizing: border-box; 
-    display: flex; 
-    flex-direction: column; 
-    position: relative; 
-    overflow: hidden;   
-    color: #f5f5f5;
-    font-size: clamp(12px, 1.2vw, 18px);
-}
+        /* 🖥️ アプリ全体のコンテナ */
+        #app { 
+            width: 100vw;       
+            height: 100dvh;
+            background: #2c2c35; 
+            padding: 2vh 2vw;   
+            box-sizing: border-box; 
+            display: flex; 
+            flex-direction: column; 
+            position: relative; 
+            overflow: hidden;   
+            color: #f5f5f5;
+            font-size: clamp(12px, 1.2vw, 18px);
+        }
 
-/* 🔄 PC横画面時のレイアウト配置調整（画面幅768px以上） */
-@media (min-width: 768px) {
-    .game-screen {
-        display: grid !important;
-        grid-template-columns: 2fr 1fr; 
-        gap: 2vh;
-        height: 96vh; 
-        align-items: stretch;
-    }
-    
-    .game-screen > div:first-child {
-        display: flex;
-        flex-direction: column;
-        justify-content: space-between;
-        height: 100%;
-        overflow: hidden;
-    }
-    
-    .title-screen h1 {
-        font-size: 4vw;
-    }
-    
-    .log-box {
-        height: 100% !important; 
-        max-height: 80vh; 
-    }
-}
+        /* 🔄 PC横画面時のレイアウト配置調整（画面幅768px以上） */
+        @media (min-width: 768px) {
+            .game-screen {
+                display: grid !important;
+                grid-template-columns: 2fr 1fr; 
+                gap: 2vh;
+                height: 96vh; 
+                align-items: stretch;
+            }
+            
+            .game-screen > div:first-child {
+                display: flex;
+                flex-direction: column;
+                justify-content: space-between;
+                height: 100%;
+                overflow: hidden;
+            }
+            
+            .title-screen h1 {
+                font-size: 4vw;
+            }
+            
+            .log-box {
+                height: 100% !important; 
+                max-height: 80vh; 
+            }
+        }
 
-/* 🃏 カードコンテナの調整（手札用） */
-.hand-container { 
-    display: flex; 
-    gap: 1vw; 
-    overflow-x: auto;       
-    overflow-y: hidden;     
-    padding: 1.5vh 1vw; 
-    background: rgba(0,0,0,0.3); 
-    border-radius: 8px; 
-    height: 36vh;           
-    width: 47vw;            
-    max-width: 47vw;        
-    box-sizing: border-box;
-    align-items: center; 
-    white-space: nowrap;    
-    flex-shrink: 0;         
-}
+        /* 🃏 カードコンテナの調整（手札用） */
+        .hand-container { 
+            display: flex; 
+            gap: 1vw; 
+            overflow-x: auto;       
+            overflow-y: hidden;     
+            padding: 1.5vh 1vw; 
+            background: rgba(0,0,0,0.3); 
+            border-radius: 8px; 
+            height: 36vh;           
+            width: 47vw;            
+            max-width: 47vw;        
+            box-sizing: border-box;
+            align-items: center; 
+            white-space: nowrap;    
+            flex-shrink: 0;         
+        }
 
-/* 📦 カードプール（デッキ編集画面の横スクロール用） */
-.scroll-grid { 
-    display: flex; 
-    gap: 12px; 
-    overflow-x: auto; 
-    overflow-y: hidden;
-    padding: 15px 10px; 
-    border-bottom: 1px dashed #444; 
-    flex-shrink: 0; 
-    background: rgba(0, 0, 0, 0.2);
-    border-radius: 8px;
-    scrollbar-width: auto; 
-}
-.scroll-grid::-webkit-scrollbar {
-    height: 8px;
-}
-.scroll-grid::-webkit-scrollbar-thumb {
-    background: #555;
-    border-radius: 4px;
-}
+        /* 📦 カードプール（デッキ編集画面の横スクロール用） */
+        .scroll-grid { 
+            display: flex; 
+            gap: 12px; 
+            overflow-x: auto; 
+            overflow-y: hidden;
+            padding: 15px 10px; 
+            border-bottom: 1px dashed #444; 
+            flex-shrink: 0; 
+            background: rgba(0, 0, 0, 0.2);
+            border-radius: 8px;
+            scrollbar-width: auto; 
+        }
+        .scroll-grid::-webkit-scrollbar {
+            height: 8px;
+        }
+        .scroll-grid::-webkit-scrollbar-thumb {
+            background: #555;
+            border-radius: 4px;
+        }
 
-/* 🃏 カード自体のサイズ */
-.card { 
-    flex-shrink: 0;         
-    width: 14vw;            
-    height: 32vh;           
-    border-radius: 12px; 
-    color: white; 
-    padding: 1.5vh 1vw; 
-    box-sizing: border-box; 
-    display: flex; 
-    flex-direction: column; 
-    justify-content: flex-start; 
-    align-items: center; 
-    text-align: center; 
-    cursor: pointer; 
-    background: #3e3e4a;
-    border: 2px solid #555;
-    box-shadow: 0 6px 12px rgba(0,0,0,0.4);
-    position: relative;
-    font-size: 1.1vw; 
-}
+        /* 🃏 カード自体のサイズ */
+        .card { 
+            flex-shrink: 0;         
+            width: 14vw;            
+            height: 32vh;           
+            border-radius: 12px; 
+            color: white; 
+            padding: 1.5vh 1vw; 
+            box-sizing: border-box; 
+            display: flex; 
+            flex-direction: column; 
+            justify-content: flex-start; 
+            align-items: center; 
+            text-align: center; 
+            cursor: pointer; 
+            background: #3e3e4a;
+            border: 2px solid #555;
+            box-shadow: 0 6px 12px rgba(0,0,0,0.4);
+            position: relative;
+            font-size: 1.1vw; 
+        }
 
-/* 📛 カード名 */
-.card-name { 
-    font-size: clamp(12px, 1.3vw, 16px);
-    font-weight: bold; 
-    margin-bottom: 0.8vh; 
-    width: 100%;
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
-    border-bottom: 2px solid rgba(255,255,255,0.2);
-    padding-bottom: 0.4vh;
-}
+        /* 📛 カード名 */
+        .card-name { 
+            font-size: clamp(12px, 1.3vw, 16px);
+            font-weight: bold; 
+            margin-bottom: 0.8vh; 
+            width: 100%;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            border-bottom: 2px solid rgba(255,255,255,0.2);
+            padding-bottom: 0.4vh;
+        }
 
-/* 📝 能力 */
-.card-ability { 
-    font-size: 1vw; 
-    color: #ffd700; 
-    font-weight: bold; 
-    margin-top: 1vh; 
-    width: 100%;
-    line-height: 1.4;
-    text-align: center;
-    white-space: normal;
-}
-.card-ability.edit-pool { color: #ffeb3b; }
+        /* 📝 能力 */
+        .card-ability { 
+            font-size: 1vw; 
+            color: #ffd700; 
+            font-weight: bold; 
+            margin-top: 1vh; 
+            width: 100%;
+            line-height: 1.4;
+            text-align: center;
+            white-space: normal;
+        }
+        .card-ability.edit-pool { color: #ffeb3b; }
 
-.end-btn { padding: 15px; border: none; border-radius: 8px; color: white; font-weight: bold; cursor: pointer; width: 100%; font-size: 15px; box-shadow: 0 4px 0 #1e7e34; transition: transform 0.1s; }
-.end-btn.active { background: #28a745; }
-.end-btn.active:active { transform: translateY(4px); box-shadow: none; }
-.end-btn.disabled { background: #555; color: #aaa; cursor: not-allowed; box-shadow: none; }
-.game-over-btn { background: #6f42c1; padding: 15px; border: none; border-radius: 8px; color: white; font-weight: bold; cursor: pointer; width: 100%; margin-bottom: 10px;}
+        .end-btn { padding: 15px; border: none; border-radius: 8px; color: white; font-weight: bold; cursor: pointer; width: 100%; font-size: 15px; box-shadow: 0 4px 0 #1e7e34; transition: transform 0.1s; }
+        .end-btn.active { background: #28a745; }
+        .end-btn.active:active { transform: translateY(4px); box-shadow: none; }
+        .end-btn.disabled { background: #555; color: #aaa; cursor: not-allowed; box-shadow: none; }
+        .game-over-btn { background: #6f42c1; padding: 15px; border: none; border-radius: 8px; color: white; font-weight: bold; cursor: pointer; width: 100%; margin-bottom: 10px;}
 
-.slot-list { display: flex; flex-direction: column; gap: 6px; background: #3a3528; border: 1px solid #ffc107; padding: 10px; border-radius: 10px; max-height: 180px; overflow-y: auto; margin-bottom: 5px; }
-.slot-item { display: flex; gap: 6px; align-items: center; }
-.slot-select-btn { flex: 1; padding: 8px 12px; border: 1px solid #ffc107; border-radius: 6px; text-align: left; cursor: pointer; background: #2c2519; color: #fff; font-size: 13px; font-weight: bold; }
-.slot-select-btn:not(.disabled):hover { background: #473d2b; }
-.slot-select-btn.disabled { background: #444; border-color: #666; color: #888; cursor: not-allowed; }
-.slot-edit-btn { padding: 8px 12px; background: #6c757d; color: white; border: none; border-radius: 6px; cursor: pointer; font-size: 13px; font-weight: bold; white-space: nowrap; }
+        .slot-list { display: flex; flex-direction: column; gap: 6px; background: #3a3528; border: 1px solid #ffc107; padding: 10px; border-radius: 10px; max-height: 180px; overflow-y: auto; margin-bottom: 5px; }
+        .slot-item { display: flex; gap: 6px; align-items: center; }
+        .slot-select-btn { flex: 1; padding: 8px 12px; border: 1px solid #ffc107; border-radius: 6px; text-align: left; cursor: pointer; background: #2c2519; color: #fff; font-size: 13px; font-weight: bold; }
+        .slot-select-btn:not(.disabled):hover { background: #473d2b; }
+        .slot-select-btn.disabled { background: #444; border-color: #666; color: #888; cursor: not-allowed; }
+        .slot-edit-btn { padding: 8px 12px; background: #6c757d; color: white; border: none; border-radius: 6px; cursor: pointer; font-size: 13px; font-weight: bold; white-space: nowrap; }
 
-.room-input-box { display: flex; gap: 5px; margin-top: 5px; }
-.room-input { flex: 1; padding: 8px; border-radius: 5px; border: 1px solid #555; background: #151518; color: white; font-size: 13px; }
-.profile-box { background: #232730; padding: 10px; border-radius: 10px; border: 1px solid #444; margin-top: 10px; }
-.username-input { width: 100%; padding: 8px; box-sizing: border-box; border-radius: 5px; border: 1px solid #555; background: #151518; color: white; font-size: 14px; }
+        .room-input-box { display: flex; gap: 5px; margin-top: 5px; }
+        .room-input { flex: 1; padding: 8px; border-radius: 5px; border: 1px solid #555; background: #151518; color: white; font-size: 13px; }
+        .profile-box { background: #232730; padding: 10px; border-radius: 10px; border: 1px solid #444; margin-top: 10px; }
+        .username-input { width: 100%; padding: 8px; box-sizing: border-box; border-radius: 5px; border: 1px solid #555; background: #151518; color: white; font-size: 14px; }
 
-.matching-overlay {
-    position: absolute; top: 0; left: 0; width: 100%; height: 100%;
-    background: rgba(0, 0, 0, 0.85); color: white;
-    display: flex; flex-direction: column; justify-content: center; align-items: center;
-    z-index: 100; box-sizing: border-box; padding: 20px; text-align: center;
-}
-.spinner {
-    width: 50px; height: 50px;
-    border: 5px solid rgba(255,255,255,0.3); border-top: 5px solid #6f42c1;
-    border-radius: 50%; animation: spin 1s linear infinite; margin-bottom: 20px;
-}
-@keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
-.cancel-match-btn {
-    margin-top: 30px; background: #dc3545; color: white; border: none;
-    padding: 10px 20px; border-radius: 20px; font-weight: bold; cursor: pointer;
-}
+        .matching-overlay {
+            position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0, 0, 0, 0.85); color: white;
+            display: flex; flex-direction: column; justify-content: center; align-items: center;
+            z-index: 100; box-sizing: border-box; padding: 20px; text-align: center;
+        }
+        .spinner {
+            width: 50px; height: 50px;
+            border: 5px solid rgba(255,255,255,0.3); border-top: 5px solid #6f42c1;
+            border-radius: 50%; animation: spin 1s linear infinite; margin-bottom: 20px;
+        }
+        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+        .cancel-match-btn {
+            margin-top: 30px; background: #dc3545; color: white; border: none;
+            padding: 10px 20px; border-radius: 20px; font-weight: bold; cursor: pointer;
+        }
 
-.card-notice-overlay {
-    position: absolute; top: 0; left: 0; width: 100%; height: 100%;
-    background: rgba(0,0,0,0.4); display: flex; flex-direction: column;
-    justify-content: center; align-items: center; z-index: 90;
-    pointer-events: none; animation: fadeInOut 1.2s ease-in-out forwards;
-}
-.notice-user {
-    color: white; font-size: 18px; font-weight: bold; text-shadow: 2px 2px 4px rgba(0,0,0,0.8); margin-bottom: 15px;
-}
-.notice-card {
-    width: 180px; height: 240px; border-radius: 15px; background: #007bff;
-    box-shadow: 0 10px 25px rgba(0,0,0,0.5); border: 3px solid white;
-    display: flex; flex-direction: column; justify-content: center; align-items: center;
-    color: white; padding: 15px; text-align: center; box-sizing: border-box;
-    transform: scale(0.5); animation: popUp 1.2s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
-}
-.notice-card .card-name { font-size: 16px; margin-bottom: 10px; white-space: normal; overflow: visible; }
-.notice-card .card-ability { font-size: 12px; white-space: normal; overflow: visible; color: yellow; }
-@keyframes fadeInOut {
-    0% { background: rgba(0,0,0,0); }
-    15% { background: rgba(0,0,0,0.4); }
-    80% { background: rgba(0,0,0,0.4); opacity: 1; }
-    100% { background: rgba(0,0,0,0); opacity: 0; }
-}
-@keyframes popUp {
-    0% { transform: scale(0.5); opacity: 0; }
-    15% { transform: scale(1.1); opacity: 1; }
-    25% { transform: scale(1.0); }
-    80% { transform: scale(1.0); opacity: 1; }
-    100% { transform: scale(0.8); opacity: 0; }
-}
+        .card-notice-overlay {
+            position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0,0,0,0.4); display: flex; flex-direction: column;
+            justify-content: center; align-items: center; z-index: 90;
+            pointer-events: none; animation: fadeInOut 1.2s ease-in-out forwards;
+        }
+        .notice-user {
+            color: white; font-size: 18px; font-weight: bold; text-shadow: 2px 2px 4px rgba(0,0,0,0.8); margin-bottom: 15px;
+        }
+        .notice-card {
+            width: 180px; height: 240px; border-radius: 15px; background: #007bff;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.5); border: 3px solid white;
+            display: flex; flex-direction: column; justify-content: center; align-items: center;
+            color: white; padding: 15px; text-align: center; box-sizing: border-box;
+            transform: scale(0.5); animation: popUp 1.2s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
+        }
+        .notice-card .card-name { font-size: 16px; margin-bottom: 10px; white-space: normal; overflow: visible; }
+        .notice-card .card-ability { font-size: 12px; white-space: normal; overflow: visible; color: yellow; }
+        @keyframes fadeInOut {
+            0% { background: rgba(0,0,0,0); }
+            15% { background: rgba(0,0,0,0.4); }
+            80% { background: rgba(0,0,0,0.4); opacity: 1; }
+            100% { background: rgba(0,0,0,0); opacity: 0; }
+        }
+        @keyframes popUp {
+            0% { transform: scale(0.5); opacity: 0; }
+            15% { transform: scale(1.1); opacity: 1; }
+            25% { transform: scale(1.0); }
+            80% { transform: scale(1.0); opacity: 1; }
+            100% { transform: scale(0.8); opacity: 0; }
+        }
 
-.card.playable {
-    border-color: #007bff !important; 
-    box-shadow: 0 0 15px rgba(0, 123, 255, 0.8), 0 6px 12px rgba(0,0,0,0.4) !important; 
-    transform: translateY(-5px); 
-    transition: transform 0.2s, box-shadow 0.2s;
-}
+        .card.playable {
+            border-color: #007bff !important; 
+            box-shadow: 0 0 15px rgba(0, 123, 255, 0.8), 0 6px 12px rgba(0,0,0,0.4) !important; 
+            transform: translateY(-5px); 
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
 
-.toast-notification {
-    position: fixed;
-    top: 10%;            
-    left: 50%;
-    transform: translate(-50%, -20px); 
-    background: rgba(220, 53, 69, 0.95); 
-    color: white;
-    padding: 12px 24px;
-    border-radius: 50px;
-    font-weight: bold;
-    font-size: 14px;
-    box-shadow: 0 8px 24px rgba(0,0,0,0.5);
-    z-index: 9999;       
-    opacity: 0;
-    pointer-events: none;
-    transition: transform 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275), opacity 0.3s ease;
-}
-.toast-notification.show {
-    opacity: 1;
-    transform: translate(-50%, 0); 
-}
+        .toast-notification {
+            position: fixed;
+            top: 10%;            
+            left: 50%;
+            transform: translate(-50%, -20px); 
+            background: rgba(220, 53, 69, 0.95); 
+            color: white;
+            padding: 12px 24px;
+            border-radius: 50px;
+            font-weight: bold;
+            font-size: 14px;
+            box-shadow: 0 8px 24px rgba(0,0,0,0.5);
+            z-index: 9999;       
+            opacity: 0;
+            pointer-events: none;
+            transition: transform 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275), opacity 0.3s ease;
+        }
+        .toast-notification.show {
+            opacity: 1;
+            transform: translate(-50%, 0); 
+        }
 
-/* 📊 スタック型リストアイテム */
-.stacked-item {
-    display: flex; 
-    justify-content: space-between; 
-    align-items: center; 
-    background: #3e3e4a; 
-    padding: 10px 15px; 
-    border-radius: 6px; 
-    border: 1px solid #555; 
-    cursor: pointer; 
-    user-select: none;
-    transition: background 0.2s;
-}
-.stacked-item:hover {
-    background: #4a4a5a;
-}
+        /* 📊 スタック型リストアイテム */
+        .stacked-item {
+            display: flex; 
+            justify-content: space-between; 
+            align-items: center; 
+            background: #3e3e4a; 
+            padding: 10px 15px; 
+            border-radius: 6px; 
+            border: 1px solid #555; 
+            cursor: pointer; 
+            user-select: none;
+            transition: background 0.2s;
+        }
+        .stacked-item:hover {
+            background: #4a4a5a;
+        }
 
-/* 現在の編成リストの親コンテナの縦スクロールを最適化 */
-.game-screen > div:last-child > div[style*="max-height"] {
-    max-height: 45vh !important;
-    overflow-y: auto !important; 
-}
+        /* 現在の編成リストの親コンテナの縦スクロールを最適化 */
+        .game-screen > div:last-child > div[style*="max-height"] {
+            max-height: 45vh !important;
+            overflow-y: auto !important; 
+        }
 
-/* 🔘 デッキ選択・モード選択ボタン */
-.deck-btn {
-    background: #3e3e4a;
-    border: 2px solid #555;
-    padding: 15px;
-    border-radius: 8px;
-    cursor: pointer;
-    text-align: center;
-    transition: 0.2s;
-    user-select: none;
-}
-.deck-btn:hover { background: #4a4a5a; border-color: #ffc107; }
-.deck-btn.active { border-color: #28a745; background: rgba(40, 167, 69, 0.2); }
-.deck-btn h3 { margin: 0 0 5px 0; font-size: 16px; color: #ffc107; }
-.deck-btn p { margin: 0; font-size: 12px; color: #ccc; }
+        /* 🔘 デッキ選択・モード選択ボタン */
+        .deck-btn {
+            background: #3e3e4a;
+            border: 2px solid #555;
+            padding: 15px;
+            border-radius: 8px;
+            cursor: pointer;
+            text-align: center;
+            transition: 0.2s;
+            user-select: none;
+        }
+        .deck-btn:hover { background: #4a4a5a; border-color: #ffc107; }
+        .deck-btn.active { border-color: #28a745; background: rgba(40, 167, 69, 0.2); }
+        .deck-btn h3 { margin: 0 0 5px 0; font-size: 16px; color: #ffc107; }
+        .deck-btn p { margin: 0; font-size: 12px; color: #ccc; }
 
-/* 📊 プレイヤー＆CPUステータスボックス */
-.status-box {
-    background: rgba(0, 0, 0, 0.4);
-    padding: 10px 15px;
-    border-radius: 8px;
-    border: 1px solid #555;
-    margin-bottom: 10px;
-}
-.status-box h3 { margin: 0 0 5px 0; font-size: 16px; color: #fff; }
-.status-box p { margin: 0; font-size: 13px; color: #aaa; }
+        /* 📊 プレイヤー＆CPUステータスボックス */
+        .status-box {
+            background: rgba(0, 0, 0, 0.4);
+            padding: 10px 15px;
+            border-radius: 8px;
+            border: 1px solid #555;
+            margin-bottom: 10px;
+        }
+        .status-box h3 { margin: 0 0 5px 0; font-size: 16px; color: #fff; }
+        .status-box p { margin: 0; font-size: 13px; color: #aaa; }
 
-/* 📜 ログボックスとリスト */
-.log-box {
-    background: rgba(0, 0, 0, 0.5);
-    padding: 10px;
-    border-radius: 8px;
-    border: 1px solid #444;
-    overflow-y: auto;
-    flex-grow: 1;
-    min-height: 150px;
-}
-.log-list {
-    list-style: none;
-    padding: 0;
-    margin: 0;
-}
-.log-list li {
-    font-size: 13px;
-    line-height: 1.5;
-    color: #ddd;
-    border-bottom: 1px solid rgba(255,255,255,0.05);
-    padding: 4px 0;
-}
+        /* 📜 ログボックスとリスト */
+        .log-box {
+            background: rgba(0, 0, 0, 0.5);
+            padding: 10px;
+            border-radius: 8px;
+            border: 1px solid #444;
+            overflow-y: auto;
+            flex-grow: 1;
+            min-height: 150px;
+        }
+        .log-list {
+            list-style: none;
+            padding: 0;
+            margin: 0;
+        }
+        .log-list li {
+            font-size: 13px;
+            line-height: 1.5;
+            color: #ddd;
+            border-bottom: 1px solid rgba(255,255,255,0.05);
+            padding: 4px 0;
+        }
 
-/* 👁️ 観戦中バッジ */
-.spectator-box {
-    background: #17a2b8;
-    color: white;
-    padding: 10px;
-    text-align: center;
-    font-weight: bold;
-    border-radius: 8px;
-    margin-bottom: 10px;
-}
+        /* 👁️ 観戦中バッジ */
+        .spectator-box {
+            background: #17a2b8;
+            color: white;
+            padding: 10px;
+            text-align: center;
+            font-weight: bold;
+            border-radius: 8px;
+            margin-bottom: 10px;
+        }
     </style>
 </head>
 <body>
@@ -339,7 +339,7 @@ body { font-family: sans-serif; background-color: #1e1e24; margin: 0; display: f
 
     <div v-if="isMatching" class="matching-overlay">
         <div class="spinner"></div>
-        <h2>{{ gameMode === 'spectate' ? '👁️ ルームに接続中...' : '🌐 対戦相手を検索中...' }}</h2>
+        <h2>{{ gameMode === 'spectate' ? '👁️ ルームに接続中...' : '🌐 对戦相手を検索中...' }}</h2>
         <p v-if="gameMode === 'online_room' || gameMode === 'spectate'" style="color: #ffc107; font-weight: bold; margin-bottom: 5px;">ルーム名: {{ roomName }}</p>
         <p style="color: #bbb; margin-top: 10px;">サーバーからの応答を待っています。</p>
         <button class="cancel-match-btn" @click="cancelMatching">キャンセル</button>
@@ -605,7 +605,6 @@ createApp({
             this.endCpuTurn(); 
         });
 
-        /* 💡 追加：対戦相手からのリアルタイムステータス更新を受信する */
         socket.on('room_state_updated', (data) => {
             if (this.isCpuMode || this.isSpectator) return;
             
@@ -652,7 +651,7 @@ createApp({
                     this.addLog("⚠️ 選手の接続が切れました。ルームは解散されました。");
                     this.isGameOver = true;
                 } else {
-                    this.addLog("⚠️ 对戦相手の接続が切れました。あなたの勝利です！");
+                    this.addLog("⚠️ 対戦相手の接続が切れました。あなたの勝利です！");
                     this.cpuHP = 0; 
                     this.isGameOver = true;
                     this.checkWinLose();
@@ -669,7 +668,9 @@ createApp({
             this.logMessages.push(msg);
             this.scrollLog();
             if(this.isGameStarted && !this.isSpectator && !this.isCpuMode) {
-                this.syncStateToServer(msg);
+                if (!msg.includes("召喚！") && !msg.includes("└【")) {
+                    this.syncStateToServer(msg);
+                }
             }
         },
         scrollLog() {
@@ -735,14 +736,11 @@ createApp({
 
             if (this.isCpuMode) {
                 let cPool = [0,1,2,3,4,5,6,7,8,9,11,12,13,14,15,26,27].map(i => cardPool[i]);
-                
-                /* 💡 修正：17種類の中からランダムに30枚のデッキを作成する */
                 let cpuInitialCards = [];
                 for (let i = 0; i < 30; i++) {
                     const randomCard = cPool[Math.floor(Math.random() * cPool.length)];
                     cpuInitialCards.push(randomCard);
                 }
-                
                 this.cpuDeck = shuffle(cpuInitialCards.map(createCardInstance));
                 for(let i=0; i<3; i++) { this.drawCard(false); }
             } else {
@@ -815,7 +813,6 @@ createApp({
                 }
             }
 
-            /* 💡 追加：自分のドロー情報を相手に同期する */
             if(isPlayer && this.isGameStarted && !this.isCpuMode && !this.isSpectator) {
                 this.syncStateToServer();
             }
@@ -836,8 +833,8 @@ createApp({
             if (isPlayer && (!this.isPlayerTurn || this.playerCurrentMana < computedCost)) return;
 
             let localSyncData = { chosenCardIndices: [], discardIndex: -1 };
-
             const activeName = isPlayer ? this.userName : (this.isCpuMode ? '🤖 CPU' : '👤 相手');
+            
             this.showCardNotice(activeName, card);
 
             if (isPlayer && !this.isCpuMode) {
@@ -850,22 +847,37 @@ createApp({
                 });
             }
 
+            // === 🔄 修正：固有のID（id）のみを参照して特定の1枚だけを落とす ===
             if (isPlayer) {
                 this.playerCurrentMana -= computedCost;
                 this.applyDamage(false, card.power); 
                 this.playerPlayedCountThisTurn++;
-                this.addLog(`👤 ${this.userName}が【${card.name}】を召喚！`);
-                this.playerHand = this.playerHand.filter(c => c.id !== card.id);
+                
+                // 100%確実にクリックされたそのインスタンスIDだけを狙い撃ち
+                const targetIndex = this.playerHand.findIndex(c => c.id === card.id);
+                if (targetIndex !== -1) {
+                    this.playerHand.splice(targetIndex, 1);
+                }
+                
+                this.logMessages.push(`👤 ${this.userName}が【${card.name}】を召喚！`);
+                this.scrollLog();
             } else {
                 this.cpuCurrentMana -= computedCost;
                 this.applyDamage(true, card.power); 
                 this.cpuPlayedCountThisTurn++;
-                this.addLog(`👤 相手が【${card.name}】を召喚！`);
-                if(this.isCpuMode) {
-                    this.cpuHand = this.cpuHand.filter(c => c.id !== card.id);
+                
+                if (this.isCpuMode) {
+                    // CPU戦の場合は最初に見つかった名前の一致するカードを落とす
+                    const targetIndex = this.cpuHand.findIndex(c => c.id === card.id || c.name === card.name);
+                    if (targetIndex !== -1) {
+                        this.cpuHand.splice(targetIndex, 1);
+                    }
                 } else {
                     this.cpuHandLength = Math.max(0, this.cpuHandLength - 1);
                 }
+                
+                this.logMessages.push(`👤 相手が【${card.name}】を召喚！`);
+                this.scrollLog();
             }
 
             card.abilities.forEach(ab => {
@@ -875,8 +887,10 @@ createApp({
             this.reduceCost(isPlayer);
             this.checkWinLose();
 
-            if(isPlayer && !this.isCpuMode) {
+            // === 🌐 オンライン同期の完全一本化 ===
+            if (isPlayer && !this.isCpuMode) {
                 socket.emit('play_card', { card: card, currentMana: this.playerCurrentMana, maxMana: this.playerMaxMana, syncData: localSyncData });
+                this.syncStateToServer(`👤 ${this.userName}が【${card.name}】を召喚！`);
             }
         },
         reduceCost(isPlayer) {
@@ -1058,7 +1072,6 @@ createApp({
                 }
             }
         },
-
         endPlayerTurn() {
             if(!this.isGameStarted || this.isGameOver) return;
             this.isPlayerTurn = false;
@@ -1073,7 +1086,6 @@ createApp({
                 setTimeout(() => { this.cpuAction(); }, 1200);
             } else {
                 this.addLog("=== 相手のターン ===");
-                /* 💡 修正：状態を確定させてからターンを渡す */
                 this.syncStateToServer("ターン終了");
                 socket.emit('end_turn', { roomName: this.roomName }); 
             }
@@ -1149,7 +1161,6 @@ createApp({
             this.editAlert = ""; 
             this.editingDeck.push({ ...this.cardPool[poolIndex], poolIndex: poolIndex }); 
         },
-
         removeCardFromEditingDeckByPoolIndex(poolIndex) {
             const index = this.editingDeck.map(c => c.poolIndex).lastIndexOf(poolIndex);
             if (index !== -1) {
@@ -1175,21 +1186,17 @@ createApp({
             if (this.gameMode === 'spectate') return '観戦モード';
             return '';
         },
-        enemyDisplayName() { return this.isSpectator ? this.p2Name : (this.isCpuMode ? '🤖 CPU' : '👤 対戦相手'); },
+        enemyDisplayName() { return this.isSpectator ? this.p2Name : (this.isCpuMode ? '🤖 CPU' : '👤 对戦相手'); },
         playerDisplayName() { return this.isSpectator ? this.p1Name : this.userName; },
         cpuHandLengthComputed() { return this.isCpuMode ? this.cpuHand.length : this.cpuHandLength; },
         cpuDeckLengthComputed() { return this.isCpuMode ? this.cpuDeck.length : this.cpuDeckLength; },
         playerHandLengthComputed() { return this.isSpectator ? this.playerHandLength : this.playerHand.length; },
         playerDeckLengthComputed() { return this.isSpectator ? this.playerDeckLength : this.playerDeck.length; },
-        
         stackedEditingDeck() {
             const counts = {};
             this.editingDeck.forEach(card => {
                 if (!counts[card.poolIndex]) {
-                    counts[card.poolIndex] = {
-                        ...card,
-                        count: 0
-                    };
+                    counts[card.poolIndex] = { ...card, count: 0 };
                 }
                 counts[card.poolIndex].count++;
             });
