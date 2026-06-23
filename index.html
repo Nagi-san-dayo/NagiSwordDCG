@@ -13,7 +13,7 @@ body { font-family: sans-serif; background-color: #1e1e24; margin: 0; display: f
 /* 🖥️ アプリ全体のコンテナ */
 #app { 
     width: 100vw;       
-    height: 100dvh; /* vh から dvh に変更（スマホのバー対策） */
+    height: 100dvh;
     background: #2c2c35; 
     padding: 2vh 2vw;   
     box-sizing: border-box; 
@@ -22,7 +22,7 @@ body { font-family: sans-serif; background-color: #1e1e24; margin: 0; display: f
     position: relative; 
     overflow: hidden;   
     color: #f5f5f5;
-    font-size: clamp(12px, 1.2vw, 18px); /* 文字が小さくなりすぎるのを防ぐ */
+    font-size: clamp(12px, 1.2vw, 18px);
 }
 
 /* 🔄 PC横画面時のレイアウト配置調整（画面幅768px以上） */
@@ -40,7 +40,7 @@ body { font-family: sans-serif; background-color: #1e1e24; margin: 0; display: f
         flex-direction: column;
         justify-content: space-between;
         height: 100%;
-        overflow: hidden; /* 子要素のはみ出しを防ぐ */
+        overflow: hidden;
     }
     
     .title-screen h1 {
@@ -75,18 +75,17 @@ body { font-family: sans-serif; background-color: #1e1e24; margin: 0; display: f
 .scroll-grid { 
     display: flex; 
     gap: 12px; 
-    overflow-x: auto;  /* 横スクロールを強制有効化 */
+    overflow-x: auto; 
     overflow-y: hidden;
     padding: 15px 10px; 
     border-bottom: 1px dashed #444; 
     flex-shrink: 0; 
     background: rgba(0, 0, 0, 0.2);
     border-radius: 8px;
-    /* ブラウザのデフォルトスクロールバーを常に表示させる */
     scrollbar-width: auto; 
 }
 .scroll-grid::-webkit-scrollbar {
-    height: 8px; /* スクロールバーを少し太くして掴みやすく */
+    height: 8px;
 }
 .scroll-grid::-webkit-scrollbar-thumb {
     background: #555;
@@ -117,7 +116,7 @@ body { font-family: sans-serif; background-color: #1e1e24; margin: 0; display: f
 
 /* 📛 カード名 */
 .card-name { 
-    font-size: clamp(12px, 1.3vw, 16px); /* 最小12pxを保証 */
+    font-size: clamp(12px, 1.3vw, 16px);
     font-weight: bold; 
     margin-bottom: 0.8vh; 
     width: 100%;
@@ -237,7 +236,7 @@ body { font-family: sans-serif; background-color: #1e1e24; margin: 0; display: f
     transform: translate(-50%, 0); 
 }
 
-/* 📊 スタック型リストアイテム ★高さを制限して縦スクロールを有効化 */
+/* 📊 スタック型リストアイテム */
 .stacked-item {
     display: flex; 
     justify-content: space-between; 
@@ -256,8 +255,8 @@ body { font-family: sans-serif; background-color: #1e1e24; margin: 0; display: f
 
 /* 現在の編成リストの親コンテナの縦スクロールを最適化 */
 .game-screen > div:last-child > div[style*="max-height"] {
-    max-height: 45vh !important; /* 高さを少し削り、はみ出しを防止 */
-    overflow-y: auto !important;  /* 縦スクロールを強制 */
+    max-height: 45vh !important;
+    overflow-y: auto !important; 
 }
 
 /* 🔘 デッキ選択・モード選択ボタン */
@@ -295,7 +294,7 @@ body { font-family: sans-serif; background-color: #1e1e24; margin: 0; display: f
     border: 1px solid #444;
     overflow-y: auto;
     flex-grow: 1;
-    min-height: 150px; /* スマホ時の最低高さ */
+    min-height: 150px;
 }
 .log-list {
     list-style: none;
@@ -320,7 +319,6 @@ body { font-family: sans-serif; background-color: #1e1e24; margin: 0; display: f
     border-radius: 8px;
     margin-bottom: 10px;
 }
-
     </style>
 </head>
 <body>
@@ -517,12 +515,12 @@ const cardPool = [
     { name: "魔剣ナギソ", cost: 10, power: 30, abilities: [], abilityText: "" },
     { name: "ナギソ破壊", cost: 1, power: 0, abilities: [{ type: "draw", value: 2 }, { type: "jishoburn", value: 4 }], abilityText: "【流水2:2ドロー】【反動4:自分に4ダメ】" },
     { name: "硬化したナギソ", cost: 4, power: 12, abilities: [], abilityText: "" },
-    { name: "ナギソ研磨油", cost: 2, power: 0, abilities: [{ type: "heal", value: 3 }, { type: "saidaimanahueru", value: 1}], abilityText: "【神秘5:HPを5回復】【恵沢1:最大マナ+1】" },
+    { name: "ナギソ研磨油", cost: 2, power: 0, abilities: [{ type: "heal", value: 3 }, { type: "saidaimanahueru", value: 1}], abilityText: "【神秘3:HPを3回復】【恵沢1:最大マナ+1】" },
     { name: "執行のナギソ", cost: 6, power: 0, abilities: [{ type: "discard", value: 2 }, { type: "jishoburn", value: 4 }], abilityText: "【罪2:相手の手札を2枚捨てる】【反動4:自分に4ダメ】" },
     { name: "内喰みのナギソ", cost: 7, power: 0, abilities: [{ type: "manadestroy", value: 3 }], abilityText: "【崩壊3:相手の最大マナを3減らす】" },
     { name: "嫌悪のナギソ", cost: 2, power: 0, abilities: [{ type: "costup", value: 1 }], abilityText: "【威圧1:相手の手札のコストを全て+1】" },
-    { name: "ナギソの破片", cost: 3, power: 0, abilities: [{ type: "heal", value: 3 }, { type: "saidaimanahueru", value: 1}, { type: "draw", value: 2 }], abilityText: "【神秘5:HPを5回復】【恵沢1:最大マナ+1】【流水2:2ドロー】" },
-    { name: "魔剣アクセサリー", cost: 20, power: 0, abilities: [{ type: "costheru", value: 1},{ type: "karyokuhueru", value: 3 }], abilityText: "【縮化1:コスト1下方】【連撃3:使用枚数×3ダメ】"},
+    { name: "ナギソの破片", cost: 3, power: 0, abilities: [{ type: "heal", value: 3 }, { type: "saidaimanahueru", value: 1}, { type: "draw", value: 2 }], abilityText: "【神秘3:HPを3回復】【恵沢1:最大マナ+1】【流水2:2ドロー】" },
+    { name: "魔剣アクセサリー", cost: 18, power: 0, abilities: [{ type: "costheru", value: 1},{ type: "karyokuhueru", value: 3 }], abilityText: "【縮化1:コスト1下方】【連撃3:使用枚数×3ダメ】"},
     { name: "ナギソブレッド", cost: 0, power: 2, abilities: [{ type: "jishoburn", value: 2 }], abilityText: "【反動2:自分に2ダメ】"},
     { name: "ナギソの叫び", cost: 7, power: 3, abilities: [{ type: "costheru", value: 1 }, { type: "kenko", value: 5 }],abilityText: "【縮化1:コスト1下方】【剣呼5:ランダム5枚生成】"},
     { name: "願望のナギソ", cost: 7, power: 0, abilities: [{ type: "costheru", value: 1 }, { type: "draw", value: 3 }],abilityText: "【縮化1:コスト1下方】【流水3:3ドロー】"},
@@ -530,7 +528,7 @@ const cardPool = [
     { name: "叛逆のナギソ", cost: 2, power: 2, abilities: [{ type: "revengeburn", value: 6 }], abilityText: "【逆境6:劣勢時6ダメ追加】"},
     { name: "ナギソの祈り", cost: 4, power: 0, abilities: [{ type: "costdown_all", value: 1 }], abilityText: "【奇跡1:手札全てのコスト−1】"},
     { name: "鮮血のナギソ", cost: 4, power: 5, abilities: [{ type: "heal", value: 10 }, { type: "draw", value: 2 }], abilityText: "【神秘10:HPを10回復】【流水2:2ドロー】" },
-    { name: "聖盾剣ナギソ", cost: 2, power: 0, abilities: [{ type: "barrier", value: 1 }], abilityText: "【聖域1:一度だけダメージを無効化】" },
+    { name: "聖盾剣ナギソ", cost: 2, power: 3, abilities: [{ type: "barrier", value: 1 }], abilityText: "【聖域:一度だけダメージを無効化】" },
     { name: "黙示録のナギソ", cost: 8, power: 6, abilities: [{ type: "costup", value: 2}, { type: "lesshandcostdown", value: 4 }, { type: "revengeburn", value: 8 }], abilityText: "【威圧2:相手の手札のコストを全て+2】【転禍為福4:相手より手札が少ない時コスト-4】【逆境8:劣勢時8ダメ追加】" },
     { name: "ナギソの怒り", cost: 5, power: 0, abilities: [{ type: "jishoburn", value: 5}, { type: "revengeburn", value: 18 }], abilityText: "【反動5:自分に5ダメ】【逆境18:劣勢時18ダメ追加】"}
 ];
@@ -561,7 +559,7 @@ createApp({
             currentDeckSlot: 0, selectedSlotIndex: null,           
             editingDeck: [], editingDeckName: "", editAlert: "", toastTimer: null, cardPool: cardPool,
             playerHP: 30, cpuHP: 30,
-            playerBarrier: false, cpuBarrier: false, /* 🆕 バリア状態を管理 */
+            playerBarrier: false, cpuBarrier: false,
             playerMaxMana: 1, playerCurrentMana: 1,
             cpuMaxMana: 1, cpuCurrentMana: 1,
             playerPlayedCountThisTurn: 0, cpuPlayedCountThisTurn: 0,
@@ -607,13 +605,30 @@ createApp({
             this.endCpuTurn(); 
         });
 
+        /* 💡 追加：対戦相手からのリアルタイムステータス更新を受信する */
+        socket.on('room_state_updated', (data) => {
+            if (this.isCpuMode || this.isSpectator) return;
+            
+            this.cpuHP = data.hp;
+            this.cpuMaxMana = data.maxMana;
+            this.cpuCurrentMana = data.currentMana;
+            this.cpuHandLength = data.handLength;
+            this.cpuDeckLength = data.deckLength;
+            this.cpuBarrier = data.barrier || false;
+            
+            if (data.latestLog && this.logMessages[this.logMessages.length - 1] !== data.latestLog) {
+                this.logMessages.push(data.latestLog);
+                this.scrollLog();
+            }
+        });
+
         socket.on('spectator_update', (state) => {
             if (!this.isSpectator) return;
             this.isGameStarted = true;
             this.playerHP = state.p1.hp;
             this.cpuHP = state.p2.hp;
-            this.playerBarrier = state.p1.barrier || false; /* 🆕 */
-            this.cpuBarrier = state.p2.barrier || false;   /* 🆕 */
+            this.playerBarrier = state.p1.barrier || false; 
+            this.cpuBarrier = state.p2.barrier || false;   
             this.playerCurrentMana = state.p1.currentMana;
             this.playerMaxMana = state.p1.maxMana;
             this.cpuCurrentMana = state.p2.currentMana;
@@ -702,7 +717,7 @@ createApp({
         },
         setupGameField(type) {
             this.playerHP = 30; this.cpuHP = 30;
-            this.playerBarrier = false; this.cpuBarrier = false; /* 🆕 */
+            this.playerBarrier = false; this.cpuBarrier = false;
             this.playerMaxMana = 1; this.playerCurrentMana = 1;
             this.cpuMaxMana = 1; this.cpuCurrentMana = 1;
             this.playerHand = []; this.cpuHand = [];
@@ -719,15 +734,22 @@ createApp({
             for(let i=0; i<3; i++) { this.drawCard(true); }
 
             if (this.isCpuMode) {
-                let cPool = [0,1,2,3,4,5,6,7,8,9,11,12,13,14,15,26,27].map(i => cardPool[i]); /* 🆕 CPUプールに新能力追加 */
-                this.cpuDeck = shuffle(cPool.map(createCardInstance));
+                let cPool = [0,1,2,3,4,5,6,7,8,9,11,12,13,14,15,26,27].map(i => cardPool[i]);
+                
+                /* 💡 修正：17種類の中からランダムに30枚のデッキを作成する */
+                let cpuInitialCards = [];
+                for (let i = 0; i < 30; i++) {
+                    const randomCard = cPool[Math.floor(Math.random() * cPool.length)];
+                    cpuInitialCards.push(randomCard);
+                }
+                
+                this.cpuDeck = shuffle(cpuInitialCards.map(createCardInstance));
                 for(let i=0; i<3; i++) { this.drawCard(false); }
             } else {
                 this.cpuHandLength = 3;
                 this.cpuDeckLength = 27;
             }
         },
-        /* 🆕 コストを動的に計算する算出メソッド（手薄能力に対応） */
         getCardCost(card, isPlayer) {
             let cost = card.cost;
             const pHandLen = this.playerHand.length;
@@ -743,7 +765,6 @@ createApp({
             }
             return Math.max(0, cost);
         },
-        /* 🆕 被ダメージ処理を一元管理して防壁(バリア)の作動をチェックする関数 */
         applyDamage(isPlayerTarget, amount) {
             if (amount <= 0 || this.isGameOver) return;
             if (isPlayerTarget) {
@@ -793,6 +814,11 @@ createApp({
                     this.cpuDeckLength--;
                 }
             }
+
+            /* 💡 追加：自分のドロー情報を相手に同期する */
+            if(isPlayer && this.isGameStarted && !this.isCpuMode && !this.isSpectator) {
+                this.syncStateToServer();
+            }
         },
         showCardNotice(userName, card) {
             this.activeNotice = { user: userName, card: card };
@@ -806,7 +832,7 @@ createApp({
         playCard(card, isPlayer, syncData = null) {
             if (this.isGameOver) return;
             
-            const computedCost = this.getCardCost(card, isPlayer); /* 🆕 */
+            const computedCost = this.getCardCost(card, isPlayer); 
             if (isPlayer && (!this.isPlayerTurn || this.playerCurrentMana < computedCost)) return;
 
             let localSyncData = { chosenCardIndices: [], discardIndex: -1 };
@@ -825,14 +851,14 @@ createApp({
             }
 
             if (isPlayer) {
-                this.playerCurrentMana -= computedCost; /* 🆕 */
-                this.applyDamage(false, card.power); /* 🆕 バリア対応 */
+                this.playerCurrentMana -= computedCost;
+                this.applyDamage(false, card.power); 
                 this.playerPlayedCountThisTurn++;
                 this.addLog(`👤 ${this.userName}が【${card.name}】を召喚！`);
                 this.playerHand = this.playerHand.filter(c => c.id !== card.id);
             } else {
-                this.cpuCurrentMana -= computedCost; /* 🆕 */
-                this.applyDamage(true, card.power); /* 🆕 バリア対応 */
+                this.cpuCurrentMana -= computedCost;
+                this.applyDamage(true, card.power); 
                 this.cpuPlayedCountThisTurn++;
                 this.addLog(`👤 相手が【${card.name}】を召喚！`);
                 if(this.isCpuMode) {
@@ -874,7 +900,7 @@ createApp({
                 }
             } 
             else if(type === "burn") {
-                this.applyDamage(!isPlayerTrigger, value); /* 🆕 バリア対応 */
+                this.applyDamage(!isPlayerTrigger, value); 
                 if (isPlayerTrigger) {
                     this.addLog(`  └【雄叫び${value}】相手プレイヤーに ${value} ダメージ！`);
                 } else {
@@ -900,7 +926,7 @@ createApp({
                 }
             } 
             else if(type === "jishoburn") {
-                this.applyDamage(isPlayerTrigger, value); /* 🆕 自傷はバリアで防ぐべきかで仕様が分かれますが、ダメージ無効化として処理 */
+                this.applyDamage(isPlayerTrigger, value); 
                 if (isPlayerTrigger) {
                     this.addLog(`  └【反動${value}】反動で自分に ${value} ダメージ！`);
                 } else {
@@ -917,7 +943,7 @@ createApp({
             }
             else if(type === "karyokuhueru") {
                 const dmg = currentCount * value;
-                this.applyDamage(!isPlayerTrigger, dmg); /* 🆕 バリア対応 */
+                this.applyDamage(!isPlayerTrigger, dmg); 
                 if (isPlayerTrigger) {
                     this.addLog(`  └【連撃${value}】このターンに使用した枚数(${currentCount}枚×${value}＝${dmg})相手に追加ダメージ！`);
                 } else {
@@ -1004,7 +1030,7 @@ createApp({
                 const myHP = isPlayerTrigger ? this.playerHP : this.cpuHP;
                 const enemyHP = isPlayerTrigger ? this.cpuHP : this.playerHP;
                 if(myHP < enemyHP) {
-                    this.applyDamage(!isPlayerTrigger, value); /* 🆕 バリア対応 */
+                    this.applyDamage(!isPlayerTrigger, value); 
                     if (isPlayerTrigger) {
                         this.addLog(`  └【逆境${value}】逆境のため相手に追加で ${value} ダメージ！`);
                     } else {
@@ -1023,7 +1049,6 @@ createApp({
                     this.addLog(`  └【奇跡${value}】相手の手札の全てのカードのコストが -${value} された！`);
                 }
             }
-            /* 🆕 新能力: 防壁(バリア)の付与 */
             else if(type === "barrier") {
                 if(isPlayerTrigger) this.playerBarrier = true; else this.cpuBarrier = true;
                 if (isPlayerTrigger) {
@@ -1048,12 +1073,13 @@ createApp({
                 setTimeout(() => { this.cpuAction(); }, 1200);
             } else {
                 this.addLog("=== 相手のターン ===");
+                /* 💡 修正：状態を確定させてからターンを渡す */
+                this.syncStateToServer("ターン終了");
                 socket.emit('end_turn', { roomName: this.roomName }); 
             }
         },
         cpuAction() {
             if (this.isGameOver) return;
-            /* 🆕 CPUのコスト参照も getCardCost に修正 */
             let playableCard = this.cpuHand.find(c => this.getCardCost(c, false) <= this.cpuCurrentMana);
             if(playableCard) {
                 this.playCard(playableCard, false);
@@ -1095,7 +1121,7 @@ createApp({
                 hp: this.playerHP, maxMana: this.playerMaxMana, currentMana: this.playerCurrentMana,
                 handLength: this.playerHand.length, deckLength: this.playerDeck.length,
                 name: this.userName, latestLog: latestLog, isP1Turn: this.isPlayerTurn,
-                barrier: this.playerBarrier /* 🆕 バリア状態をルーム共有に同期 */
+                barrier: this.playerBarrier 
             });
         },
         openDeckEditor(slotIndex) { 
