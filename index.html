@@ -356,7 +356,7 @@
 
         <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-top: 10px;">
             <div class="deck-btn mode" :class="{'active': gameMode === 'cpu'}" @click="gameMode = 'cpu'">🤖 CPU対戦</div>
-            <div class="deck-btn mode" :class="{'active': gameMode === 'online_random'}" @click="gameMode = 'online_random'">🌐 ﾗﾝﾀﾞﾑﾏｯﾁ</div>
+            <div class="deck-btn mode" :class="{'active': gameMode === 'online_random'}" @click="gameMode = 'online_random'">🌐 ﾗﾝﾀﾞ幕ﾏｯﾁ</div>
             <div class="deck-btn mode" style="grid-column: span 2;" :class="{'active': gameMode === 'online_room'}" @click="gameMode = 'online_room'">🔑 ルームマッチ (合言葉)</div>
             <div class="deck-btn mode spectate" style="grid-column: span 2;" :class="{'active': gameMode === 'spectate'}" @click="gameMode = 'spectate'">👁️ ルームを観戦する</div>
         </div>
@@ -411,11 +411,11 @@
             
             <h3>📦 カードプール (クリックで追加)</h3>
             <div class="scroll-grid">
-                <div v-for="(card, index) in cardPool" :key="index" class="card" :class="{'playable': getCardCountInEditingDeck(index) < 5, 'disabled': getCardCountInEditingDeck(index) >= 5}" @click="addCardToEditingDeck(index)">
+                <div v-for="(card, index) in cardPool" :key="index" class="card" :class="{'playable': getCardCountInEditingDeck(index) < 3, 'disabled': getCardCountInEditingDeck(index) >= 3}" @click="addCardToEditingDeck(index)">
                     <div class="card-name">{{ card.name }}</div>
                     <div>コ:{{ card.cost }} / 攻:{{ card.power }}</div>
                     <div v-if="card.abilityText" class="card-ability edit-pool" v-html="formatAbility(card.abilityText)"></div>
-                    <div class="card-ability" style="color: #fff; margin-top: auto;">枚数: {{ getCardCountInEditingDeck(index) }} / 5</div>
+                    <div class="card-ability" style="color: #fff; margin-top: auto;">枚数: {{ getCardCountInEditingDeck(index) }} / 3</div>
                 </div>
             </div>
         </div>
@@ -725,9 +725,10 @@ createApp({
             this.playerPlayedCountThisTurn = 0; this.cpuPlayedCountThisTurn = 0;
 
             let pPool = [];
-            if(type === 'agro') pPool = [0,0,0,0,0, 1,1,1,1,1, 4,4,4,4,4, 6,6,6,6,6, 9,9,9,9,9, 2,2,2,2,2].map(i => cardPool[i]);
-            else if(type === 'ramp') pPool = [3,3,3,3,3, 1,1,1,1,1, 2,2,2,2,2, 4,4,4,4,4, 6,6,6,6,6, 10,10,10,10,10].map(i => cardPool[i]);
-            else if(type === 'combo') pPool = [6,6,6,6,6, 7,7,7,7,7, 5,5,5,5,5, 8,8,8,8,8, 2,2,2,2,2, 4,4,4,4,4].map(i => cardPool[i]);
+            /* 🛠️ プリセットデッキも 5枚から「10種類 × 各3枚 ＝ 30枚」へ再構築 */
+            if(type === 'agro') pPool = [0,0,0, 1,1,1, 4,4,4, 6,6,6, 9,9,9, 2,2,2, 11,11,11, 12,12,12, 19,19,19, 23,23,23].map(i => cardPool[i]);
+            else if(type === 'ramp') pPool = [3,3,3, 1,1,1, 2,2,2, 4,4,4, 6,6,6, 10,10,10, 13,13,13, 17,17,17, 24,24,24, 26,26,26].map(i => cardPool[i]);
+            else if(type === 'combo') pPool = [6,6,6, 7,7,7, 5,5,5, 8,8,8, 2,2,2, 4,4,4, 20,20,20, 21,21,21, 24,24,24, 27,27,27].map(i => cardPool[i]);
             else if(type === 'custom') pPool = this.customDecks[this.selectedSlotIndex].map(i => cardPool[i]); 
 
             this.playerDeck = shuffle(pPool.map(createCardInstance));
@@ -826,10 +827,9 @@ createApp({
                 }
             }, 1200);
         },
-                playCard(card, isPlayer, syncData = null) {
+        playCard(card, isPlayer, syncData = null) {
             if (this.isGameOver) return;
             
-            // 🛑【追加】連打・多重発動防止（手札にないカードの処理は即リターン）
             if (isPlayer) {
                 if (!this.playerHand.some(c => c.id === card.id)) return;
             } else if (this.isCpuMode) {
@@ -888,7 +888,6 @@ createApp({
                 this.triggerAbility(ab, isPlayer, isPlayer ? localSyncData : syncData);
             });
 
-            // 🔄【修正】今プレイしたカードのIDを引数に渡す
             this.reduceCost(isPlayer, card.id);
             this.checkWinLose();
 
@@ -901,7 +900,6 @@ createApp({
             if(!isPlayer && !this.isCpuMode) return; 
             let hand = isPlayer ? this.playerHand : this.cpuHand;
             hand.forEach(c => {
-                // 🛑【追加】今使用したカード自体はコスト減少の対象外にする
                 if (playedCardId && c.id === playedCardId) return;
 
                 const reduce = c.abilities.find(ab => ab.type === "costheru");
@@ -984,7 +982,6 @@ createApp({
                             if (this.playerHand.length < this.maxHandSize) this.playerHand.push(randCard);
                             else this.addLog(`🔥 手札満杯のため生成カードが燃破した！`);
                         } else {
-                            // オンライン対戦相手とCPU戦で処理を分ける
                             if (this.isCpuMode) {
                                 let randCard = createCardInstance(this.cardPool[Math.floor(Math.random() * this.cardPool.length)]);
                                 if (this.cpuHand.length < this.maxHandSize) this.cpuHand.push(randCard);
@@ -1087,7 +1084,7 @@ createApp({
                 }
             }
         },
-                endPlayerTurn() {
+        endPlayerTurn() {
             if(!this.isGameStarted || this.isGameOver) return;
             this.isPlayerTurn = false;
             this.isFirstTurn = false;
@@ -1102,7 +1099,6 @@ createApp({
             } else {
                 this.addLog("=== 相手のターン ===");
                 
-                // 🔄 オンライン対戦時も、ローカル画面上の相手のターン開始処理（マナ回復＆ドロー）を先んじて行う
                 this.cpuMaxMana = Math.min(this.totalMaxManaLimit, this.cpuMaxMana + 1);
                 this.cpuCurrentMana = this.cpuMaxMana;
                 this.drawCard(false);
@@ -1173,9 +1169,10 @@ createApp({
                 return; 
             }
         
-            if (this.getCardCountInEditingDeck(poolIndex) >= 5) {
+            /* 🛠️ 重複エラーチェックを 5 から 3 へ変更 */
+            if (this.getCardCountInEditingDeck(poolIndex) >= 3) {
                 if (this.toastTimer) clearTimeout(this.toastTimer);
-                this.editAlert = `❌「${this.cardPool[poolIndex].name}」は5枚までしか入れられません。`;
+                this.editAlert = `❌「${this.cardPool[poolIndex].name}」は3枚までしか入れられません。`;
                 this.toastTimer = setTimeout(() => { this.editAlert = ""; }, 2500);
                 return; 
             }
