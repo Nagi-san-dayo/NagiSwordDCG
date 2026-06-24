@@ -214,6 +214,21 @@
             transition: transform 0.2s, box-shadow 0.2s;
         }
 
+        /* 🔄 選択破棄ターゲット時の強調エフェクト */
+        .card.discard-target {
+            border-color: #dc3545 !important;
+            box-shadow: 0 0 15px rgba(220, 53, 69, 0.8), 0 6px 12px rgba(0,0,0,0.4) !important;
+            cursor: pointer;
+        }
+        .card.discard-target:hover {
+            transform: translateY(-8px);
+            background: #5a3e4a;
+        }
+        @keyframes pulse-red {
+            from { box-shadow: 0 0 5px rgba(220, 53, 69, 0.2); }
+            to { box-shadow: 0 0 15px rgba(220, 53, 69, 0.8); }
+        }
+
         .toast-notification {
             position: fixed;
             top: 10%;            
@@ -339,7 +354,7 @@
 
     <div v-if="isMatching" class="matching-overlay">
         <div class="spinner"></div>
-        <h2>{{ gameMode === 'spectate' ? '👁️ ルームに接続中...' : '🌐 対戦相手を検索中...' }}</h2>
+        <h2>{{ gameMode === 'spectate' ? '👁️ ルームに接続中...' : '🌐 对戦相手を検索中...' }}</h2>
         <p v-if="gameMode === 'online_room' || gameMode === 'spectate'" style="color: #ffc107; font-weight: bold; margin-bottom: 5px;">ルーム名: {{ roomName }}</p>
         <p style="color: #bbb; margin-top: 10px;">サーバーからの応答を待っています。</p>
         <button class="cancel-match-btn" @click="cancelMatching">キャンセル</button>
@@ -470,11 +485,20 @@
                 <p>山札: {{ playerDeckLengthComputed }} 枚 / <b>手札: {{ playerHandLengthComputed }} 枚</b></p>
             </div>
 
+            <div v-if="isSelectingDiscard" style="background: rgba(220, 53, 69, 0.85); padding: 10px; border-radius: 8px; border: 2px solid #ff4d4d; color: white; font-weight: bold; text-align: center; margin-bottom: 10px; animation: pulse-red 1s infinite alternate;">
+                ⚠️ 捨てる手札を選んでクリックしてください 
+                <button @click="cancelDiscardSelect" style="margin-left:15px; padding: 5px 10px; border-radius: 5px; border: none; background: #333; color: white; cursor: pointer; font-weight: bold;">❌ やめる</button>
+            </div>
+
             <div class="hand-container">
                 <div v-for="card in playerHand" :key="card.id" 
                      class="card" 
-                     :class="{ 'playable': !isSpectator && isPlayerTurn && !isGameOver && playerCurrentMana >= getCardCost(card, true), 'disabled': isSpectator || !isPlayerTurn || isGameOver || playerCurrentMana < getCardCost(card, true) }"
-                     @click="!isSpectator && playCard(card, true)">
+                     :class="{ 
+                         'playable': !isSpectator && isPlayerTurn && !isGameOver && !isSelectingDiscard && playerCurrentMana >= getCardCost(card, true), 
+                         'disabled': isSpectator || !isPlayerTurn || isGameOver || (!isSelectingDiscard && playerCurrentMana < getCardCost(card, true)),
+                         'discard-target': isSelectingDiscard && pendingCardToPlay && card.id !== pendingCardToPlay.id
+                     }"
+                     @click="!isSpectator && handleHandCardClick(card)">
                     <div class="card-name">{{ card.name }}</div>
                     <div>コ:{{ getCardCost(card, true) }} / 攻:{{ card.power }}</div>
                     <div v-if="card.abilityText" class="card-ability" v-html="formatAbility(card.abilityText)"></div>
@@ -537,6 +561,7 @@ const cardPool = [
     { name: "欠け刃のナギソ", cost: 5, power: 5, abilities: [{ type: "karyokuhueru", value: 1 }, { type: "burn", value: 5 }, { type: "jishoburn", value: 5 }, { type: "revengeburn", value: 5 }], abilityText: "【連撃1】 【雄叫び5】 【反動5】 【逆境5】" },
     { name: "魔源体ナギソ", cost: 20, power: 0, abilities: [{ type: "saidaimanahueru", value: 2 }, { type: "manahueru", value: 3 }, { type: "lesshandcostdown", value: 20 }], abilityText: "【恵沢2】 【還元3】 【転禍為福20】" },
     { name: "九尾のナギソ", cost: 9, power: 5, abilities: [{ type: "draw", value: 1 }, { type: "kenko", value: 1 }, { type: "heal", value: 5 }, { type: "discard", value: 2 }, { type: "manadestroy", value: 2 }, { type: "costup", value: 3 }, { type: "deckdestroy", value: 4 }, { type: "costdown_all", value: 3 }, { type: "barrier", value: 1 }], abilityText: "【流水1】 【剣呼1】 【神秘5】 【罪2】 【崩壊2】 【威圧3】 【罰4】 【奇跡3】 【聖域】" },
+    { name: "流天のナギソ", cost: 5, power: 5, abilities: [{ type: "self_discard_select", value: 2 }, { type: "barrier", value: 1 }, { type: "manahueru", value: 3 }, { type: "draw", value: 4 }], abilityText: "【流炎2】 【聖域】 【還元3】【流水4】" },
 ];
 
 function generateId() { return Math.random().toString(36).substr(2, 9); }
@@ -545,7 +570,7 @@ function shuffle(array) {
     const clone = [...array];
     for (let i = clone.length - 1; i > 0; i--) {
         const j = Math.floor(Math.random() * (i + 1));
-        [clone[i], clone[j]] = [clone[j], clone[i]]; // ← ここを正しく修正！
+        [clone[i], clone[j]] = [clone[j], clone[i]];
     }
     return clone;
 }
@@ -577,7 +602,10 @@ createApp({
             isFirstTurn: true,
             p1Name: "プレイヤー1", p2Name: "プレイヤー2",
             activeNotice: null,
-            noticeKey: 0
+            noticeKey: 0,
+            /* 🔄 選択破棄用データ */
+            isSelectingDiscard: false,
+            pendingCardToPlay: null
         };
     },
     mounted() {
@@ -689,6 +717,7 @@ createApp({
         getDeckName(index) { return this.customDeckNames[index] || `デッキ ${index + 1}`; },
         resetToTitle() {
             this.isGameStarted = false; this.isGameOver = false; this.isSpectator = false;
+            this.isSelectingDiscard = false; this.pendingCardToPlay = null;
             this.logMessages = ["モードとデッキを選んでゲームを始めてね！"];
         },
         handleDeckSelect(type, slotIndex = null) {
@@ -729,9 +758,9 @@ createApp({
             this.cpuMaxMana = 1; this.cpuCurrentMana = 1;
             this.playerHand = []; this.cpuHand = [];
             this.playerPlayedCountThisTurn = 0; this.cpuPlayedCountThisTurn = 0;
+            this.isSelectingDiscard = false; this.pendingCardToPlay = null;
 
             let pPool = [];
-            /* 🛠️ プリセットデッキも 5枚から「10種類 × 各3枚 ＝ 30枚」へ再構築 */
             if(type === 'agro') pPool = [0,0,0, 1,1,1, 2,2,2, 4,4,4, 9,9,9, 11,11,11, 12,12,12, 16,16,16, 19,19,19, 25,25,25].map(i => cardPool[i]);
             else if(type === 'ramp') pPool = [2,2,2, 3,3,3, 10,10,10, 13,13,13, 14,14,14, 15,15,15, 16,16,16, 17,17,17, 22,22,22, 26,26,26].map(i => cardPool[i]);
             else if(type === 'combo') pPool = [1,1,1, 2,2,2, 5,5,5, 6,6,6, 7,7,7, 8,8,8, 12,12,12, 18,18,18, 19,19,19, 21,21,21].map(i => cardPool[i]);
@@ -742,7 +771,7 @@ createApp({
             for(let i=0; i<3; i++) { this.drawCard(true); }
 
             if (this.isCpuMode) {
-                let cPool = [0,1,2,3,4,5,6,7,8,9,11,12,13,14,15,26,27].map(i => cardPool[i]);
+                let cPool = [0,1,2,3,4,5,6,7,8,9,11,12,13,14,15,26,27,35].map(i => cardPool[i]);
                 let cpuInitialCards = [];
                 for (let i = 0; i < 30; i++) {
                     const randomCard = cPool[Math.floor(Math.random() * cPool.length)];
@@ -833,6 +862,36 @@ createApp({
                 }
             }, 1200);
         },
+        /* 🔄 手札クリック時のハンドラー分岐 */
+        handleHandCardClick(card) {
+            if (this.isSelectingDiscard) {
+                if (card.id === this.pendingCardToPlay.id) {
+                    this.addLog("⚠️ プレイしようとしているカード自体は捨てられません！");
+                    return;
+                }
+                this.isSelectingDiscard = false;
+                let customSyncData = { discardTargetId: card.id, chosenCardIndices: [], discardIndex: -1 };
+                this.playCard(this.pendingCardToPlay, true, customSyncData);
+                this.pendingCardToPlay = null;
+                return;
+            }
+
+            if (!this.isPlayerTurn || this.isGameOver || this.playerCurrentMana < this.getCardCost(card, true)) return;
+
+            const needsDiscard = card.abilities.find(a => a.type === "self_discard_select");
+            if (needsDiscard && this.playerHand.length > 1) {
+                this.pendingCardToPlay = card;
+                this.isSelectingDiscard = true;
+                this.addLog(`🔄 【${card.name}】を発動。捨てる手札を1枚選んでください...`);
+            } else {
+                this.playCard(card, true);
+            }
+        },
+        cancelDiscardSelect() {
+            this.isSelectingDiscard = false;
+            this.pendingCardToPlay = null;
+            this.addLog("❌ カードの使用をキャンセルしました。");
+        },
         playCard(card, isPlayer, syncData = null) {
             if (this.isGameOver) return;
             
@@ -845,7 +904,8 @@ createApp({
             const computedCost = this.getCardCost(card, isPlayer); 
             if (isPlayer && (!this.isPlayerTurn || this.playerCurrentMana < computedCost)) return;
 
-            let localSyncData = { chosenCardIndices: [], discardIndex: -1 };
+            /* 🔄 既存データ構造を崩さないよう同期データを初期化 */
+            let localSyncData = syncData || { chosenCardIndices: [], discardIndex: -1 };
             const activeName = isPlayer ? this.userName : (this.isCpuMode ? '🤖 CPU' : '👤 相手');
             
             this.showCardNotice(activeName, card);
@@ -924,6 +984,31 @@ createApp({
                     this.addLog(`  └【流水${value}】相手がカードを ${value} 枚ドローした！`);
                 }
             } 
+            /* 🔄 選択ディスカードアビリティの実装 */
+            else if(type === "self_discard_select") {
+                if (isPlayerTrigger) {
+                    this.addLog(`  └【流炎${value}】手札からカードを ${value} 枚選択して捨てた！`);
+                } else {
+                    this.addLog(`  └【流炎${value}】相手が手札を ${value} 枚選択して捨てた！`);
+                }
+                
+                for(let i=0; i<value; i++){
+                    if(isPlayerTrigger) {
+                        if (syncData && syncData.discardTargetId) {
+                            const idx = this.playerHand.findIndex(c => c.id === syncData.discardTargetId);
+                            if (idx !== -1) this.playerHand.splice(idx, 1);
+                        } else if(this.playerHand.length > 0) {
+                            this.playerHand.splice(Math.floor(Math.random()*this.playerHand.length), 1);
+                        }
+                    } else {
+                        if(this.isCpuMode) {
+                            if(this.cpuHand.length > 0) this.cpuHand.splice(Math.floor(Math.random()*this.cpuHand.length), 1);
+                        } else {
+                            this.cpuHandLength = Math.max(0, this.cpuHandLength - 1);
+                        }
+                    }
+                }
+            }
             else if(type === "burn") {
                 this.applyDamage(!isPlayerTrigger, value); 
                 if (isPlayerTrigger) {
@@ -1095,6 +1180,7 @@ createApp({
             this.isPlayerTurn = false;
             this.isFirstTurn = false;
             this.playerPlayedCountThisTurn = 0;
+            this.isSelectingDiscard = false; this.pendingCardToPlay = null;
             
             if (this.isCpuMode) {
                 this.addLog("=== CPUのターン ===");
@@ -1175,7 +1261,6 @@ createApp({
                 return; 
             }
         
-            /* 🛠️ 重複エラーチェックを 5 から 3 へ変更 */
             if (this.getCardCountInEditingDeck(poolIndex) >= 3) {
                 if (this.toastTimer) clearTimeout(this.toastTimer);
                 this.editAlert = `❌「${this.cardPool[poolIndex].name}」は3枚までしか入れられません。`;
@@ -1211,7 +1296,7 @@ createApp({
             if (this.gameMode === 'spectate') return '観戦モード';
             return '';
         },
-        enemyDisplayName() { return this.isSpectator ? this.p2Name : (this.isCpuMode ? '🤖 CPU' : '👤 对戦相手'); },
+        enemyDisplayName() { return this.isSpectator ? this.p2Name : (this.isCpuMode ? '🤖 CPU' : '👤 対戦相手'); },
         playerDisplayName() { return this.isSpectator ? this.p1Name : this.userName; },
         cpuHandLengthComputed() { return this.isCpuMode ? this.cpuHand.length : this.cpuHandLength; },
         cpuDeckLengthComputed() { return this.isCpuMode ? this.cpuDeck.length : this.cpuDeckLength; },
