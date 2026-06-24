@@ -826,9 +826,16 @@ createApp({
                 }
             }, 1200);
         },
-        playCard(card, isPlayer, syncData = null) {
+                playCard(card, isPlayer, syncData = null) {
             if (this.isGameOver) return;
             
+            // 🛑【追加】連打・多重発動防止（手札にないカードの処理は即リターン）
+            if (isPlayer) {
+                if (!this.playerHand.some(c => c.id === card.id)) return;
+            } else if (this.isCpuMode) {
+                if (!this.cpuHand.some(c => c.id === card.id || c.name === card.name)) return;
+            }
+
             const computedCost = this.getCardCost(card, isPlayer); 
             if (isPlayer && (!this.isPlayerTurn || this.playerCurrentMana < computedCost)) return;
 
@@ -847,13 +854,11 @@ createApp({
                 });
             }
 
-            // === 🔄 修正：固有のID（id）のみを参照して特定の1枚だけを落とす ===
             if (isPlayer) {
                 this.playerCurrentMana -= computedCost;
                 this.applyDamage(false, card.power); 
                 this.playerPlayedCountThisTurn++;
                 
-                // 100%確実にクリックされたそのインスタンスIDだけを狙い撃ち
                 const targetIndex = this.playerHand.findIndex(c => c.id === card.id);
                 if (targetIndex !== -1) {
                     this.playerHand.splice(targetIndex, 1);
@@ -867,7 +872,6 @@ createApp({
                 this.cpuPlayedCountThisTurn++;
                 
                 if (this.isCpuMode) {
-                    // CPU戦の場合は最初に見つかった名前の一致するカードを落とす
                     const targetIndex = this.cpuHand.findIndex(c => c.id === card.id || c.name === card.name);
                     if (targetIndex !== -1) {
                         this.cpuHand.splice(targetIndex, 1);
@@ -884,19 +888,22 @@ createApp({
                 this.triggerAbility(ab, isPlayer, isPlayer ? localSyncData : syncData);
             });
 
-            this.reduceCost(isPlayer);
+            // 🔄【修正】今プレイしたカードのIDを引数に渡す
+            this.reduceCost(isPlayer, card.id);
             this.checkWinLose();
 
-            // === 🌐 オンライン同期の完全一本化 ===
             if (isPlayer && !this.isCpuMode) {
                 socket.emit('play_card', { card: card, currentMana: this.playerCurrentMana, maxMana: this.playerMaxMana, syncData: localSyncData });
                 this.syncStateToServer(`👤 ${this.userName}が【${card.name}】を召喚！`);
             }
         },
-        reduceCost(isPlayer) {
+        reduceCost(isPlayer, playedCardId = null) {
             if(!isPlayer && !this.isCpuMode) return; 
             let hand = isPlayer ? this.playerHand : this.cpuHand;
             hand.forEach(c => {
+                // 🛑【追加】今使用したカード自体はコスト減少の対象外にする
+                if (playedCardId && c.id === playedCardId) return;
+
                 const reduce = c.abilities.find(ab => ab.type === "costheru");
                 if(reduce) c.cost = Math.max(0, c.cost - reduce.value);
             });
