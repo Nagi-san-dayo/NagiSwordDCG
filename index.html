@@ -356,7 +356,7 @@
 
         <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-top: 10px;">
             <div class="deck-btn mode" :class="{'active': gameMode === 'cpu'}" @click="gameMode = 'cpu'">🤖 CPU対戦</div>
-            <div class="deck-btn mode" :class="{'active': gameMode === 'online_random'}" @click="gameMode = 'online_random'">🌐 ﾗﾝﾀﾞ幕ﾏｯﾁ</div>
+            <div class="deck-btn mode" :class="{'active': gameMode === 'online_random'}" @click="gameMode = 'online_random'">🌐 ﾗﾝﾀﾞﾑﾏｯﾁ</div>
             <div class="deck-btn mode" style="grid-column: span 2;" :class="{'active': gameMode === 'online_room'}" @click="gameMode = 'online_room'">🔑 ルームマッチ (合言葉)</div>
             <div class="deck-btn mode spectate" style="grid-column: span 2;" :class="{'active': gameMode === 'spectate'}" @click="gameMode = 'spectate'">👁️ ルームを観戦する</div>
         </div>
@@ -524,13 +524,18 @@ const cardPool = [
     { name: "ナギソブレッド", cost: 0, power: 2, abilities: [{ type: "jishoburn", value: 2 }], abilityText: "【反動2:自分に2ダメ】"},
     { name: "ナギソの叫び", cost: 7, power: 3, abilities: [{ type: "costheru", value: 1 }, { type: "kenko", value: 5 }],abilityText: "【縮化1:コスト1下方】【剣呼5:ランダム5枚生成】"},
     { name: "願望のナギソ", cost: 7, power: 0, abilities: [{ type: "costheru", value: 1 }, { type: "draw", value: 3 }],abilityText: "【縮化1:コスト1下方】【流水3:3ドロー】"},
-    { name: "裁きのナギソ", cost: 6, power: 0, abilities: [{ type: "deckdestroy", value: 5 }], abilityText: "【罰5:デッキ5枚破壊】"},
+    { name: "裁きのナギソ", cost: 4, power: 0, abilities: [{ type: "deckdestroy", value: 5 }], abilityText: "【罰5:デッキ5枚破壊】"},
     { name: "叛逆のナギソ", cost: 2, power: 2, abilities: [{ type: "revengeburn", value: 6 }], abilityText: "【逆境6:劣勢時6ダメ追加】"},
-    { name: "ナギソの祈り", cost: 4, power: 0, abilities: [{ type: "costdown_all", value: 1 }], abilityText: "【奇跡1:手札全てのコスト−1】"},
+    { name: "ナギソの祈り", cost: 3, power: 0, abilities: [{ type: "costdown_all", value: 1 }], abilityText: "【奇跡1:手札全てのコスト−1】"},
     { name: "鮮血のナギソ", cost: 4, power: 5, abilities: [{ type: "heal", value: 10 }, { type: "draw", value: 2 }], abilityText: "【神秘10:HPを10回復】【流水2:2ドロー】" },
     { name: "聖盾剣ナギソ", cost: 2, power: 3, abilities: [{ type: "barrier", value: 1 }], abilityText: "【聖域:一度だけダメージを無効化】" },
     { name: "黙示録のナギソ", cost: 8, power: 6, abilities: [{ type: "costup", value: 2}, { type: "lesshandcostdown", value: 4 }, { type: "revengeburn", value: 8 }], abilityText: "【威圧2:相手の手札のコストを全て+2】【転禍為福4:相手より手札が少ない時コスト-4】【逆境8:劣勢時8ダメ追加】" },
-    { name: "ナギソの怒り", cost: 5, power: 0, abilities: [{ type: "jishoburn", value: 5}, { type: "revengeburn", value: 18 }], abilityText: "【反動5:自分に5ダメ】【逆境18:劣勢時18ダメ追加】"}
+    { name: "ナギソの怒り", cost: 5, power: 0, abilities: [{ type: "jishoburn", value: 5}, { type: "revengeburn", value: 18 }], abilityText: "【反動5:自分に5ダメ】【逆境18:劣勢時18ダメ追加】"},
+    { name: "轟咆せしナギソ", cost: 11, power: 0, abilities: [{ type: "draw", value: 1 }, { type: "lesshandcostdown", value: 10 }, { type: "revengeburn", value: 10 }], abilityText: "【流水1:1ドロー】【転禍為福10:相手より手札が少ない時コスト-10】【逆境10:劣勢時10ダメ追加】" },
+    { name: "天誅のナギソ", cost: 3, power: 0, abilities: [{ type: "discard", value: 1 }, { type: "barrier", value: 1 }], abilityText: "【罪1:相手の手札を1枚捨てる】【聖域1:一度だけダメージを無効化】" },
+    { name: "夢幻のナギソ", cost: 5, power: 0, abilities: [{ type: "saidaimanahueru", value: 5 }, { type: "jishoburn", value: 10 }, { type: "heal", value: 5 }], abilityText: "【恵沢5:最大マナ+5】【反動10:自分に10ダメ】【神秘5:HPを5回復】" },
+    { name: "欠け刃のナギソ", cost: 5, power: 5, abilities: [{ type: "karyokuhueru", value: 1 }, { type: "burn", value: 5 }, { type: "jishoburn", value: 5 }, { type: "revengeburn", value: 5 }], abilityText: "【連撃1:使用枚数×1ダメ】【雄叫び5:5ダメ】【反動5:自分に5ダメ】【逆境5:劣勢時5ダメ追加】" },
+    { name: "魔源体ナギソ", cost: 20, power: 0, abilities: [{ type: "saidaimanahueru", value: 2 }, { type: "manahueru", value: 3 }, { type: "lesshandcostdown", value: 20 }], abilityText: "【恵沢2:最大マナ+2】【還元3:マナ3回復】【転禍為福20:相手より手札が少ない時コスト-20】" },
 ];
 
 function generateId() { return Math.random().toString(36).substr(2, 9); }
@@ -726,9 +731,9 @@ createApp({
 
             let pPool = [];
             /* 🛠️ プリセットデッキも 5枚から「10種類 × 各3枚 ＝ 30枚」へ再構築 */
-            if(type === 'agro') pPool = [0,0,0, 1,1,1, 4,4,4, 6,6,6, 9,9,9, 2,2,2, 11,11,11, 12,12,12, 19,19,19, 23,23,23].map(i => cardPool[i]);
-            else if(type === 'ramp') pPool = [3,3,3, 1,1,1, 2,2,2, 4,4,4, 6,6,6, 10,10,10, 13,13,13, 17,17,17, 24,24,24, 26,26,26].map(i => cardPool[i]);
-            else if(type === 'combo') pPool = [6,6,6, 7,7,7, 5,5,5, 8,8,8, 2,2,2, 4,4,4, 20,20,20, 21,21,21, 24,24,24, 27,27,27].map(i => cardPool[i]);
+            if(type === 'agro') pPool = [0,0,0, 1,1,1, 2,2,2, 4,4,4, 9,9,9, 11,11,11, 12,12,12, 16,16,16, 19,19,19, 25,25,25].map(i => cardPool[i]);
+            else if(type === 'ramp') pPool = [2,2,2, 3,3,3, 10,10,10, 13,13,13, 14,14,14, 15,15,15, 16,16,16, 17,17,17, 22,22,22, 26,26,26].map(i => cardPool[i]);
+            else if(type === 'combo') pPool = [1,1,1, 2,2,2, 5,5,5, 6,6,6, 7,7,7, 8,8,8, 12,12,12, 18,18,18, 19,19,19, 21,21,21].map(i => cardPool[i]);
             else if(type === 'custom') pPool = this.customDecks[this.selectedSlotIndex].map(i => cardPool[i]); 
 
             this.playerDeck = shuffle(pPool.map(createCardInstance));
