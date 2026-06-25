@@ -572,14 +572,14 @@ const cardPool = [
     { name: "九尾のナギソ", cost: 9, power: 5, abilities: [{ type: "draw", value: 1 }, { type: "kenko", value: 1 }, { type: "heal", value: 3 }, { type: "discard", value: 1 }, { type: "manadestroy", value: 2 }, { type: "costup", value: 1 }, { type: "deckdestroy", value: 3 }, { type: "costdown_all", value: 2 }, { type: "barrier", value: 1 }], abilityText: "【流水1】 【剣呼1】 【神秘3】 【罪1】 【崩壊2】 【威圧1】 【罰3】 【奇跡2】 【聖域】" },
     { name: "流天のナギソ", cost: 5, power: 5, abilities: [{ type: "self_discard_select", value: 2 }, { type: "barrier", value: 1 }, { type: "manahueru", value: 3 }, { type: "draw", value: 4 }], abilityText: "【流炎2】 【聖域】 【還元3】 【流水4】" },
     { name: "氷炎のナギソ", cost: 2, power: 2, abilities: [{ type: "costheru", value: 1 }, { type: "self_discard_select", value: 1}, { type: "draw", value: 1 }], abilityText: "【縮化1】 【流炎1】 【流水1】" },
-    { name: "淙々のナギソ", cost: 1, power: 0, abilities: [{ type: "zenjikouon", value: 1 }, { type: "draw", value: 1 }], abilityText: "【漸次昂音1】 【流水1】" },
-    { name: "猛響のナギソ", cost: 2, power: 0, abilities: [{ type: "zenjikouon", value: 1 }, { type: "burn", value: 1 }], abilityText: "【漸次昂音1】 【雄叫び1】" },
-    { name: "漸速のナギソ", cost: 3, power: 0, abilities: [{ type: "zenjikouon", value: 1 }, { type: "saidaimanahueru", value: 1 },{ type: "manahueru", value: 1 }], abilityText: "【漸次昂音1】 【恵沢1】 【還元1】"},
-    { name: "癒音のナギソ", cost: 3, power: 0, abilities: [{ type: "zenjikouon", value: 1 }, { type: "heal", value: 1 }], abilityText: "【漸次昂音1】 【神秘1】"},
-    { name: "罪音のナギソ", cost: 4, power: 0, abilities: [{ type: "zenjikouon", value: 1 }, { type: "discard", value: 1 }], abilityText: "【漸次昂音1】 【罪1】"},
+    { name: "淙々のナギソ", cost: 2, power: 0, abilities: [{ type: "zenjikouon", value: 1 }, { type: "draw", value: 1 }], abilityText: "【漸次昂音1】 【流水1】" },
+    { name: "猛響のナギソ", cost: 3, power: 0, abilities: [{ type: "zenjikouon", value: 1 }, { type: "burn", value: 1 }], abilityText: "【漸次昂音1】 【雄叫び1】" },
+    { name: "漸速のナギソ", cost: 4, power: 0, abilities: [{ type: "zenjikouon", value: 1 }, { type: "manahueru", value: 1 }], abilityText: "【漸次昂音1】 【還元1】"},
+    { name: "癒音のナギソ", cost: 4, power: 0, abilities: [{ type: "zenjikouon", value: 1 }, { type: "heal", value: 1 }], abilityText: "【漸次昂音1】 【神秘1】"},
+    { name: "罪音のナギソ", cost: 6, power: 0, abilities: [{ type: "zenjikouon", value: 1 }, { type: "discard", value: 1 }], abilityText: "【漸次昂音1】 【罪1】"},
     { name: "襲音のナギソ", cost: 6, power: 0, abilities: [{ type: "zenjikouon", value: 1 }, { type: "costup", value: 1 }], abilityText: "【漸次昂音1】 【威圧1】"},
-    { name: "風声鶴唳のナギソ", cost: 7, power: 0, abilities: [{ type: "zenjikouon", value: 1 }, { type: "manadestroy", value: 1 }], abilityText: "【漸次昂音1】 【崩壊1】"},
-    { name: "水琴窟のナギソ", cost: 5, power: 0, abilities: [{ type: "zenjikouon", value: 1 }, { type: "costdown_all", value: 1 }], abilityText: "【漸次昂音1】 【奇跡1】"},
+    { name: "風声鶴唳のナギソ", cost: 8, power: 0, abilities: [{ type: "zenjikouon", value: 1 }, { type: "manadestroy", value: 1 }], abilityText: "【漸次昂音1】 【崩壊1】"},
+    { name: "水琴窟のナギソ", cost: 9, power: 0, abilities: [{ type: "zenjikouon", value: 1 }, { type: "costdown_all", value: 1 }], abilityText: "【漸次昂音1】 【奇跡1】"},
     { name: "澎湃轟々のナギソ", cost: 8, power: 0, abilities: [{ type: "zenjikouon", value: 1 }, { type: "karyokuhueru", value: 1 }], abilityText: "【漸次昂音1】 【連撃1】"},
     { name: "玲瓏のナギソ", cost: 5, power: 0, abilities: [{ type: "zenjikouon", value: 1 }, { type: "costheru", value: 1}], abilityText: "【漸次昂音1】 【縮化1】"},
 ];
@@ -978,17 +978,6 @@ createApp({
                             localSyncData.chosenCardIndices.push(Math.floor(Math.random() * this.cardPool.length));
                         }
                     }
-                    /* ✨ 追加：漸次昂音の生成情報も事前に確定してオンライン同期データへ格納 */
-                    if (ab.type === "zenjikouon") {
-                        if (!localSyncData.chosenZenjiIndices) localSyncData.chosenZenjiIndices = [];
-                        const zenjiPool = this.cardPool.map((c, idx) => ({ ...c, idx })).filter(c => c.abilities.some(a => a.type === "zenjikouon"));
-                        for(let i=0; i<ab.value; i++) {
-                            if (zenjiPool.length > 0) {
-                                const randIdx = Math.floor(Math.random() * zenjiPool.length);
-                                localSyncData.chosenZenjiIndices.push(zenjiPool[randIdx].idx);
-                            }
-                        }
-                    }
                 });
             }
 
@@ -1115,52 +1104,19 @@ createApp({
                     }
                 }
             }
-            /* ✨ 追加：漸次昂音アビリティの実装 */
+                        /* ✨ 変更：漸次昂音アビリティの実装（手札の強化のみ） */
             else if(type === "zenjikouon") {
                 if (isPlayerTrigger) {
-                    this.addLog(`  └【漸次昂音${value}】手札に漸次昂音カード${value}枚を生成し、手札と山札の漸次昂音カードを強化！`);
+                    this.addLog(`  └【漸次昂音${value}】手札の漸次昂音カードを強化！`);
                 } else {
-                    this.addLog(`  └【漸次昂音${value}】相手が手札に漸次昂音カードを${value}枚生成し､手札と山札の漸次昂音カードを強化！`);
+                    this.addLog(`  └【漸次昂音${value}】相手が手札の漸次昂音カードを強化！`);
                 }
 
-                // 1. カード生成処理
-                if (this.isCpuMode || !isPlayerTrigger) {
-                    const zenjiPool = this.cardPool.filter(c => c.abilities.some(a => a.type === "zenjikouon"));
-                    for(let i = 0; i < value; i++) {
-                        if (isPlayerTrigger) {
-                            if (zenjiPool.length > 0 && this.playerHand.length < this.maxHandSize) {
-                                this.playerHand.push(createCardInstance(zenjiPool[Math.floor(Math.random() * zenjiPool.length)]));
-                            } else if (this.playerHand.length >= this.maxHandSize) {
-                                this.addLog(`🔥 手札満杯のため生成されたカードが燃破した！`);
-                            }
-                        } else {
-                            if (this.isCpuMode) {
-                                if (zenjiPool.length > 0 && this.cpuHand.length < this.maxHandSize) {
-                                    this.cpuHand.push(createCardInstance(zenjiPool[Math.floor(Math.random() * zenjiPool.length)]));
-                                }
-                            } else {
-                                if (this.cpuHandLength < this.maxHandSize) this.cpuHandLength++;
-                                else this.addLog(`🔥 相手の手札が上限を超えているため燃破した！`);
-                            }
-                        }
-                    }
-                } else if (syncData && syncData.chosenZenjiIndices) {
-                    syncData.chosenZenjiIndices.forEach(idx => {
-                        if (this.playerHand.length < this.maxHandSize) {
-                            this.playerHand.push(createCardInstance(this.cardPool[idx]));
-                        } else {
-                            this.addLog(`🔥 手札満杯のため生成されたカードが燃破した！`);
-                        }
-                    });
-                }
-
-                // 2. 手札とデッキ内カードの増幅処理
+                // 手札の増幅処理のみ実行（生成と山札強化を削除）
                 if (isPlayerTrigger) {
                     this.boostZenjiCards(this.playerHand, value);
-                    this.boostZenjiCards(this.playerDeck, value);
                 } else if (this.isCpuMode) {
                     this.boostZenjiCards(this.cpuHand, value);
-                    this.boostZenjiCards(this.cpuDeck, value);
                 }
                 // (オンライン対戦相手側は、相手自身のローカル環境で同期して強化が実行されます)
             }
