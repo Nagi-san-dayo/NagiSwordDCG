@@ -485,12 +485,12 @@
 
             <div class="status-box" :class="gameMode === 'cpu' ? 'cpu-box' : 'online-enemy-box'">
                 <h3>👤 {{ enemyDisplayName }} HP: {{ cpuHP }} <span v-if="cpuBarrier">🛡️[防壁]</span> (マナ: {{ cpuCurrentMana }}/{{ cpuMaxMana }})</h3>
-                <p>山札: {{ cpuDeckLengthComputed }} 枚 / 手札: {{ cpuHandLengthComputed }} 枚</p>
+                <p>山札: {{ cpuDeckLengthComputed }} 枚 / 手札: {{ cpuHandLengthComputed }} 枚 / 🦴骨カウンター: {{ isSpectator ? p2FleshCounter : cpuFleshCounter }}</p>
             </div>
 
             <div class="status-box player-box">
                 <h3>👤 {{ playerDisplayName }} HP: {{ playerHP }} <span v-if="playerBarrier">🛡️[防壁]</span> (マナ: {{ playerCurrentMana }}/{{ playerMaxMana }})</h3>
-                <p>山札: {{ playerDeckLengthComputed }} 枚 / <b>手札: {{ playerHandLengthComputed }} 枚</b></p>
+                <p>山札: {{ playerDeckLengthComputed }} 枚 / <b>手札: {{ playerHandLengthComputed }} 枚</b> / 🦴骨カウンター: {{ isSpectator ? p1FleshCounter : playerFleshCounter }}</p>
             </div>
 
             <div v-if="isSelectingDiscard" style="background: rgba(220, 53, 69, 0.85); padding: 10px; border-radius: 8px; border: 2px solid #ff4d4d; color: white; font-weight: bold; text-align: center; margin-bottom: 10px; animation: pulse-red 1s infinite alternate;">
@@ -502,8 +502,8 @@
                 <div v-for="card in playerHand" :key="card.id" 
                      class="card" 
                      :class="{ 
-                         'playable': !isSpectator && isPlayerTurn && !isGameOver && !isSelectingDiscard && playerCurrentMana >= getCardCost(card, true), 
-                         'disabled': isSpectator || !isPlayerTurn || isGameOver || (!isSelectingDiscard && playerCurrentMana < getCardCost(card, true)),
+                         'playable': !isSpectator && isPlayerTurn && !isGameOver && !isSelectingDiscard && playerCurrentMana >= getCardCost(card, true) && hasEnoughFlesh(card, true), 
+                         'disabled': isSpectator || !isPlayerTurn || isGameOver || (!isSelectingDiscard && (playerCurrentMana < getCardCost(card, true) || !hasEnoughFlesh(card, true))),
                          'discard-target': isSelectingDiscard && pendingCardToPlay && card.id !== pendingCardToPlay.id,
                          'discard-selected': pendingDiscardIds.includes(card.id)
                      }"
@@ -581,7 +581,17 @@ const cardPool = [
     { name: "風声鶴唳のナギソ", cost: 8, power: 0, abilities: [{ type: "zenjikouon", value: 1 }, { type: "manadestroy", value: 1 }], abilityText: "【漸次昂音1】 【崩壊1】"},
     { name: "水琴窟のナギソ", cost: 9, power: 0, abilities: [{ type: "zenjikouon", value: 1 }, { type: "costdown_all", value: 1 }], abilityText: "【漸次昂音1】 【奇跡1】"},
     { name: "澎湃轟々のナギソ", cost: 8, power: 0, abilities: [{ type: "zenjikouon", value: 1 }, { type: "karyokuhueru", value: 1 }], abilityText: "【漸次昂音1】 【連撃1】"},
-    { name: "玲瓏のナギソ", cost: 5, power: 0, abilities: [{ type: "zenjikouon", value: 1 }, { type: "costheru", value: 1}], abilityText: "【漸次昂音1】 【縮化1】"},
+    { name: "玲瓏のナギソ", cost: 5, power: 0, abilities: [{ type: "zenjikouon", value: 1 }, { type: "costheru", value: 1 }], abilityText: "【漸次昂音1】 【縮化1】"},
+    { name: "鼠骨短剣ナギソ", cost: 1, power: 0, abilities: [{ type: "nie", value: 1 }, { type: "draw", value: 1 }, { type: "revengeburn", value: 2 }], abilityText: "【贄1】 【流水1】 【逆境2】" },
+    { name: "兎骨懐剣ナギソ", cost: 2, power: 1, abilities: [{ type: "nie", value: 2 }, { type: "saidaimanahueru", value: 1 }], abilityText: "【贄2】 【恵沢1】" },
+    { name: "犬骨盾剣ナギソ", cost: 3, power: 4, abilities: [{ type: "nie", value: -2 }, { type: "costup", value: 1 }, { type: "barrier", value: 1 }], abilityText: "【贄-2】 【威圧1】 【聖域】" },
+    { name: "猫骨細剣ナギソ", cost: 3, power: 3, abilities: [{ type: "nie", value: -2 }, { type: "draw", value: 3 }], abilityText: "【贄-1】 【流水3】" },
+    { name: "牛骨太刀ナギソ", cost: 4, power: 0, abilities: [{ type: "nie", value: 4 }, { type: "heal", value: 5 }, { type: "costdown_all", value: 1 }], abilityText: "【贄4】 【神秘5】 【奇跡1】" },
+    { name: "虎骨大刀ナギソ", cost: 5, power: 6, abilities: [{ type: "nie", value: -4 }, { type: "burn", value: 4 }, { type: "costup", value: 2 }, { type: "self_discard_select", value: 2 }], abilityText: "【贄-4】 【雄叫び4】 【威圧2】 【流炎2】" },
+    { name: "狼骨双剣ナギソ", cost: 5, power: 4, abilities: [{ type: "nie", value: -3 }, { type: "burn", value: 3 }, { type: "karyokuhueru", value: 1 }, { type: "discard", value: 1 }], abilityText: "【贄-3】 【雄叫び3】 【連撃1】 【罪1】" },
+    { name: "熊骨突剣ナギソ", cost: 7, power: 8, abilities: [{ type: "nie", value: -4 }, { type: "burn", value: 5 }, { type: "manadestroy", value: 2 }, { type: "costup", value: 1 }, { type: "self_discard_select", value: 3 }], abilityText: "【贄-4】 【雄叫び5】 【崩壊2】 【威圧1】 【流炎】" },
+    { name: "鯨骨長太刀ナギソ", cost: 7, power: 4, abilities: [{ type: "nie", value: 5 }, { type: "zenjikouon", value: 1 }, { type: "manahueru", value: 2 }, { type: "deckdestroy", value: 1 }, { type: "jishoburn", value: 5 }], abilityText: "【贄5】 【漸次昂音1】 【還元2】 【罰1】 【反動5】" },
+    { name: "獅子骨大剣ナギソ", cost: 8, power: 9, abilities: [{ type: "nie", value: -7 }, { type: "burn", value: 7 }, { type: "revengeburn", value: 5 }, { type: "costup", value: 3 }, { type: "manadestroy", value: 3 }, { type: "self_discard_select", value: 4 }], abilityText: "【贄-7】 【雄叫び7】 【逆境5】 【威圧3】 【崩壊3】 【流炎4】" },
 ];
 
 function generateId() { return Math.random().toString(36).substr(2, 9); }
@@ -590,7 +600,7 @@ function createCardInstance(baseCard) {
         ...baseCard, 
         baseCost: baseCard.cost, 
         id: generateId(),
-        abilities: JSON.parse(JSON.stringify(baseCard.abilities)) // ✨ 追加：能力データを完全に独立させてコピー
+        abilities: JSON.parse(JSON.stringify(baseCard.abilities)) 
     };  
 }
 function shuffle(array) {
@@ -620,6 +630,9 @@ createApp({
             playerBarrier: false, cpuBarrier: false,
             playerMaxMana: 1, playerCurrentMana: 1,
             cpuMaxMana: 1, cpuCurrentMana: 1,
+            /* ✨ 追加：自分・相手の骨カウンター、および観戦用の格納スペース */
+            playerFleshCounter: 0, cpuFleshCounter: 0,
+            p1FleshCounter: 0, p2FleshCounter: 0,
             playerPlayedCountThisTurn: 0, cpuPlayedCountThisTurn: 0,
             logMessages: ["モードとデッキを選んでゲームを始めてね！"],
             playerDeck: [], cpuDeck: [], playerHand: [], cpuHand: [],
@@ -630,7 +643,6 @@ createApp({
             p1Name: "プレイヤー1", p2Name: "プレイヤー2",
             activeNotice: null,
             noticeKey: 0,
-            /* 🔄 選択破棄用データ */
             isSelectingDiscard: false,
             pendingCardToPlay: null,
             pendingDiscardIds: []
@@ -676,6 +688,8 @@ createApp({
             this.cpuHandLength = data.handLength;
             this.cpuDeckLength = data.deckLength;
             this.cpuBarrier = data.barrier || false;
+            /* ✨ 追加：オンライン対戦相手の骨カウンターの同期 */
+            if (data.fleshCounter !== undefined) this.cpuFleshCounter = data.fleshCounter;
             
             if (data.latestLog && this.logMessages[this.logMessages.length - 1] !== data.latestLog) {
                 this.logMessages.push(data.latestLog);
@@ -698,6 +712,9 @@ createApp({
             this.playerDeckLength = state.p1.deckLength;
             this.cpuHandLength = state.p2.handLength;
             this.cpuDeckLength = state.p2.deckLength;
+            /* ✨ 追加：観戦時の骨カウンター情報更新 */
+            this.p1FleshCounter = state.p1.fleshCounter || 0;
+            this.p2FleshCounter = state.p2.fleshCounter || 0;
             this.p1Name = state.p1.name;
             this.p2Name = state.p2.name;
             this.isPlayerTurn = state.isP1Turn;
@@ -713,7 +730,7 @@ createApp({
                     this.addLog("⚠️ 選手の接続が切れました。ルームは解散されました。");
                     this.isGameOver = true;
                 } else {
-                    this.addLog("⚠️ 対戦相手の接続が切れました。あなたの勝利です！");
+                    this.addLog("⚠️ 对戦相手の接続が切れました。あなたの勝利です！");
                     this.cpuHP = 0; 
                     this.isGameOver = true;
                     this.checkWinLose();
@@ -785,6 +802,8 @@ createApp({
             this.playerBarrier = false; this.cpuBarrier = false;
             this.playerMaxMana = 1; this.playerCurrentMana = 1;
             this.cpuMaxMana = 1; this.cpuCurrentMana = 1;
+            /* ✨ 追加：ゲーム開始時に骨カウンターをリセット */
+            this.playerFleshCounter = 0; this.cpuFleshCounter = 0;
             this.playerHand = []; this.cpuHand = [];
             this.playerPlayedCountThisTurn = 0; this.cpuPlayedCountThisTurn = 0;
             this.isSelectingDiscard = false; this.pendingCardToPlay = null;
@@ -801,7 +820,8 @@ createApp({
             for(let i=0; i<3; i++) { this.drawCard(true); }
 
             if (this.isCpuMode) {
-                let cPool = [0,1,2,3,4,5,6,7,8,9,11,12,13,14,15,26,27,35,37,38].map(i => cardPool[i]);
+                // CPU用のプールに贄のサンプルも混ざるように調整可能（ここでは既存通り）
+                let cPool = [0,1,2,3,4,5,6,7,8,9,11,12,13,14,15,26,27,35,37,38,47,48].map(i => cardPool[i]);
                 let cpuInitialCards = [];
                 for (let i = 0; i < 30; i++) {
                     const randomCard = cPool[Math.floor(Math.random() * cPool.length)];
@@ -829,6 +849,16 @@ createApp({
             }
             return Math.max(0, cost);
         },
+        /* ✨ 追加：カードが負の【贄】を持つ場合、肉カウンターが十分にあるかを判定する関数 */
+        hasEnoughFlesh(card, isPlayer) {
+            const nieAbility = card.abilities.find(a => a.type === "nie");
+            if (nieAbility && nieAbility.value < 0) {
+                const required = Math.abs(nieAbility.value);
+                const current = isPlayer ? this.playerFleshCounter : this.cpuFleshCounter;
+                return current >= required;
+            }
+            return true;
+        },
         applyDamage(isPlayerTarget, amount) {
             if (amount <= 0 || this.isGameOver) return;
             if (isPlayerTarget) {
@@ -854,7 +884,6 @@ createApp({
                     this.addLog(`💀 【LO】山札が0枚のため敗北しました。`);
                     this.playerHP = 0; 
                     this.checkWinLose(); 
-                    /* ✨ 修正：リターンする前に通信相手に敗北状態を明示的に同期 */
                     if (!this.isCpuMode) {
                         this.syncStateToServer(`💀 【LO】山札が0枚のため敗北しました。`);
                     }
@@ -898,7 +927,6 @@ createApp({
                 }
             }, 1200);
         },
-        /* 🔄 手札クリック時のハンドラー分岐 */
         handleHandCardClick(card) {
             if (this.isSelectingDiscard) {
                 if (card.id === this.pendingCardToPlay.id) {
@@ -906,7 +934,6 @@ createApp({
                     return;
                 }
                 
-                // すでに選択されている場合は選択を解除
                 if (this.pendingDiscardIds.includes(card.id)) {
                     this.pendingDiscardIds = this.pendingDiscardIds.filter(id => id !== card.id);
                     return;
@@ -914,13 +941,10 @@ createApp({
 
                 const ab = this.pendingCardToPlay.abilities.find(a => a.type === "self_discard_select");
                 const requiredCount = ab ? ab.value : 1;
-                
-                // プレイ対象カードを除いた手札の最大選択可能数
                 const maxSelectable = Math.min(requiredCount, this.playerHand.length - 1);
 
                 this.pendingDiscardIds.push(card.id);
 
-                // 必要枚数に達したらプレイを実行
                 if (this.pendingDiscardIds.length >= maxSelectable) {
                     this.isSelectingDiscard = false;
                     let customSyncData = { discardTargetIds: [...this.pendingDiscardIds], chosenCardIndices: [], chosenZenjiIndices: [], discardIndex: -1 };
@@ -934,7 +958,8 @@ createApp({
                 return;
             }
 
-            if (!this.isPlayerTurn || this.isGameOver || this.playerCurrentMana < this.getCardCost(card, true)) return;
+            /* ✨ 変更：骨カウンター判定条件「!this.hasEnoughFlesh(card, true)」を不発条件に追加 */
+            if (!this.isPlayerTurn || this.isGameOver || this.playerCurrentMana < this.getCardCost(card, true) || !this.hasEnoughFlesh(card, true)) return;
 
             const needsDiscard = card.abilities.find(a => a.type === "self_discard_select");
             if (needsDiscard && this.playerHand.length > 1) {
@@ -963,9 +988,9 @@ createApp({
             }
 
             const computedCost = this.getCardCost(card, isPlayer); 
-            if (isPlayer && (!this.isPlayerTurn || this.playerCurrentMana < computedCost)) return;
+            /* ✨ 変更：骨カウンター判定条件「!this.hasEnoughFlesh(card, isPlayer)」を安全策として追加 */
+            if (isPlayer && (!this.isPlayerTurn || this.playerCurrentMana < computedCost || !this.hasEnoughFlesh(card, true))) return;
 
-            /* 🔄 既存データ構造を崩さないよう同期データを初期化 */
             let localSyncData = syncData || { chosenCardIndices: [], chosenZenjiIndices: [], discardIndex: -1 };
             const activeName = isPlayer ? this.userName : (this.isCpuMode ? '🤖 CPU' : '👤 相手');
             
@@ -1023,25 +1048,19 @@ createApp({
                 this.syncStateToServer(`👤 ${this.userName}が【${card.name}】を召喚！`);
             }
         },
-                /* ✨ 追加：漸次昂音持ちカードの手札・山札の一括強化メソッド */
         boostZenjiCards(cards, amount) {
             cards.forEach(c => {
                 const hasZenji = c.abilities.some(ab => ab.type === "zenjikouon");
                 if (hasZenji) {
-                    // 1. 内部データ（abilities）の数値を増やす処理
                     c.abilities.forEach(ab => {
-                        // 🛑 聖域(barrier)と漸次昂音(zenjikouon)の数値は増やさない
                         if (ab.type !== "barrier" && ab.type !== "zenjikouon") {
                             ab.value += amount;
                         }
                     });
-                    
-                    // 2. 画面表示用テキスト（abilityText）の数値を増やす処理
                     if (c.abilityText) {
-                        // 🛑 正規表現で数字の前の文字を判定し、「漸次昂音」か「聖域」が含まれていれば足し算を除外
                         c.abilityText = c.abilityText.replace(/([^0-9]+)(\d+)/g, (match, p1, p2) => {
                             if (p1.includes("漸次昂音") || p1.includes("聖域")) {
-                                return match; // 変更せずにそのまま返す
+                                return match; 
                             }
                             return p1 + (parseInt(p2) + amount);
                         });
@@ -1071,7 +1090,29 @@ createApp({
                     this.addLog(`  └【流水${value}】相手がカードを ${value} 枚ドローした！`);
                 }
             } 
-            /* 🔄 選択ディスカードアビリティの実装 */
+            /* ✨ 追加：【贄n】効果の処理ロジック */
+            else if(type === "nie") {
+                if (isPlayerTrigger) {
+                    if (value > 0) {
+                        this.playerFleshCounter += value;
+                        this.addLog(`  └【贄${value}】骨カウンターを ${value} 付与した！(現在: ${this.playerFleshCounter})`);
+                    } else {
+                        const consume = Math.abs(value);
+                        this.playerFleshCounter -= consume;
+                        this.addLog(`  └【贄${value}】骨カウンターを ${consume} 消費した！(現在: ${this.playerFleshCounter})`);
+                    }
+                } else {
+                    // CPU または オンラインの対戦相手の処理
+                    if (value > 0) {
+                        this.cpuFleshCounter += value;
+                        this.addLog(`  └【贄${value}】相手が骨カウンターを ${value} 付与した！(現在: ${this.cpuFleshCounter})`);
+                    } else {
+                        const consume = Math.abs(value);
+                        this.cpuFleshCounter -= consume;
+                        this.addLog(`  └【贄${value}】相手が骨カウンターを ${consume} 消費した！(現在: ${this.cpuFleshCounter})`);
+                    }
+                }
+            }
             else if(type === "self_discard_select") {
                 if (isPlayerTrigger) {
                     this.addLog(`  └【流炎${value}】手札からカードを ${value} 枚選択して捨てた！`);
@@ -1081,13 +1122,11 @@ createApp({
                 
                 if (isPlayerTrigger) {
                     if (syncData && syncData.discardTargetIds && syncData.discardTargetIds.length > 0) {
-                        // 配列内のIDをすべて手札から削除
                         syncData.discardTargetIds.forEach(id => {
                             const idx = this.playerHand.findIndex(c => c.id === id);
                             if (idx !== -1) this.playerHand.splice(idx, 1);
                         });
                     } else {
-                        // フォールバック
                         for(let i=0; i<value; i++){
                             if(this.playerHand.length > 0) {
                                 this.playerHand.splice(Math.floor(Math.random()*this.playerHand.length), 1);
@@ -1104,7 +1143,6 @@ createApp({
                     }
                 }
             }
-                        /* ✨ 変更：漸次昂音アビリティの実装（手札の強化のみ） */
             else if(type === "zenjikouon") {
                 if (isPlayerTrigger) {
                     this.addLog(`  └【漸次昂音${value}】手札の漸次昂音カードを強化！`);
@@ -1112,13 +1150,11 @@ createApp({
                     this.addLog(`  └【漸次昂音${value}】相手が手札の漸次昂音カードを強化！`);
                 }
 
-                // 手札の増幅処理のみ実行（生成と山札強化を削除）
                 if (isPlayerTrigger) {
                     this.boostZenjiCards(this.playerHand, value);
                 } else if (this.isCpuMode) {
                     this.boostZenjiCards(this.cpuHand, value);
                 }
-                // (オンライン対戦相手側は、相手自身のローカル環境で同期して強化が実行されます)
             }
             else if(type === "burn") {
                 this.applyDamage(!isPlayerTrigger, value); 
@@ -1314,7 +1350,8 @@ createApp({
 
         cpuAction() {
             if (this.isGameOver) return;
-            let playableCard = this.cpuHand.find(c => this.getCardCost(c, false) <= this.cpuCurrentMana);
+            /* ✨ 変更：CPUのAI行動探索にも「hasEnoughFlesh(c, false)」の判定を追加 */
+            let playableCard = this.cpuHand.find(c => this.getCardCost(c, false) <= this.cpuCurrentMana && this.hasEnoughFlesh(c, false));
             if(playableCard) {
                 this.playCard(playableCard, false);
                 setTimeout(() => { this.cpuAction(); }, 1400);
@@ -1355,7 +1392,9 @@ createApp({
                 hp: this.playerHP, maxMana: this.playerMaxMana, currentMana: this.playerCurrentMana,
                 handLength: this.playerHand.length, deckLength: this.playerDeck.length,
                 name: this.userName, latestLog: latestLog, isP1Turn: this.isPlayerTurn,
-                barrier: this.playerBarrier 
+                barrier: this.playerBarrier,
+                /* ✨ 追加：ルームステートの通信同期データに骨カウンターを含める */
+                fleshCounter: this.playerFleshCounter
             });
         },
         openDeckEditor(slotIndex) { 
