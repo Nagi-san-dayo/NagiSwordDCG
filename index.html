@@ -379,7 +379,7 @@
 
         <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-top: 10px;">
             <div class="deck-btn mode" :class="{'active': gameMode === 'cpu'}" @click="gameMode = 'cpu'">🤖 CPU対戦</div>
-            <div class="deck-btn mode" :class="{'active': gameMode === 'online_random'}" @click="gameMode = 'online_random'">🌐 ﾗﾝﾀﾞﾑﾏｯﾁ</div>
+            <div class="deck-btn mode" :class="{'active': gameMode === 'online_random'}" @click="gameMode = 'online_random'">🌐 ランダムマッチ</div>
             <div class="deck-btn mode" style="grid-column: span 2;" :class="{'active': gameMode === 'online_room'}" @click="gameMode = 'online_room'">🔑 ルームマッチ (合言葉)</div>
             <div class="deck-btn mode spectate" style="grid-column: span 2;" :class="{'active': gameMode === 'spectate'}" @click="gameMode = 'spectate'">👁️ ルームを観戦する</div>
         </div>
@@ -555,23 +555,33 @@ const cardPool = [
     { name: "ナギソの破片", cost: 3, power: 0, abilities: [{ type: "heal", value: 3 }, { type: "saidaimanahueru", value: 1}, { type: "draw", value: 2 }], abilityText: "【神秘3】 【恵沢1】 【流水2】" },
     { name: "魔剣アクセサリー", cost: 18, power: 0, abilities: [{ type: "costheru", value: 1},{ type: "karyokuhueru", value: 3 }], abilityText: "【縮化1】 【連撃3】"},
     { name: "ナギソブレッド", cost: 0, power: 2, abilities: [{ type: "jishoburn", value: 2 }], abilityText: "【反動2】"},
-    { name: "ナギソの叫び", cost: 7, power: 3, abilities: [{ type: "costheru", value: 1 }, { type: "kenko", value: 5 }],abilityText: "【縮化1】 【剣呼5】"},
+    { name: "ナギソの叫び", cost: 9, power: 0, abilities: [{ type: "costheru", value: 1 }, { type: "kenko", value: 4 }],abilityText: "【縮化1】 【剣呼4】"},
     { name: "願望のナギソ", cost: 7, power: 0, abilities: [{ type: "costheru", value: 1 }, { type: "draw", value: 3 }],abilityText: "【縮化1】 【流水3】"},
     { name: "裁きのナギソ", cost: 4, power: 0, abilities: [{ type: "deckdestroy", value: 5 }], abilityText: "【罰5】"},
     { name: "叛逆のナギソ", cost: 2, power: 2, abilities: [{ type: "revengeburn", value: 6 }], abilityText: "【逆境6】"},
     { name: "ナギソの祈り", cost: 3, power: 0, abilities: [{ type: "costdown_all", value: 1 }], abilityText: "【奇跡1】"},
     { name: "鮮血のナギソ", cost: 4, power: 5, abilities: [{ type: "heal", value: 10 }, { type: "draw", value: 2 }], abilityText: "【神秘10】 【流水2】" },
     { name: "聖盾剣ナギソ", cost: 2, power: 3, abilities: [{ type: "barrier", value: 1 }], abilityText: "【聖域】" },
-    { name: "黙示録のナギソ", cost: 8, power: 6, abilities: [{ type: "costup", value: 2}, { type: "lesshandcostdown", value: 4 }, { type: "revengeburn", value: 8 }], abilityText: "【威圧2】 【転禍為福4】 【逆境8】" },
-    { name: "ナギソの怒り", cost: 5, power: 0, abilities: [{ type: "jishoburn", value: 5}, { type: "revengeburn", value: 18 }], abilityText: "【反動5】 【逆境18】"},
+    { name: "黙示録のナギソ", cost: 8, power: 6, abilities: [{ type: "costup", value: 2 }, { type: "lesshandcostdown", value: 4 }, { type: "revengeburn", value: 8 }], abilityText: "【威圧2】 【転禍為福4】 【逆境8】" },
+    { name: "ナギソの怒り", cost: 5, power: 0, abilities: [{ type: "jishoburn", value: 5 }, { type: "revengeburn", value: 18 }], abilityText: "【反動5】 【逆境18】"},
     { name: "轟咆せしナギソ", cost: 11, power: 0, abilities: [{ type: "draw", value: 1 }, { type: "lesshandcostdown", value: 10 }, { type: "revengeburn", value: 10 }], abilityText: "【流水1】 【転禍為福10】 【逆境10】" },
     { name: "天誅のナギソ", cost: 3, power: 0, abilities: [{ type: "discard", value: 1 }, { type: "barrier", value: 1 }], abilityText: "【罪1】 【聖域1】" },
     { name: "夢幻のナギソ", cost: 5, power: 0, abilities: [{ type: "saidaimanahueru", value: 5 }, { type: "jishoburn", value: 10 }, { type: "heal", value: 5 }], abilityText: "【恵沢5】 【反動10】 【神秘5】" },
     { name: "欠け刃のナギソ", cost: 5, power: 5, abilities: [{ type: "karyokuhueru", value: 1 }, { type: "burn", value: 5 }, { type: "jishoburn", value: 5 }, { type: "revengeburn", value: 5 }], abilityText: "【連撃1】 【雄叫び5】 【反動5】 【逆境5】" },
     { name: "魔源体ナギソ", cost: 20, power: 0, abilities: [{ type: "saidaimanahueru", value: 2 }, { type: "manahueru", value: 3 }, { type: "lesshandcostdown", value: 20 }], abilityText: "【恵沢2】 【還元3】 【転禍為福20】" },
     { name: "九尾のナギソ", cost: 9, power: 5, abilities: [{ type: "draw", value: 1 }, { type: "kenko", value: 1 }, { type: "heal", value: 3 }, { type: "discard", value: 1 }, { type: "manadestroy", value: 2 }, { type: "costup", value: 1 }, { type: "deckdestroy", value: 3 }, { type: "costdown_all", value: 2 }, { type: "barrier", value: 1 }], abilityText: "【流水1】 【剣呼1】 【神秘3】 【罪1】 【崩壊2】 【威圧1】 【罰3】 【奇跡2】 【聖域】" },
-    { name: "流天のナギソ", cost: 5, power: 5, abilities: [{ type: "self_discard_select", value: 2 }, { type: "barrier", value: 1 }, { type: "manahueru", value: 3 }, { type: "draw", value: 4 }], abilityText: "【流炎2】 【聖域】 【還元3】　【流水4】" },
+    { name: "流天のナギソ", cost: 5, power: 5, abilities: [{ type: "self_discard_select", value: 2 }, { type: "barrier", value: 1 }, { type: "manahueru", value: 3 }, { type: "draw", value: 4 }], abilityText: "【流炎2】 【聖域】 【還元3】 【流水4】" },
     { name: "氷炎のナギソ", cost: 2, power: 2, abilities: [{ type: "costheru", value: 1 }, { type: "self_discard_select", value: 1}, { type: "draw", value: 1 }], abilityText: "【縮化1】 【流炎1】 【流水1】" },
+    { name: "淙々のナギソ", cost: 1, power: 0, abilities: [{ type: "zenjikouon", value: 1 }, { type: "draw", value: 1 }], abilityText: "【漸次昂音1】 【流水1】" },
+    { name: "猛響のナギソ", cost: 2, power: 0, abilities: [{ type: "zenjikouon", value: 1 }, { type: "burn", value: 1 }], abilityText: "【漸次昂音1】 【雄叫び1】" },
+    { name: "漸速のナギソ", cost: 3, power: 0, abilities: [{ type: "zenjikouon", value: 1 }, { type: "saidaimanahueru", value: 1 },{ type: "manahueru", value: 1 }], abilityText: "【漸次昂音1】 【恵沢1】 【還元1】"},
+    { name: "癒音のナギソ", cost: 3, power: 0, abilities: [{ type: "zenjikouon", value: 1 }, { type: "heal", value: 1 }], abilityText: "【漸次昂音1】 【神秘1】"},
+    { name: "罪音のナギソ", cost: 4, power: 0, abilities: [{ type: "zenjikouon", value: 1 }, { type: "discard", value: 1 }], abilityText: "【漸次昂音1】 【罪1】"},
+    { name: "襲音のナギソ", cost: 6, power: 0, abilities: [{ type: "zenjikouon", value: 1 }, { type: "costup", value: 1 }], abilityText: "【漸次昂音1】 【威圧1】"},
+    { name: "風声鶴唳のナギソ", cost: 7, power: 0, abilities: [{ type: "zenjikouon", value: 1 }, { type: "manadestroy", value: 1 }], abilityText: "【漸次昂音1】 【崩壊1】"},
+    { name: "水琴窟のナギソ", cost: 5, power: 0, abilities: [{ type: "zenjikouon", value: 1 }, { type: "costdown_all", value: 1 }], abilityText: "【漸次昂音1】 【奇跡1】"},
+    { name: "澎湃轟々のナギソ", cost: 8, power: 0, abilities: [{ type: "zenjikouon", value: 1 }, { type: "karyokuhueru", value: 1 }], abilityText: "【漸次昂音1】 【連撃1】"},
+    { name: "玲瓏のナギソ", cost: 5, power: 0, abilities: [{ type: "zenjikouon", value: 1 }, { type: "costheru", value: 1}], abilityText: "【漸次昂音1】 【縮化1】"},
 ];
 
 function generateId() { return Math.random().toString(36).substr(2, 9); }
@@ -593,7 +603,7 @@ createApp({
             userName: "一般ナギソ",
             gameMode: 'cpu', 
             isGameStarted: false, isGameOver: false, isPlayerTurn: true,
-            isEditMode: false, isMatching: false, isSpectator: false,
+            isEditMode: false, isMatching: false, isSppeectator: false,
             roomName: '',
             customDecks: Array(10).fill(null),
             customDeckNames: Array(10).fill(""),
@@ -784,7 +794,7 @@ createApp({
             for(let i=0; i<3; i++) { this.drawCard(true); }
 
             if (this.isCpuMode) {
-                let cPool = [0,1,2,3,4,5,6,7,8,9,11,12,13,14,15,26,27,35].map(i => cardPool[i]);
+                let cPool = [0,1,2,3,4,5,6,7,8,9,11,12,13,14,15,26,27,35,37,38].map(i => cardPool[i]);
                 let cpuInitialCards = [];
                 for (let i = 0; i < 30; i++) {
                     const randomCard = cPool[Math.floor(Math.random() * cPool.length)];
@@ -900,7 +910,7 @@ createApp({
                 // 必要枚数に達したらプレイを実行
                 if (this.pendingDiscardIds.length >= maxSelectable) {
                     this.isSelectingDiscard = false;
-                    let customSyncData = { discardTargetIds: [...this.pendingDiscardIds], chosenCardIndices: [], discardIndex: -1 };
+                    let customSyncData = { discardTargetIds: [...this.pendingDiscardIds], chosenCardIndices: [], chosenZenjiIndices: [], discardIndex: -1 };
                     
                     const cardToPlay = this.pendingCardToPlay;
                     this.pendingCardToPlay = null;
@@ -943,7 +953,7 @@ createApp({
             if (isPlayer && (!this.isPlayerTurn || this.playerCurrentMana < computedCost)) return;
 
             /* 🔄 既存データ構造を崩さないよう同期データを初期化 */
-            let localSyncData = syncData || { chosenCardIndices: [], discardIndex: -1 };
+            let localSyncData = syncData || { chosenCardIndices: [], chosenZenjiIndices: [], discardIndex: -1 };
             const activeName = isPlayer ? this.userName : (this.isCpuMode ? '🤖 CPU' : '👤 相手');
             
             this.showCardNotice(activeName, card);
@@ -953,6 +963,17 @@ createApp({
                     if (ab.type === "kenko") {
                         for(let i=0; i<ab.value; i++) {
                             localSyncData.chosenCardIndices.push(Math.floor(Math.random() * this.cardPool.length));
+                        }
+                    }
+                    /* ✨ 追加：漸次昂音の生成情報も事前に確定してオンライン同期データへ格納 */
+                    if (ab.type === "zenjikouon") {
+                        if (!localSyncData.chosenZenjiIndices) localSyncData.chosenZenjiIndices = [];
+                        const zenjiPool = this.cardPool.map((c, idx) => ({ ...c, idx })).filter(c => c.abilities.some(a => a.type === "zenjikuon"));
+                        for(let i=0; i<ab.value; i++) {
+                            if (zenjiPool.length > 0) {
+                                const randIdx = Math.floor(Math.random() * zenjiPool.length);
+                                localSyncData.chosenZenjiIndices.push(zenjiPool[randIdx].idx);
+                            }
                         }
                     }
                 });
@@ -999,6 +1020,32 @@ createApp({
                 socket.emit('play_card', { card: card, currentMana: this.playerCurrentMana, maxMana: this.playerMaxMana, syncData: localSyncData });
                 this.syncStateToServer(`👤 ${this.userName}が【${card.name}】を召喚！`);
             }
+        },
+                /* ✨ 追加：漸次昂音持ちカードの手札・山札の一括強化メソッド */
+        boostZenjiCards(cards, amount) {
+            cards.forEach(c => {
+                const hasZenji = c.abilities.some(ab => ab.type === "zenjikouon");
+                if (hasZenji) {
+                    // 1. 内部データ（abilities）の数値を増やす処理
+                    c.abilities.forEach(ab => {
+                        // 🛑 聖域(barrier)と漸次昂音(zenjikouon)の数値は増やさない
+                        if (ab.type !== "barrier" && ab.type !== "zenjikouon") {
+                            ab.value += amount;
+                        }
+                    });
+                    
+                    // 2. 画面表示用テキスト（abilityText）の数値を増やす処理
+                    if (c.abilityText) {
+                        // 🛑 正規表現で数字の前の文字を判定し、「漸次昂音」か「聖域」が含まれていれば足し算を除外
+                        c.abilityText = c.abilityText.replace(/([^0-9]+)(\d+)/g, (match, p1, p2) => {
+                            if (p1.includes("漸次昂音") || p1.includes("聖域")) {
+                                return match; // 変更せずにそのまま返す
+                            }
+                            return p1 + (parseInt(p2) + amount);
+                        });
+                    }
+                }
+            });
         },
         reduceCost(isPlayer, playedCardId = null) {
             if(!isPlayer && !this.isCpuMode) return; 
@@ -1054,6 +1101,55 @@ createApp({
                         }
                     }
                 }
+            }
+            /* ✨ 追加：漸次昂音アビリティの実装 */
+            else if(type === "zenjikouon") {
+                if (isPlayerTrigger) {
+                    this.addLog(`  └【漸次昂音${value}】手札に漸次昂音カード${value}枚を生成し、手札と山札の漸次昂音カードを強化！`);
+                } else {
+                    this.addLog(`  └【漸次昂音${value}】相手が手札に漸次昂音カードを${value}枚生成し､手札と山札の漸次昂音カードを強化！`);
+                }
+
+                // 1. カード生成処理
+                if (this.isCpuMode || !isPlayerTrigger) {
+                    const zenjiPool = this.cardPool.filter(c => c.abilities.some(a => a.type === "zenjikouon"));
+                    for(let i = 0; i < value; i++) {
+                        if (isPlayerTrigger) {
+                            if (zenjiPool.length > 0 && this.playerHand.length < this.maxHandSize) {
+                                this.playerHand.push(createCardInstance(zenjiPool[Math.floor(Math.random() * zenjiPool.length)]));
+                            } else if (this.playerHand.length >= this.maxHandSize) {
+                                this.addLog(`🔥 手札満杯のため生成されたカードが燃破した！`);
+                            }
+                        } else {
+                            if (this.isCpuMode) {
+                                if (zenjiPool.length > 0 && this.cpuHand.length < this.maxHandSize) {
+                                    this.cpuHand.push(createCardInstance(zenjiPool[Math.floor(Math.random() * zenjiPool.length)]));
+                                }
+                            } else {
+                                if (this.cpuHandLength < this.maxHandSize) this.cpuHandLength++;
+                                else this.addLog(`🔥 相手の手札が上限を超えているため燃破した！`);
+                            }
+                        }
+                    }
+                } else if (syncData && syncData.chosenZenjiIndices) {
+                    syncData.chosenZenjiIndices.forEach(idx => {
+                        if (this.playerHand.length < this.maxHandSize) {
+                            this.playerHand.push(createCardInstance(this.cardPool[idx]));
+                        } else {
+                            this.addLog(`🔥 手札満杯のため生成されたカードが燃破した！`);
+                        }
+                    });
+                }
+
+                // 2. 手札とデッキ内カードの増幅処理
+                if (isPlayerTrigger) {
+                    this.boostZenjiCards(this.playerHand, value);
+                    this.boostZenjiCards(this.playerDeck, value);
+                } else if (this.isCpuMode) {
+                    this.boostZenjiCards(this.cpuHand, value);
+                    this.boostZenjiCards(this.cpuDeck, value);
+                }
+                // (オンライン対戦相手側は、相手自身のローカル環境で同期して強化が実行されます)
             }
             else if(type === "burn") {
                 this.applyDamage(!isPlayerTrigger, value); 
