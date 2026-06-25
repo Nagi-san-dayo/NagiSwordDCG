@@ -585,7 +585,14 @@ const cardPool = [
 ];
 
 function generateId() { return Math.random().toString(36).substr(2, 9); }
-function createCardInstance(baseCard) { return { ...baseCard, baseCost: baseCard.cost, id: generateId() };  }
+function createCardInstance(baseCard) { 
+    return { 
+        ...baseCard, 
+        baseCost: baseCard.cost, 
+        id: generateId(),
+        abilities: JSON.parse(JSON.stringify(baseCard.abilities)) // ✨ 追加：能力データを完全に独立させてコピー
+    };  
+}
 function shuffle(array) {
     const clone = [...array];
     for (let i = clone.length - 1; i > 0; i--) {
