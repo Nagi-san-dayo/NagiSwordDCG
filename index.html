@@ -852,8 +852,14 @@ createApp({
             if (isPlayer) {
                 if (this.playerDeck.length === 0) {
                     this.addLog(`💀 【LO】山札が0枚のため敗北しました。`);
-                    this.playerHP = 0; this.checkWinLose(); return;
-                }
+                    this.playerHP = 0; 
+                    this.checkWinLose(); 
+                    /* ✨ 修正：リターンする前に通信相手に敗北状態を明示的に同期 */
+                    if (!this.isCpuMode) {
+                        this.syncStateToServer(`💀 【LO】山札が0枚のため敗北しました。`);
+                    }
+                    return;
+                } 
                 let drawnCard = this.playerDeck.shift();
                 if (this.playerHand.length < this.maxHandSize) {
                     this.playerHand.push(drawnCard);
@@ -975,7 +981,7 @@ createApp({
                     /* ✨ 追加：漸次昂音の生成情報も事前に確定してオンライン同期データへ格納 */
                     if (ab.type === "zenjikouon") {
                         if (!localSyncData.chosenZenjiIndices) localSyncData.chosenZenjiIndices = [];
-                        const zenjiPool = this.cardPool.map((c, idx) => ({ ...c, idx })).filter(c => c.abilities.some(a => a.type === "zenjikuon"));
+                        const zenjiPool = this.cardPool.map((c, idx) => ({ ...c, idx })).filter(c => c.abilities.some(a => a.type === "zenjikouon"));
                         for(let i=0; i<ab.value; i++) {
                             if (zenjiPool.length > 0) {
                                 const randIdx = Math.floor(Math.random() * zenjiPool.length);
