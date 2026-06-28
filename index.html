@@ -343,27 +343,27 @@
             margin-bottom: 10px;
         }
         /* 📜 タイトル画面の縦スクロール対応 */
-.title-screen {
-    width: 100%;
-    height: 100%; /* 親要素(#app)の高さいっぱいに広げる */
-    overflow-y: auto; /* 縦方向に要素がはみ出した場合にスクロールバーを表示 */
-    overflow-x: hidden; /* 横スクロールは防ぐ */
-    padding-right: 10px; /* スクロールバーと文字が被らないように少し余白を確保 */
-    padding-bottom: 30px; /* 一番下までスクロールした時のための余白 */
-    box-sizing: border-box;
-}
+        .title-screen {
+            width: 100%;
+            height: 100%; /* 親要素(#app)の高さいっぱいに広げる */
+            overflow-y: auto; /* 縦方向に要素がはみ出した場合にスクロールバーを表示 */
+            overflow-x: hidden; /* 横スクロールは防ぐ */
+            padding-right: 10px; /* スクロールバーと文字が被らないように少し余白を確保 */
+            padding-bottom: 30px; /* 一番下までスクロールした時のための余白 */
+            box-sizing: border-box;
+        }
 
-/* 🎨 タイトル画面用スクロールバーの装飾（お好みで） */
-.title-screen::-webkit-scrollbar {
-    width: 8px;
-}
-.title-screen::-webkit-scrollbar-thumb {
-    background: #555;
-    border-radius: 4px;
-}
-.title-screen::-webkit-scrollbar-track {
-    background: transparent;
-}
+        /* 🎨 タイトル画面用スクロールバーの装飾（お好みで） */
+        .title-screen::-webkit-scrollbar {
+            width: 8px;
+        }
+        .title-screen::-webkit-scrollbar-thumb {
+            background: #555;
+            border-radius: 4px;
+        }
+        .title-screen::-webkit-scrollbar-track {
+            background: transparent;
+        }
     </style>
 </head>
 <body>
@@ -508,7 +508,7 @@
             <div class="status-box" :class="gameMode === 'cpu' ? 'cpu-box' : 'online-enemy-box'">
                 <h3>
                     👤 {{ enemyDisplayName }} HP: {{ cpuHP }} 
-                    <span v-if="cpuBarrier > 0">🛡️[防壁:{{ cpuBarrier }}]</span> 
+                    <span v-if="cpuBarrier > 0">🛡️[聖域:{{ cpuBarrier }}]</span> 
                     (マナ: {{ cpuCurrentMana }}/{{ cpuMaxMana }})
                 </h3>
                 <p>山札: {{ cpuDeckLengthComputed }} 枚 / 手札: {{ cpuHandLengthComputed }} 枚 / 🦴骨カウンター: {{ isSpectator ? p2FleshCounter : cpuFleshCounter }}</p>
@@ -517,7 +517,7 @@
             <div class="status-box player-box">
                 <h3>
                     👤 {{ playerDisplayName }} HP: {{ playerHP }} 
-                    <span v-if="playerBarrier > 0">🛡️[防壁:{{ playerBarrier }}]</span> 
+                    <span v-if="playerBarrier > 0">🛡️[聖域:{{ playerBarrier }}]</span> 
                     (マナ: {{ playerCurrentMana }}/{{ playerMaxMana }})
                 </h3>
                 <p>山札: {{ playerDeckLengthComputed }} 枚 / <b>手札: {{ playerHandLengthComputed }} 枚</b> / 🦴骨カウンター: {{ isSpectator ? p1FleshCounter : playerFleshCounter }}</p>
@@ -632,6 +632,16 @@ const cardPool = [
     { name: "霊契のナギソ", cost: 6, power: 5, abilities: [{ type: "contract", value: 2 }, { type: "lesshandcostdown", value: 3 }, { type: "draw", value: 3 }], abilityText: "【契約2】 【転禍為福3】 【流水3】"},
     { name: "甘霖契のナギソ", cost: 9, power: 9, abilities: [{ type: "contract", value: 3 }, { type: "lesshandcostdown", value: 6 }, { type: "manahueru", value: 3 }], abilityText: "【契約3】 【転禍為福6】 【還元3】"},
     { name: "天律神威ノ封縛鎖", cost: 20, power: 10, abilities: [{ type: "contract", value: 3 }, { type: "lesshandcostdown", value: 10 }, { type: "costheru", value: 1 }, { type: "costup", value: 10 }], abilityText: "【契約1】 【転禍為福10】 【縮化1】 【威圧10】"},
+    { name: "流麗のナギソ", cost: 1, power: 0, abilities: [{ type: "madoutanzou", value: 2, grants: [{ type: "draw", value: 1 , text: "【流水1】" }, { type: "heal", value: 2 , text: "【神秘2】" }]}], abilityText: "【魔導鍛造2(流水1,神秘2)】" },
+    { name: "生命のナギソ", cost: 2, power: 0, abilities: [{ type: "madoutanzou", value: 2, grants: [{ type: "heal", value: 4 , text: "【神秘4】" }]}], abilityText: "【魔導鍛造2(神秘4)】" },
+    { name: "飢救のナギソ", cost: 3, power: 0, abilities: [{ type: "madoutanzou", value: 1, grants: [{ type: "costdown_all", value: 1 , text: "【奇跡1】" }, { type: "heal", value: 2, text: "【神秘2】"}]}], abilityText: "【魔導鍛造1(奇跡1,神秘2)】" },
+    { name: "刻霊のナギソ", cost: 4, power: 0, abilities: [{ type: "madoutanzou", value: 2, grants: [{ type: "saidaimanahueru", value: 1 , text: "【恵沢1】" }, { type: "heal", value: 2, text: "【神秘2】" }]}], abilityText: "【魔導鍛造2(恵沢1,神秘2)】" },
+    { name: "狂相のナギソ", cost: 5, power: 0, abilities: [{ type: "madoutanzou", value: 2, grants: [{ type: "costup", value: 1 , text: "【威圧1】" }]}], abilityText: "【魔導鍛造2(威圧1)】" },
+    { name: "赫灼のナギソ", cost: 6, power: 0, abilities: [{ type: "madoutanzou", value: 2, grants: [{ type: "discard", value: 1 , text: "【罪1】" }]}], abilityText: "【魔導鍛造2(罪1)】" },
+    { name: "永妖のナギソ", cost: 6, power: 0, abilities: [{ type: "madoutanzou", value: 3, grants: [{ type: "barrier", value: 1 , text: "【聖域1】" }, { type: "heal", value: 2, text: "【神秘2】"}]}], abilityText: "【魔導鍛造3(聖域1,神秘2)】" },
+    { name: "覆釈のナギソ", cost: 7, power: 0, abilities: [{ type: "madoutanzou", value: 6, grants: [{ type: "heal", value: 4 , text: "【神秘4】" }]}], abilityText: "【魔導鍛造6(神秘4)】" },
+    { name: "霜天のナギソ", cost: 7, power: 0, abilities: [{ type: "madoutanzou", value: 4, grants: [{ type: "deckdestroy", value: 1 , text: "【罰1】" }, { type: "draw", value: 1, text: "【流水1】"}, { type: "heal", value: 2, text: "【神秘2】"}]}], abilityText: "【魔導鍛造4(罰1,流水1,神秘2)" },
+    { name: "Bread Brade", cost: 15, power: 0, abilities: [{ type: "madoutanzou", value: 10, grants: [{ type: "karyokuhueru", value: 1 , text: "【連撃1】" }, { type: "heal", value: 2, text: "【神秘2】"}]}, { type: "costheru", value: 1 }], abilityText: "【魔導鍛造10(連撃1,神秘2)】 【縮化1】" },
 ];
 
 function generateId() { return Math.random().toString(36).substr(2, 9); }
@@ -1367,6 +1377,57 @@ createApp({
                     this.drawCard(!isPlayerTrigger); // トリガーしたプレイヤーと逆の対象にドロー
                 }
             }
+            /* 🍞 新能力：魔導鍛造（1枚に複数効果を一度に付与する版） */
+else if(type === "madoutanzou") {
+    if (isPlayerTrigger) {
+        this.addLog(`  └【魔導鍛造${value}】特別な効果を持つナギソブレッドを ${value} 枚生成した！`);
+    } else {
+        this.addLog(`  └【魔導鍛造${value}】相手が特別な効果を持つナギソブレッドを ${value} 枚生成した！`);
+    }
+
+    const breadBase = this.cardPool.find(c => c.name === "ナギソブレッド");
+
+    // value（枚数）の分だけループ
+    for (let i = 0; i < value; i++) {
+        if (isPlayerTrigger) {
+            if (this.playerHand.length < this.maxHandSize) {
+                // 新しいナギソブレッドのインスタンスを作成
+                let customBread = createCardInstance(breadBase);
+                
+                // ✨ 配列で定義された付与効果（grants）をすべてこの1枚に付与する
+                if (ab.grants && Array.isArray(ab.grants)) {
+                    ab.grants.forEach(g => {
+                        customBread.abilities.push({ type: g.type, value: g.value });
+                        customBread.abilityText += ` ${g.text}`;
+                    });
+                }
+                
+                this.playerHand.push(customBread);
+            } else {
+                this.addLog(`🔥 手札満杯のため生成されたナギソブレッドが燃破した！`);
+            }
+        } else {
+            // CPUまたは通信相手の同期処理
+            if (this.isCpuMode) {
+                if (this.cpuHand.length < this.maxHandSize) {
+                    let customBread = createCardInstance(breadBase);
+                    if (ab.grants && Array.isArray(ab.grants)) {
+                        ab.grants.forEach(g => {
+                            customBread.abilities.push({ type: g.type, value: g.value });
+                            customBread.abilityText += ` ${g.text}`;
+                        });
+                    }
+                    this.cpuHand.push(customBread);
+                }
+            } else {
+                if (this.cpuHandLength < this.maxHandSize) {
+                    this.cpuHandLength++;
+                }
+            }
+        }
+    }
+}
+
         },
         endPlayerTurn() {
             if(!this.isGameStarted || this.isGameOver) return;
