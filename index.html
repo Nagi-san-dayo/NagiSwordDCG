@@ -384,7 +384,7 @@
 
     <div v-if="isMatching" class="matching-overlay">
         <div class="spinner"></div>
-        <h2>{{ gameMode === 'spectate' ? '👁️ ルームに接続中...' : '🌐 对戦相手を検索中...' }}</h2>
+        <h2>{{ gameMode === 'spectate' ? '👁️ ルームに接続中...' : '🌐 対戦相手を検索中...' }}</h2>
         <p v-if="gameMode === 'online_room' || gameMode === 'spectate'" style="color: #ffc107; font-weight: bold; margin-bottom: 5px;">ルーム名: {{ roomName }}</p>
         <p style="color: #bbb; margin-top: 10px;">サーバーからの応答を待っています。</p>
         <button class="cancel-match-btn" @click="cancelMatching">キャンセル</button>
@@ -506,12 +506,20 @@
             </div>
 
             <div class="status-box" :class="gameMode === 'cpu' ? 'cpu-box' : 'online-enemy-box'">
-                <h3>👤 {{ enemyDisplayName }} HP: {{ cpuHP }} <span v-if="cpuBarrier">🛡️[防壁]</span> (マナ: {{ cpuCurrentMana }}/{{ cpuMaxMana }})</h3>
+                <h3>
+                    👤 {{ enemyDisplayName }} HP: {{ cpuHP }} 
+                    <span v-if="cpuBarrier > 0">🛡️[防壁:{{ cpuBarrier }}]</span> 
+                    (マナ: {{ cpuCurrentMana }}/{{ cpuMaxMana }})
+                </h3>
                 <p>山札: {{ cpuDeckLengthComputed }} 枚 / 手札: {{ cpuHandLengthComputed }} 枚 / 🦴骨カウンター: {{ isSpectator ? p2FleshCounter : cpuFleshCounter }}</p>
             </div>
 
             <div class="status-box player-box">
-                <h3>👤 {{ playerDisplayName }} HP: {{ playerHP }} <span v-if="playerBarrier">🛡️[防壁]</span> (マナ: {{ playerCurrentMana }}/{{ playerMaxMana }})</h3>
+                <h3>
+                    👤 {{ playerDisplayName }} HP: {{ playerHP }} 
+                    <span v-if="playerBarrier > 0">🛡️[防壁:{{ playerBarrier }}]</span> 
+                    (マナ: {{ playerCurrentMana }}/{{ playerMaxMana }})
+                </h3>
                 <p>山札: {{ playerDeckLengthComputed }} 枚 / <b>手札: {{ playerHandLengthComputed }} 枚</b> / 🦴骨カウンター: {{ isSpectator ? p1FleshCounter : playerFleshCounter }}</p>
             </div>
 
@@ -570,50 +578,60 @@ const cardPool = [
     { name: "魔剣ナギソ", cost: 10, power: 30, abilities: [], abilityText: "" },
     { name: "ナギソ破壊", cost: 1, power: 0, abilities: [{ type: "draw", value: 2 }, { type: "jishoburn", value: 4 }], abilityText: "【流水2】 【反動4】" },
     { name: "硬化したナギソ", cost: 4, power: 12, abilities: [], abilityText: "" },
-    { name: "ナギソ研磨油", cost: 2, power: 0, abilities: [{ type: "heal", value: 3 }, { type: "saidaimanahueru", value: 1}], abilityText: "【神秘3】 【恵沢1】" },
-    { name: "執行のナギソ", cost: 6, power: 0, abilities: [{ type: "discard", value: 2 }, { type: "jishoburn", value: 4 }], abilityText: "【罪2】 【反動4】" },
-    { name: "内喰みのナギソ", cost: 7, power: 0, abilities: [{ type: "manadestroy", value: 3 }], abilityText: "【崩壊3】" },
-    { name: "嫌悪のナギソ", cost: 2, power: 0, abilities: [{ type: "costup", value: 1 }], abilityText: "【威圧1】" },
-    { name: "ナギソの破片", cost: 3, power: 0, abilities: [{ type: "heal", value: 3 }, { type: "saidaimanahueru", value: 1}, { type: "draw", value: 2 }], abilityText: "【神秘3】 【恵沢1】 【流水2】" },
+    { name: "ナギソ研磨油", cost: 2, power: 0, abilities: [{ type: "heal", value: 4 }], abilityText: "【神秘4】" },
+    { name: "執行のナギソ", cost: 7, power: 0, abilities: [{ type: "discard", value: 2 }, { type: "jishoburn", value: 4 }], abilityText: "【罪2】 【反動4】" },
+    { name: "内喰みのナギソ", cost: 7, power: 0, abilities: [{ type: "manadestroy", value: 2 }], abilityText: "【崩壊2】" },
+    { name: "嫌悪のナギソ", cost: 3, power: 0, abilities: [{ type: "costup", value: 1 }], abilityText: "【威圧1】" },
+    { name: "ナギソの破片", cost: 5, power: 0, abilities: [{ type: "heal", value: 3 }, { type: "saidaimanahueru", value: 1}, { type: "draw", value: 1 }], abilityText: "【神秘3】 【恵沢1】 【流水1】" },
     { name: "魔剣アクセサリー", cost: 18, power: 0, abilities: [{ type: "costheru", value: 1},{ type: "karyokuhueru", value: 3 }], abilityText: "【縮化1】 【連撃3】"},
     { name: "ナギソブレッド", cost: 0, power: 2, abilities: [{ type: "jishoburn", value: 2 }], abilityText: "【反動2】"},
     { name: "ナギソの叫び", cost: 9, power: 0, abilities: [{ type: "costheru", value: 1 }, { type: "kenko", value: 4 }],abilityText: "【縮化1】 【剣呼4】"},
     { name: "願望のナギソ", cost: 7, power: 0, abilities: [{ type: "costheru", value: 1 }, { type: "draw", value: 3 }],abilityText: "【縮化1】 【流水3】"},
-    { name: "裁きのナギソ", cost: 4, power: 0, abilities: [{ type: "deckdestroy", value: 5 }], abilityText: "【罰5】"},
+    { name: "裁きのナギソ", cost: 6, power: 0, abilities: [{ type: "deckdestroy", value: 5 }], abilityText: "【罰5】"},
     { name: "叛逆のナギソ", cost: 2, power: 2, abilities: [{ type: "revengeburn", value: 6 }], abilityText: "【逆境6】"},
     { name: "ナギソの祈り", cost: 3, power: 0, abilities: [{ type: "costdown_all", value: 1 }], abilityText: "【奇跡1】"},
-    { name: "鮮血のナギソ", cost: 4, power: 5, abilities: [{ type: "heal", value: 10 }, { type: "draw", value: 2 }], abilityText: "【神秘10】 【流水2】" },
-    { name: "聖盾剣ナギソ", cost: 2, power: 3, abilities: [{ type: "barrier", value: 1 }], abilityText: "【聖域】" },
-    { name: "黙示録のナギソ", cost: 8, power: 6, abilities: [{ type: "costup", value: 2 }, { type: "lesshandcostdown", value: 4 }, { type: "revengeburn", value: 8 }], abilityText: "【威圧2】 【転禍為福4】 【逆境8】" },
-    { name: "ナギソの怒り", cost: 5, power: 0, abilities: [{ type: "jishoburn", value: 5 }, { type: "revengeburn", value: 18 }], abilityText: "【反動5】 【逆境18】"},
-    { name: "轟咆せしナギソ", cost: 11, power: 0, abilities: [{ type: "draw", value: 1 }, { type: "lesshandcostdown", value: 10 }, { type: "revengeburn", value: 10 }], abilityText: "【流水1】 【転禍為福10】 【逆境10】" },
-    { name: "天誅のナギソ", cost: 3, power: 0, abilities: [{ type: "discard", value: 1 }, { type: "barrier", value: 1 }], abilityText: "【罪1】 【聖域1】" },
-    { name: "夢幻のナギソ", cost: 5, power: 0, abilities: [{ type: "saidaimanahueru", value: 5 }, { type: "jishoburn", value: 10 }, { type: "heal", value: 5 }], abilityText: "【恵沢5】 【反動10】 【神秘5】" },
+    { name: "鮮血のナギソ", cost: 5, power: 5, abilities: [{ type: "heal", value: 5 }, { type: "draw", value: 2 }], abilityText: "【神秘5】 【流水2】" },
+    { name: "聖盾剣ナギソ", cost: 3, power: 3, abilities: [{ type: "barrier", value: 1 }], abilityText: "【聖域1】" },
+    { name: "黙示録のナギソ", cost: 8, power: 6, abilities: [{ type: "lesshandcostdown", value: 4 }, { type: "revengeburn", value: 6 }], abilityText: "【転禍為福4】 【逆境6】" },
+    { name: "ナギソの怒り", cost: 5, power: 1, abilities: [{ type: "jishoburn", value: 5 }, { type: "revengeburn", value: 18 }], abilityText: "【反動5】 【逆境18】"},
+    { name: "轟咆せしナギソ", cost: 11, power: 0, abilities: [{ type: "draw", value: 1 }, { type: "lesshandcostdown", value: 9 }, { type: "revengeburn", value: 6 }], abilityText: "【流水1】 【転禍為福9】 【逆境6】" },
+    { name: "天誅のナギソ", cost: 3, power: 0, abilities: [{ type: "discard", value: 1 }], abilityText: "【罪1】" },
+    { name: "夢幻のナギソ", cost: 5, power: 0, abilities: [{ type: "saidaimanahueru", value: 3 }, { type: "jishoburn", value: 10 }, { type: "heal", value: 5 }], abilityText: "【恵沢3】 【反動10】 【神秘5】" },
     { name: "欠け刃のナギソ", cost: 5, power: 5, abilities: [{ type: "karyokuhueru", value: 1 }, { type: "burn", value: 5 }, { type: "jishoburn", value: 5 }, { type: "revengeburn", value: 5 }], abilityText: "【連撃1】 【雄叫び5】 【反動5】 【逆境5】" },
-    { name: "魔源体ナギソ", cost: 20, power: 0, abilities: [{ type: "saidaimanahueru", value: 2 }, { type: "manahueru", value: 3 }, { type: "lesshandcostdown", value: 20 }], abilityText: "【恵沢2】 【還元3】 【転禍為福20】" },
-    { name: "九尾のナギソ", cost: 9, power: 5, abilities: [{ type: "draw", value: 1 }, { type: "kenko", value: 1 }, { type: "heal", value: 3 }, { type: "discard", value: 1 }, { type: "manadestroy", value: 2 }, { type: "costup", value: 1 }, { type: "deckdestroy", value: 3 }, { type: "costdown_all", value: 2 }, { type: "barrier", value: 1 }], abilityText: "【流水1】 【剣呼1】 【神秘3】 【罪1】 【崩壊2】 【威圧1】 【罰3】 【奇跡2】 【聖域】" },
-    { name: "流天のナギソ", cost: 5, power: 5, abilities: [{ type: "self_discard_select", value: 2 }, { type: "barrier", value: 1 }, { type: "manahueru", value: 3 }, { type: "draw", value: 4 }], abilityText: "【流炎2】 【聖域】 【還元3】 【流水4】" },
+    { name: "魔源体ナギソ", cost: 20, power: 0, abilities: [{ type: "saidaimanahueru", value: 1 }, { type: "manahueru", value: 2 }, { type: "lesshandcostdown", value: 18 }], abilityText: "【恵沢1】 【還元2】 【転禍為福18】" },
+    { name: "八俣多之惡呂智", cost: 9, power: 5, abilities: [{ type: "draw", value: 1 }, { type: "kenko", value: 1 }, { type: "heal", value: 3 }, { type: "discard", value: 1 }, { type: "costup", value: 1 }, { type: "costdown_all", value: 1 }, { type: "barrier", value: 1 }], abilityText: "【流水1】 【剣呼1】 【神秘3】 【罪1】 【威圧1】 【奇跡1】 【聖域1】" },
+    { name: "流天のナギソ", cost: 5, power: 5, abilities: [{ type: "self_discard_select", value: 2 }, { type: "manahueru", value: 3 }, { type: "draw", value: 2 }], abilityText: "【流炎2】 【聖域1】 【還元3】 【流水2】" },
     { name: "氷炎のナギソ", cost: 2, power: 2, abilities: [{ type: "costheru", value: 1 }, { type: "self_discard_select", value: 1}, { type: "draw", value: 1 }], abilityText: "【縮化1】 【流炎1】 【流水1】" },
-    { name: "淙々のナギソ", cost: 2, power: 0, abilities: [{ type: "zenjikouon", value: 1 }, { type: "draw", value: 1 }], abilityText: "【漸次昂音1】 【流水1】" },
-    { name: "猛響のナギソ", cost: 3, power: 0, abilities: [{ type: "zenjikouon", value: 1 }, { type: "burn", value: 1 }], abilityText: "【漸次昂音1】 【雄叫び1】" },
-    { name: "漸速のナギソ", cost: 4, power: 0, abilities: [{ type: "zenjikouon", value: 1 }, { type: "manahueru", value: 1 }], abilityText: "【漸次昂音1】 【還元1】"},
-    { name: "癒音のナギソ", cost: 4, power: 0, abilities: [{ type: "zenjikouon", value: 1 }, { type: "heal", value: 1 }], abilityText: "【漸次昂音1】 【神秘1】"},
+    { name: "淙々のナギソ", cost: 1, power: 0, abilities: [{ type: "zenjikouon", value: 1 }, { type: "draw", value: 1 }], abilityText: "【漸次昂音1】 【流水1】" },
+    { name: "護音のナギソ", cost: 3, power: 0, abilities: [{ type: "zenjikouon", value: 1 }, { type: "barrier", value: 1 }], abilityText: "【漸次昂音1】 【聖域1】" },
+    { name: "漸速のナギソ", cost: 4, power: 0, abilities: [{ type: "zenjikouon", value: 1 }, { type: "saidaimanahueru", value: 1 }], abilityText: "【漸次昂音1】 【恵沢1】"},
+    { name: "癒音のナギソ", cost: 3, power: 0, abilities: [{ type: "zenjikouon", value: 1 }, { type: "heal", value: 1 }], abilityText: "【漸次昂音1】 【神秘1】"},
     { name: "罪音のナギソ", cost: 6, power: 0, abilities: [{ type: "zenjikouon", value: 1 }, { type: "discard", value: 1 }], abilityText: "【漸次昂音1】 【罪1】"},
     { name: "襲音のナギソ", cost: 6, power: 0, abilities: [{ type: "zenjikouon", value: 1 }, { type: "costup", value: 1 }], abilityText: "【漸次昂音1】 【威圧1】"},
-    { name: "風声鶴唳のナギソ", cost: 8, power: 0, abilities: [{ type: "zenjikouon", value: 1 }, { type: "manadestroy", value: 1 }], abilityText: "【漸次昂音1】 【崩壊1】"},
-    { name: "水琴窟のナギソ", cost: 9, power: 0, abilities: [{ type: "zenjikouon", value: 1 }, { type: "costdown_all", value: 1 }], abilityText: "【漸次昂音1】 【奇跡1】"},
-    { name: "澎湃轟々のナギソ", cost: 8, power: 0, abilities: [{ type: "zenjikouon", value: 1 }, { type: "karyokuhueru", value: 1 }], abilityText: "【漸次昂音1】 【連撃1】"},
-    { name: "玲瓏のナギソ", cost: 5, power: 0, abilities: [{ type: "zenjikouon", value: 1 }, { type: "costheru", value: 1 }], abilityText: "【漸次昂音1】 【縮化1】"},
+    { name: "風声鶴唳のナギソ", cost: 7, power: 0, abilities: [{ type: "zenjikouon", value: 1 }, { type: "manadestroy", value: 1 }], abilityText: "【漸次昂音1】 【崩壊1】"},
+    { name: "水琴窟のナギソ", cost: 7, power: 0, abilities: [{ type: "zenjikouon", value: 1 }, { type: "costdown_all", value: 1 }], abilityText: "【漸次昂音1】 【奇跡1】"},
+    { name: "澎湃轟々のナギソ", cost: 7, power: 0, abilities: [{ type: "zenjikouon", value: 1 }, { type: "karyokuhueru", value: 1 }], abilityText: "【漸次昂音1】 【連撃1】"},
+    { name: "玲瓏のナギソ", cost: 5, power: 0, abilities: [{ type: "zenjikouon", value: 2 }, { type: "costheru", value: 1 }], abilityText: "【漸次昂音1】 【縮化1】"},
     { name: "鼠骨短剣ナギソ", cost: 1, power: 0, abilities: [{ type: "nie", value: 1 }, { type: "draw", value: 1 }, { type: "revengeburn", value: 2 }], abilityText: "【贄1】 【流水1】 【逆境2】" },
-    { name: "兎骨懐剣ナギソ", cost: 2, power: 1, abilities: [{ type: "nie", value: 2 }, { type: "saidaimanahueru", value: 1 }], abilityText: "【贄2】 【恵沢1】" },
-    { name: "犬骨盾剣ナギソ", cost: 3, power: 4, abilities: [{ type: "nie", value: -2 }, { type: "costup", value: 1 }, { type: "barrier", value: 1 }], abilityText: "【贄-2】 【威圧1】 【聖域】" },
-    { name: "猫骨細剣ナギソ", cost: 3, power: 3, abilities: [{ type: "nie", value: -2 }, { type: "draw", value: 3 }], abilityText: "【贄-2】 【流水3】" },
-    { name: "牛骨太刀ナギソ", cost: 4, power: 0, abilities: [{ type: "nie", value: 4 }, { type: "heal", value: 5 }, { type: "costdown_all", value: 1 }], abilityText: "【贄4】 【神秘5】 【奇跡1】" },
+    { name: "兎骨懐剣ナギソ", cost: 3, power: 1, abilities: [{ type: "nie", value: 2 }, { type: "saidaimanahueru", value: 1 }], abilityText: " 【贄2】 【恵沢1】" },
+    { name: "犬骨盾剣ナギソ", cost: 3, power: 4, abilities: [{ type: "nie", value: -2 }, { type: "costup", value: 1 },], abilityText: "【贄-2】 【威圧1】" },
+    { name: "猫骨細剣ナギソ", cost: 3, power: 3, abilities: [{ type: "nie", value: -2 }, { type: "draw", value: 2 }], abilityText: "【贄-2】 【流水2】" },
+    { name: "牛骨太刀ナギソ", cost: 4, power: 0, abilities: [{ type: "nie", value: 4 }, { type: "heal", value: 5 }], abilityText: "【贄4】 【神秘5】" },
     { name: "虎骨大刀ナギソ", cost: 5, power: 6, abilities: [{ type: "nie", value: -4 }, { type: "burn", value: 4 }, { type: "costup", value: 2 }, { type: "self_discard_select", value: 2 }], abilityText: "【贄-4】 【雄叫び4】 【威圧2】 【流炎2】" },
     { name: "狼骨双剣ナギソ", cost: 5, power: 4, abilities: [{ type: "nie", value: -3 }, { type: "burn", value: 3 }, { type: "karyokuhueru", value: 1 }, { type: "discard", value: 1 }], abilityText: "【贄-3】 【雄叫び3】 【連撃1】 【罪1】" },
     { name: "熊骨突剣ナギソ", cost: 7, power: 8, abilities: [{ type: "nie", value: -4 }, { type: "burn", value: 5 }, { type: "manadestroy", value: 2 }, { type: "costup", value: 1 }, { type: "self_discard_select", value: 3 }], abilityText: "【贄-4】 【雄叫び5】 【崩壊2】 【威圧1】 【流炎3】" },
     { name: "鯨骨長太刀ナギソ", cost: 7, power: 4, abilities: [{ type: "nie", value: 5 }, { type: "zenjikouon", value: 1 }, { type: "manahueru", value: 2 }, { type: "deckdestroy", value: 1 }, { type: "jishoburn", value: 5 }], abilityText: "【贄5】 【漸次昂音1】 【還元2】 【罰1】 【反動5】" },
     { name: "獅子骨大剣ナギソ", cost: 8, power: 9, abilities: [{ type: "nie", value: -7 }, { type: "burn", value: 7 }, { type: "revengeburn", value: 5 }, { type: "costup", value: 3 }, { type: "manadestroy", value: 3 }, { type: "self_discard_select", value: 4 }], abilityText: "【贄-7】 【雄叫び7】 【逆境5】 【威圧3】 【崩壊3】 【流炎4】" },
+    { name: "血契のナギソ", cost: 1, power: 4, abilities: [{ type: "contract", value: 1 }, { type: "draw", value: 1 }], abilityText: "【契約1】 【流水1】" },
+    { name: "宿痾のナギソ", cost: 1, power: 2, abilities: [{ type: "contract", value: 1 }, { type: "heal", value: 3 }, { type: "self_discard_select", value: 1 }], abilityText: "【契約1】 【神秘3】 【流炎1】"},
+    { name: "瞬刻のナギソ", cost: 2, power: 7, abilities: [{ type: "contract", value: 1 }, { type: "lesshandcostdown", value: 2 }, { type: "self_discard_select", value: 1 }], abilityText: "【契約1】 【転禍為福2】 【流炎1】"},
+    { name: "無辜のナギソ", cost: 5, power: 5, abilities: [{ type: "contract", value: 1 }, { type: "lesshandcostdown", value: 2 }, { type: "costdown_all", value: 1 }], abilityText: "【契約1】 【転禍為福2】 【奇跡1】"},
+    { name: "束縛契のナギソ", cost: 5, power: 5, abilities: [{ type: "contract", value: 2 }, { type: "lesshandcostdown", value: 2 }, { type: "costup", value: 2 }], abilityText: "【契約2】 【転禍為福2】 【威圧2】"},
+    { name: "贖罪のナギソ", cost: 7, power: 7, abilities: [{ type: "contract", value: 2 }, { type: "lesshandcostdown", value: 6 }, { type: "barrier", value: 1 }], abilityText: "【契約2】 【転禍為福6】 【聖域1】"},
+    { name: "冥約のナギソ", cost: 8, power: 6, abilities: [{ type: "contract", value: 2 }, { type: "lesshandcostdown", value: 6 }, { type: "saidaimanahueru", value: 1 }, { type: "draw", value: 1 }], abilityText: "【契約2】 【転禍為福6】 【恵沢1】 【流水1】"},
+    { name: "霊契のナギソ", cost: 6, power: 5, abilities: [{ type: "contract", value: 2 }, { type: "lesshandcostdown", value: 3 }, { type: "draw", value: 3 }], abilityText: "【契約2】 【転禍為福3】 【流水3】"},
+    { name: "甘霖契のナギソ", cost: 9, power: 9, abilities: [{ type: "contract", value: 3 }, { type: "lesshandcostdown", value: 6 }, { type: "manahueru", value: 3 }], abilityText: "【契約3】 【転禍為福6】 【還元3】"},
+    { name: "天律神威ノ封縛鎖", cost: 20, power: 10, abilities: [{ type: "contract", value: 3 }, { type: "lesshandcostdown", value: 10 }, { type: "costheru", value: 1 }, { type: "costup", value: 10 }], abilityText: "【契約1】 【転禍為福10】 【縮化1】 【威圧10】"},
 ];
 
 function generateId() { return Math.random().toString(36).substr(2, 9); }
@@ -642,17 +660,16 @@ createApp({
             userName: "一般ナギソ",
             gameMode: 'cpu', 
             isGameStarted: false, isGameOver: false, isPlayerTurn: true,
-            isEditMode: false, isMatching: false, isSppeectator: false,
+            isEditMode: false, isMatching: false, isSpectator: false,
             roomName: '',
             customDecks: Array(10).fill(null),
             customDeckNames: Array(10).fill(""),
             currentDeckSlot: 0, selectedSlotIndex: null,           
             editingDeck: [], editingDeckName: "", editAlert: "", toastTimer: null, cardPool: cardPool,
             playerHP: 30, cpuHP: 30,
-            playerBarrier: false, cpuBarrier: false,
+            playerBarrier: 0, cpuBarrier: 0, // 🛡️ レベル化対応（旧falseから0に変更）
             playerMaxMana: 1, playerCurrentMana: 1,
             cpuMaxMana: 1, cpuCurrentMana: 1,
-            /* ✨ 追加：自分・相手の骨カウンター、および観戦用の格納スペース */
             playerFleshCounter: 0, cpuFleshCounter: 0,
             p1FleshCounter: 0, p2FleshCounter: 0,
             playerPlayedCountThisTurn: 0, cpuPlayedCountThisTurn: 0,
@@ -709,8 +726,7 @@ createApp({
             this.cpuCurrentMana = data.currentMana;
             this.cpuHandLength = data.handLength;
             this.cpuDeckLength = data.deckLength;
-            this.cpuBarrier = data.barrier || false;
-            /* ✨ 追加：オンライン対戦相手の骨カウンターの同期 */
+            this.cpuBarrier = data.barrier || 0; // 同期
             if (data.fleshCounter !== undefined) this.cpuFleshCounter = data.fleshCounter;
             
             if (data.latestLog && this.logMessages[this.logMessages.length - 1] !== data.latestLog) {
@@ -724,8 +740,8 @@ createApp({
             this.isGameStarted = true;
             this.playerHP = state.p1.hp;
             this.cpuHP = state.p2.hp;
-            this.playerBarrier = state.p1.barrier || false; 
-            this.cpuBarrier = state.p2.barrier || false;   
+            this.playerBarrier = state.p1.barrier || 0; // 観戦同期
+            this.cpuBarrier = state.p2.barrier || 0;   // 観戦同期
             this.playerCurrentMana = state.p1.currentMana;
             this.playerMaxMana = state.p1.maxMana;
             this.cpuCurrentMana = state.p2.currentMana;
@@ -734,7 +750,6 @@ createApp({
             this.playerDeckLength = state.p1.deckLength;
             this.cpuHandLength = state.p2.handLength;
             this.cpuDeckLength = state.p2.deckLength;
-            /* ✨ 追加：観戦時の骨カウンター情報更新 */
             this.p1FleshCounter = state.p1.fleshCounter || 0;
             this.p2FleshCounter = state.p2.fleshCounter || 0;
             this.p1Name = state.p1.name;
@@ -821,10 +836,9 @@ createApp({
         },
         setupGameField(type) {
             this.playerHP = 30; this.cpuHP = 30;
-            this.playerBarrier = false; this.cpuBarrier = false;
+            this.playerBarrier = 0; this.cpuBarrier = 0; // バリアリセット
             this.playerMaxMana = 1; this.playerCurrentMana = 1;
             this.cpuMaxMana = 1; this.cpuCurrentMana = 1;
-            /* ✨ 追加：ゲーム開始時に骨カウンターをリセット */
             this.playerFleshCounter = 0; this.cpuFleshCounter = 0;
             this.playerHand = []; this.cpuHand = [];
             this.playerPlayedCountThisTurn = 0; this.cpuPlayedCountThisTurn = 0;
@@ -842,8 +856,7 @@ createApp({
             for(let i=0; i<3; i++) { this.drawCard(true); }
 
             if (this.isCpuMode) {
-                // CPU用のプールに贄のサンプルも混ざるように調整可能（ここでは既存通り）
-                let cPool = [0,1,2,3,4,5,6,7,8,9,11,12,13,14,15,26,27,35,37,38,47,48].map(i => cardPool[i]);
+                let cPool = [0,1,2,3,4,5,6,7,8,9,11,12,13,14,15,26,27,35,37,38,47,48,57].map(i => cardPool[i]); // 新カードも混ぜる
                 let cpuInitialCards = [];
                 for (let i = 0; i < 30; i++) {
                     const randomCard = cPool[Math.floor(Math.random() * cPool.length)];
@@ -871,7 +884,6 @@ createApp({
             }
             return Math.max(0, cost);
         },
-        /* ✨ 追加：カードが負の【贄】を持つ場合、肉カウンターが十分にあるかを判定する関数 */
         hasEnoughFlesh(card, isPlayer) {
             const nieAbility = card.abilities.find(a => a.type === "nie");
             if (nieAbility && nieAbility.value < 0) {
@@ -884,16 +896,16 @@ createApp({
         applyDamage(isPlayerTarget, amount) {
             if (amount <= 0 || this.isGameOver) return;
             if (isPlayerTarget) {
-                if (this.playerBarrier) {
-                    this.playerBarrier = false;
-                    this.addLog("🛡️ プレイヤーの【聖域】が作動し、ダメージを無効化した！");
+                if (this.playerBarrier > 0) {
+                    this.playerBarrier--;
+                    this.addLog(`🛡️ プレイヤーの【聖域】が作動し、ダメージを無効化した！(残り防壁: ${this.playerBarrier}回)`);
                 } else {
                     this.playerHP -= amount;
                 }
             } else {
-                if (this.cpuBarrier) {
-                    this.cpuBarrier = false;
-                    this.addLog("🛡️ 相手の【聖域】が作動し、ダメージを無効化した！");
+                if (this.cpuBarrier > 0) {
+                    this.cpuBarrier--;
+                    this.addLog(`🛡️ 相手の【聖域】が作動し、ダメージを無効化した！(残り防壁: ${this.cpuBarrier}回)`);
                 } else {
                     this.cpuHP -= amount;
                 }
@@ -980,7 +992,6 @@ createApp({
                 return;
             }
 
-            /* ✨ 変更：骨カウンター判定条件「!this.hasEnoughFlesh(card, true)」を不発条件に追加 */
             if (!this.isPlayerTurn || this.isGameOver || this.playerCurrentMana < this.getCardCost(card, true) || !this.hasEnoughFlesh(card, true)) return;
 
             const needsDiscard = card.abilities.find(a => a.type === "self_discard_select");
@@ -1010,7 +1021,6 @@ createApp({
             }
 
             const computedCost = this.getCardCost(card, isPlayer); 
-            /* ✨ 変更：骨カウンター判定条件「!this.hasEnoughFlesh(card, isPlayer)」を安全策として追加 */
             if (isPlayer && (!this.isPlayerTurn || this.playerCurrentMana < computedCost || !this.hasEnoughFlesh(card, true))) return;
 
             let localSyncData = syncData || { chosenCardIndices: [], chosenZenjiIndices: [], discardIndex: -1 };
@@ -1075,13 +1085,15 @@ createApp({
                 const hasZenji = c.abilities.some(ab => ab.type === "zenjikouon");
                 if (hasZenji) {
                     c.abilities.forEach(ab => {
-                        if (ab.type !== "barrier" && ab.type !== "zenjikouon") {
+                        // 聖域の除外条件を撤廃（レベルも一緒に上がるように設定）
+                        if (ab.type !== "zenjikouon") {
                             ab.value += amount;
                         }
                     });
                     if (c.abilityText) {
                         c.abilityText = c.abilityText.replace(/([^0-9]+)(\d+)/g, (match, p1, p2) => {
-                            if (p1.includes("漸次昂音") || p1.includes("聖域")) {
+                            // 漸次昂音そのものの効果上昇は防ぎつつ聖域1等のレベルを書き換える
+                            if (p1.includes("漸次昂音")) {
                                 return match; 
                             }
                             return p1 + (parseInt(p2) + amount);
@@ -1112,7 +1124,6 @@ createApp({
                     this.addLog(`  └【流水${value}】相手がカードを ${value} 枚ドローした！`);
                 }
             } 
-            /* ✨ 追加：【贄n】効果の処理ロジック */
             else if(type === "nie") {
                 if (isPlayerTrigger) {
                     if (value > 0) {
@@ -1124,7 +1135,6 @@ createApp({
                         this.addLog(`  └【贄${value}】骨カウンターを ${consume} 消費した！(現在: ${this.playerFleshCounter})`);
                     }
                 } else {
-                    // CPU または オンラインの対戦相手の処理
                     if (value > 0) {
                         this.cpuFleshCounter += value;
                         this.addLog(`  └【贄${value}】相手が骨カウンターを ${value} 付与した！(現在: ${this.cpuFleshCounter})`);
@@ -1335,12 +1345,26 @@ createApp({
                     this.addLog(`  └【奇跡${value}】相手の手札の全てのカードのコストが -${value} された！`);
                 }
             }
+            /* 🛡️ 聖域：レベル化 ＆ 重ねがけ不可（上書き）の実装 */
             else if(type === "barrier") {
-                if(isPlayerTrigger) this.playerBarrier = true; else this.cpuBarrier = true;
+                if(isPlayerTrigger) this.playerBarrier = value; 
+                else this.cpuBarrier = value;
+                
                 if (isPlayerTrigger) {
-                    this.addLog(`  └【聖域】自分に一回限りのダメージ無効バリアを展開した！`);
+                    this.addLog(`  └【聖域${value}】自分に ${value} 回のダメージ無効バリアを展開した！`);
                 } else {
-                    this.addLog(`  └【聖域】相手が一回限りのダメージ無効バリアを展開した！`);
+                    this.addLog(`  └【聖域${value}】相手が ${value} 回のダメージ無効バリアを展開した！`);
+                }
+            }
+            /* 📜 新能力：契約n の実装 */
+            else if(type === "contract") {
+                if (isPlayerTrigger) {
+                    this.addLog(`  └【契約${value}】相手にカードを ${value} 枚ドローさせる！`);
+                } else {
+                    this.addLog(`  └【契約${value}】自分はカードを ${value} 枚ドローする！`);
+                }
+                for (let i = 0; i < value; i++) { 
+                    this.drawCard(!isPlayerTrigger); // トリガーしたプレイヤーと逆の対象にドロー
                 }
             }
         },
@@ -1372,7 +1396,6 @@ createApp({
 
         cpuAction() {
             if (this.isGameOver) return;
-            /* ✨ 変更：CPUのAI行動探索にも「hasEnoughFlesh(c, false)」の判定を追加 */
             let playableCard = this.cpuHand.find(c => this.getCardCost(c, false) <= this.cpuCurrentMana && this.hasEnoughFlesh(c, false));
             if(playableCard) {
                 this.playCard(playableCard, false);
@@ -1414,8 +1437,7 @@ createApp({
                 hp: this.playerHP, maxMana: this.playerMaxMana, currentMana: this.playerCurrentMana,
                 handLength: this.playerHand.length, deckLength: this.playerDeck.length,
                 name: this.userName, latestLog: latestLog, isP1Turn: this.isPlayerTurn,
-                barrier: this.playerBarrier,
-                /* ✨ 追加：ルームステートの通信同期データに骨カウンターを含める */
+                barrier: this.playerBarrier, // 数値を送信するように変更
                 fleshCounter: this.playerFleshCounter
             });
         },
