@@ -390,24 +390,24 @@
         <button class="cancel-match-btn" @click="cancelMatching">キャンセル</button>
     </div>
 
-    <div v-if="isSelectingToken" class="matching-overlay" style="background: rgba(0, 0, 0, 0.95);">
-        <h2 style="color: #007bff;">⚙️ 機巧増幅（アーティファクト・マニフェスト） ⚙️</h2>
-        <p style="font-size: 16px; margin-bottom: 25px;">山札に加える機巧トークンを1種選択してください（{{ tokenSelectionCount }}枚追加してシャッフル）</p>
-        <div style="display: flex; gap: 20px; justify-content: center; width: 100%; max-width: 800px;">
-            <div class="card playable" @click="selectToken('draw')" style="width: 180px; height: 260px;">
-                <div class="card-name">機巧の兵</div>
-                <div>コ:1 / 攻:0</div>
-                <div class="card-ability" style="color: #007bff; margin-top: 20px;">【流水1】<br><br><span style="color:#aaa; font-size:11px;">山札を1枚引き、手札を循環させる基礎機巧。</span></div>
+    <div v-if="isSelectingToken" class="matching-overlay" style="background: rgba(0, 0, 0, 0.95); padding: 5vh 2vw;">
+        <h2 style="color: #007bff; font-size: clamp(24px, 2.5vw, 36px); margin-bottom: 5px;">⚙️ 機巧増幅 ⚙️</h2>
+        <p style="font-size: clamp(14px, 1.4vw, 20px); margin-bottom: 4vh;">山札に加えるナギソトークンを1種選択してください（{{ tokenSelectionCount }}枚追加してシャッフル）</p>
+        <div style="display: flex; gap: 3vw; justify-content: center; width: 100%; max-width: 1000px; flex-wrap: wrap;">
+            <div class="card playable" @click="selectToken('draw')" style="width: 230px; height: 330px; font-size: 14px !important; padding: 20px 15px;">
+                <div class="card-name" style="font-size: 18px; text-overflow: clip; white-space: normal;">アナライズナギソ</div>
+                <div style="font-size: 14px; margin-bottom: 10px;">コ:1 / 攻:0</div>
+                <div class="card-ability" style="color: #007bff; font-size: 14px; margin-top: 15px;">【流水1】<br>【還元1】<br><br><span style="color:#aaa; font-size:12px; font-weight: normal;">カードを1枚引き、マナを1回復する基本機巧。</span></div>
             </div>
-            <div class="card playable" @click="selectToken('burn')" style="width: 180px; height: 260px; border-color: #dc3545 !important; box-shadow: 0 0 15px rgba(220, 53, 69, 0.8);">
-                <div class="card-name" style="color: #ff8888;">機巧の槍</div>
-                <div>コ:1 / 攻:0</div>
-                <div class="card-ability" style="color: #dc3545; margin-top: 20px;">【雄叫び2】<br><br><span style="color:#aaa; font-size:11px;">敵リーダーへダイレクトに2点撃ち込む攻撃機巧。</span></div>
+            <div class="card playable" @click="selectToken('burn')" style="width: 230px; height: 330px; font-size: 14px !important; padding: 20px 15px; border-color: #dc3545 !important; box-shadow: 0 0 15px rgba(220, 53, 69, 0.8) !important;">
+                <div class="card-name" style="color: #ff8888; font-size: 18px; text-overflow: clip; white-space: normal;">ブリッツナギソ</div>
+                <div style="font-size: 14px; margin-bottom: 10px;">コ:1 / 攻:1</div>
+                <div class="card-ability" style="color: #dc3545; font-size: 14px; margin-top: 15px;">【雄叫び1】<br>【還元1】<br><br><span style="color:#aaa; font-size:12px; font-weight: normal;">敵に1ダメージを与え、マナを1回復する攻撃機巧。</span></div>
             </div>
-            <div class="card playable" @click="selectToken('heal')" style="width: 180px; height: 260px; border-color: #28a745 !important; box-shadow: 0 0 15px rgba(40, 167, 69, 0.8);">
-                <div class="card-name" style="color: #88ff88;">機巧の盾</div>
-                <div>コ:1 / 攻:0</div>
-                <div class="card-ability" style="color: #28a745; margin-top: 20px;">【神秘2】<br><br><span style="color:#aaa; font-size:11px;">自身の生命力を2ポイント修復する防衛機巧。</span></div>
+            <div class="card playable" @click="selectToken('heal')" style="width: 230px; height: 330px; font-size: 14px !important; padding: 20px 15px; border-color: #28a745 !important; box-shadow: 0 0 15px rgba(40, 167, 69, 0.8) !important;">
+                <div class="card-name" style="color: #88ff88; font-size: 18px; text-overflow: clip; white-space: normal;">エンシェントナギソ</div>
+                <div style="font-size: 14px; margin-bottom: 10px;">コ:2 / 攻:0</div>
+                <div class="card-ability" style="color: #28a745; font-size: 14px; margin-top: 15px;">【神秘4】<br>【還元1】<br><br><span style="color:#aaa; font-size:12px; font-weight: normal;">自身の生命力を4ポイント修復し、マナを1回復する防衛機巧。</span></div>
             </div>
         </div>
     </div>
@@ -478,11 +478,11 @@
             
             <h3>📦 カードプール (クリックで追加)</h3>
             <div class="scroll-grid">
-                <div v-for="(card, index) in cardPool" :key="index" class="card" :class="{'playable': getCardCountInEditingDeck(index) < 3, 'disabled': getCardCountInEditingDeck(index) >= 3}" @click="addCardToEditingDeck(index)">
+                <div v-for="card in filteredCardPool" :key="card.originalIndex" class="card" :class="{'playable': getCardCountInEditingDeck(card.originalIndex) < 3, 'disabled': getCardCountInEditingDeck(card.originalIndex) >= 3}" @click="addCardToEditingDeck(card.originalIndex)">
                     <div class="card-name">{{ card.name }}</div>
                     <div>コ:{{ card.cost }} / 攻:{{ card.power }}</div>
                     <div v-if="card.abilityText" class="card-ability edit-pool" v-html="formatAbility(card.abilityText)"></div>
-                    <div class="card-ability" style="color: #fff; margin-top: auto;">枚数: {{ getCardCountInEditingDeck(index) }} / 3</div>
+                    <div class="card-ability" style="color: #fff; margin-top: auto;">枚数: {{ getCardCountInEditingDeck(card.originalIndex) }} / 3</div>
                 </div>
             </div>
         </div>
@@ -603,7 +603,7 @@ const cardPool = [
     { name: "ナギソ破壊", cost: 1, power: 0, abilities: [{ type: "draw", value: 2 }, { type: "jishoburn", value: 4 }], abilityText: "【流水2】 【反動4】" },
     { name: "硬化したナギソ", cost: 4, power: 12, abilities: [], abilityText: "" },
     { name: "ナギソ研磨油", cost: 2, power: 0, abilities: [{ type: "heal", value: 4 }], abilityText: "【神秘4】" },
-    { name: "執行のナギソ", cost: 7, power: 0, abilities: [{ type: "discard", value: 2 }, { type: "jishoburn", value: 4 }], abilityText: "【罪2】 【反動4】" },
+    { name: "執行 of ナギソ", cost: 7, power: 0, abilities: [{ type: "discard", value: 2 }, { type: "jishoburn", value: 4 }], abilityText: "【罪2】 【反動4】" },
     { name: "内喰みのナギソ", cost: 7, power: 0, abilities: [{ type: "manadestroy", value: 2 }], abilityText: "【崩壊2】" },
     { name: "嫌悪のナギソ", cost: 3, power: 0, abilities: [{ type: "costup", value: 1 }], abilityText: "【威圧1】" },
     { name: "ナギソの破片", cost: 4, power: 0, abilities: [{ type: "heal", value: 3 }, { type: "saidaimanahueru", value: 1}, { type: "draw", value: 1 }], abilityText: "【神秘3】 【恵沢1】 【流水1】" },
@@ -675,7 +675,7 @@ const cardPool = [
     { name: "寵刹のナギソ", cost: 6, power: 0, abilities: [{ type: "kikouzouhuku", value: 5 }, { type: "draw", value: 3 }, { type: "self_discard_select", value: 3 }], abilityText: "【機巧増幅3】 【流水3】 【流炎3】" },
     { name: "断絶のナギソ", cost: 5, power: 0, abilities: [{ type: "kyoumei", effect: { type: "discard", value: 1 }, label: "罪1" }], abilityText: "【共鳴(罪1)】" },
     { name: "ナギソ・コア", cost: 4, power: 0, abilities: [{ type: "kikouzouhuku", value: 3 }, { type: "draw", value: 2 }], abilityText: "【機巧増幅3】 【流水2】" },
-    { name: "終焉のナギソ", cost: 8, power: 0, abilities: [{ type: "kyoumei", effect: { type: "burn", value: 5 }, label: "雄叫び5" }, { type: "madoutanzou", value: 2, grants: [{ type: "draw", value: 2, text: "流水2" }, { type: "heal", value: 2, text: "神秘2"}]}], abilityText: "【共鳴(雄叫び5)】 【魔導鍛造2(流水2,神秘2)】" },
+    { name: "終焉のナギソ", cost: 8, power: 0, abilities: [{ type: "kyoumei", effect: { type: "burn", value: 5 }, label: "雄叫び5" }, { type: "madoutanzou", value: 4, grants: [{ type: "draw", value: 1, text: "流水1" }, { type: "heal", value: 2, text: "神秘2"}]}], abilityText: "【共鳴(雄叫び5)】 【魔導鍛造4(流水1,神秘2)】" },
     { name: "アナライズナギソ", cost: 1, power: 0, abilities: [{ type: "draw", value: 1 }, { type: "manahueru", value: 1 }], abilityText: "【流水1】 【還元1】" },
     { name: "ブリッツナギソ", cost: 1, power: 1, abilities: [{ type: "burn", value: 1 }, { type: "manahueru", value: 1 }], abilityText: "【雄叫び1】 【還元1】" },
     { name: "エンシェントナギソ", cost: 2, power: 0, abilities: [{ type: "heal", value: 4 }, { type: "manahueru", value: 1 }], abilityText: "【神秘】 【還元1】" }
@@ -733,7 +733,6 @@ createApp({
             pendingCardToPlay: null,
             pendingDiscardIds: [],
             
-            /* ✨ 新規追加ステータス */
             isSelectingToken: false,
             tokenSelectionCount: 0,
             playerResonanceEffects: [],
@@ -820,7 +819,7 @@ createApp({
                     this.addLog("⚠️ 選手の接続が切れました。ルームは解散されました。");
                     this.isGameOver = true;
                 } else {
-                    this.addLog("⚠️ 对戦相手の接続が切れました。あなたの勝利です！");
+                    this.addLog("⚠️ 対戦相手の接続が切れました。あなたの勝利です！");
                     this.cpuHP = 0; 
                     this.isGameOver = true;
                     this.checkWinLose();
@@ -828,7 +827,6 @@ createApp({
             }
         });
     },
-    /* 🧬 共鳴：山札の長さ（偶数になった瞬間）を監視するウォッチャーを設定 */
     watch: {
         playerDeckLengthComputed(newLen, oldLen) {
             if (this.isGameStarted && !this.isSpectator && newLen % 2 === 0 && oldLen % 2 !== 0) {
@@ -913,7 +911,6 @@ createApp({
             this.isSelectingDiscard = false; this.pendingCardToPlay = null;
             this.pendingDiscardIds = [];
             
-            /* ✨ 新規ギミック初期化 */
             this.isSelectingToken = false;
             this.tokenSelectionCount = 0;
             this.playerResonanceEffects = [];
@@ -930,7 +927,6 @@ createApp({
             for(let i=0; i<3; i++) { this.drawCard(true); }
 
             if (this.isCpuMode) {
-                /* ⚙️ CPUのデッキプールにも新カードを追加 */
                 let cPool = [0,1,2,3,4,5,6,7,8,9,11,12,13,14,15,26,27,35,37,38,47,48,57,76,77,78,79,80,81,82,83,84,85].map(i => cardPool[i]);
                 let cpuInitialCards = [];
                 for (let i = 0; i < 30; i++) {
@@ -1037,7 +1033,7 @@ createApp({
             }, 1200);
         },
         handleHandCardClick(card) {
-            if (this.isSelectingToken) return; // トークン選択中は手札操作不可
+            if (this.isSelectingToken) return; 
 
             if (this.isSelectingDiscard) {
                 if (card.id === this.pendingCardToPlay.id) {
@@ -1185,8 +1181,6 @@ createApp({
                 if(reduce) c.cost = Math.max(0, c.cost - reduce.value);
             });
         },
-        
-        /* ⚙️ 機巧増幅 トークン選択処理メソッド（プレイヤー用） */
         selectToken(tokenType) {
             let tokenBase = null;
             let tokenName = "";
@@ -1204,8 +1198,6 @@ createApp({
             this.tokenSelectionCount = 0;
             this.syncStateToServer();
         },
-
-                /* 🧬 共鳴：永続効果の自動実行処理（偶数突入時に駆動） */
         triggerResonance(isPlayer) {
             const effects = isPlayer ? this.playerResonanceEffects : this.cpuResonanceEffects;
             if (effects.length === 0) return;
@@ -1213,13 +1205,11 @@ createApp({
             this.addLog(isPlayer ? `✨ 自身のデッキが偶数になり【共鳴】が発動した！` : `✨ 相手のデッキが偶数になり【共鳴】が発動した！`);
             
             effects.forEach(eff => {
-                // 既存のすべての能力に対応するため、汎用の能力発動メソッドにそのまま流す
                 this.triggerAbility(eff, isPlayer, null);
             });
             this.checkWinLose();
             if (isPlayer) this.syncStateToServer();
         },
-
         triggerAbility(ab, isPlayerTrigger, syncData) {
             const type = ab.type; const value = ab.value;
             const currentCount = isPlayerTrigger ? this.playerPlayedCountThisTurn : this.cpuPlayedCountThisTurn;
@@ -1232,7 +1222,6 @@ createApp({
                     this.addLog(`  └【流水${value}】相手がカードを ${value} 枚ドローした！`);
                 }
             } 
-            /* ⚙️ 新規能力：機巧増幅 */
             else if(type === "kikouzouhuku") {
                 if (isPlayerTrigger) {
                     this.isSelectingToken = true;
@@ -1257,10 +1246,8 @@ createApp({
                     }
                 }
             }
-                        /* 🧬 新規能力：共鳴（プレイヤーへのリーダー付与型能力） */
             else if(type === "kyoumei") {
                 if (isPlayerTrigger) {
-                    // 全ての能力のプロパティを維持してバフ配列に保存
                     this.playerResonanceEffects.push({ ...ab.effect });
                     this.addLog(`  └【共鳴：${ab.label}】を獲得！以後、デッキが偶数枚になる度に能力が誘発する！`);
                 } else {
@@ -1415,7 +1402,6 @@ createApp({
                     });
                 }
             }
-
             else if(type === "discard") {
                 if (isPlayerTrigger) {
                     this.addLog(`  └【罪${value}】相手の手札をランダムに ${value} 枚捨てさせた！`);
@@ -1578,7 +1564,6 @@ createApp({
                 socket.emit('end_turn', { roomName: this.roomName }); 
             }
         },
-
         cpuAction() {
             if (this.isGameOver) return;
             let playableCard = this.cpuHand.find(c => this.getCardCost(c, false) <= this.cpuCurrentMana && this.hasEnoughFlesh(c, false));
@@ -1632,7 +1617,6 @@ createApp({
             this.editingDeck = this.customDecks[slotIndex] ? this.customDecks[slotIndex].map(i => ({ ...cardPool[i], poolIndex: i })) : []; 
         },
         getCardCountInEditingDeck(poolIndex) { return this.editingDeck.filter(c => c.poolIndex === poolIndex).length; },
-        
         addCardToEditingDeck(poolIndex) { 
             if (this.editingDeck.length >= 30) {
                 if (this.toastTimer) clearTimeout(this.toastTimer);
@@ -1640,14 +1624,12 @@ createApp({
                 this.toastTimer = setTimeout(() => { this.editAlert = ""; }, 2500);
                 return; 
             }
-        
             if (this.getCardCountInEditingDeck(poolIndex) >= 3) {
                 if (this.toastTimer) clearTimeout(this.toastTimer);
                 this.editAlert = `❌「${this.cardPool[poolIndex].name}」は3枚までしか入れられません。`;
                 this.toastTimer = setTimeout(() => { this.editAlert = ""; }, 2500);
                 return; 
             }
-        
             this.editAlert = ""; 
             this.editingDeck.push({ ...this.cardPool[poolIndex], poolIndex: poolIndex }); 
         },
@@ -1676,7 +1658,7 @@ createApp({
             if (this.gameMode === 'spectate') return '観戦モード';
             return '';
         },
-        enemyDisplayName() { return this.isSpectator ? this.p2Name : (this.isCpuMode ? '🤖 CPU' : '👤 对戦相手'); },
+        enemyDisplayName() { return this.isSpectator ? this.p2Name : (this.isCpuMode ? '🤖 CPU' : '👤 対戦相手'); },
         playerDisplayName() { return this.isSpectator ? this.p1Name : this.userName; },
         cpuHandLengthComputed() { return this.isCpuMode ? this.cpuHand.length : this.cpuHandLength; },
         cpuDeckLengthComputed() { return this.isCpuMode ? this.cpuDeck.length : this.cpuDeckLength; },
@@ -1691,6 +1673,13 @@ createApp({
                 counts[card.poolIndex].count++;
             });
             return Object.values(counts).sort((a, b) => a.cost - b.cost);
+        },
+        /* 🛡️ 新設：デッキ編集画面用のフィルタリングされたカードプール */
+        filteredCardPool() {
+            const tokens = ["アナライズナギソ", "ブリッツナギソ", "エンシェントナギソ"];
+            return this.cardPool
+                .map((card, index) => ({ ...card, originalIndex: index }))
+                .filter(card => !tokens.includes(card.name));
         }
     }
 }).mount('#app');
