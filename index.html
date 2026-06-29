@@ -495,7 +495,7 @@
             <button class="game-over-btn" @click="cancelEditor" style="background:#6c757d; margin-bottom: 15px;">❌ 変更を破棄して戻る</button>
 
             <h3>🃏 現在の編成 (クリックで1枚減らす)</h3>
-            <div style="display: flex; flex-direction: column; gap: 6px; max-height: 55vh; overflow-y: auto; padding-right: 5px;">
+            <div style="display: flex; flex-direction: column; gap: 6px; max-height: 80vh; overflow-y: auto; padding-right: 5px;">
                 <div v-for="card in stackedEditingDeck" :key="card.poolIndex" 
                      @click="removeCardFromEditingDeckByPoolIndex(card.poolIndex)"
                      class="stacked-item">
