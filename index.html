@@ -603,7 +603,7 @@ const cardPool = [
     { name: "ナギソ破壊", cost: 1, power: 0, abilities: [{ type: "draw", value: 2 }, { type: "jishoburn", value: 4 }], abilityText: "【流水2】 【反動4】" },
     { name: "硬化したナギソ", cost: 4, power: 12, abilities: [], abilityText: "" },
     { name: "ナギソ研磨油", cost: 2, power: 0, abilities: [{ type: "heal", value: 4 }], abilityText: "【神秘4】" },
-    { name: "執行 of ナギソ", cost: 7, power: 0, abilities: [{ type: "discard", value: 2 }, { type: "jishoburn", value: 4 }], abilityText: "【罪2】 【反動4】" },
+    { name: "執行のナギソ", cost: 7, power: 0, abilities: [{ type: "discard", value: 2 }, { type: "jishoburn", value: 4 }], abilityText: "【罪2】 【反動4】" },
     { name: "内喰みのナギソ", cost: 7, power: 0, abilities: [{ type: "manadestroy", value: 2 }], abilityText: "【崩壊2】" },
     { name: "嫌悪のナギソ", cost: 3, power: 0, abilities: [{ type: "costup", value: 1 }], abilityText: "【威圧1】" },
     { name: "ナギソの破片", cost: 4, power: 0, abilities: [{ type: "heal", value: 3 }, { type: "saidaimanahueru", value: 1}, { type: "draw", value: 1 }], abilityText: "【神秘3】 【恵沢1】 【流水1】" },
@@ -1181,23 +1181,36 @@ createApp({
                 if(reduce) c.cost = Math.max(0, c.cost - reduce.value);
             });
         },
-        selectToken(tokenType) {
-            let tokenBase = null;
-            let tokenName = "";
-            if (tokenType === 'draw') { tokenBase = this.cardPool[86]; tokenName = "アナライズナギソ"; }
-            else if (tokenType === 'burn') { tokenBase = this.cardPool[87]; tokenName = "ブリッツナギソ"; }
-            else if (tokenType === 'heal') { tokenBase = this.cardPool[88]; tokenName = "エンシェントナギソ"; }
+      selectToken(tokenType) {
+    let tokenBase = null;
+    let tokenName = "";
+    
+    // 【修正】インデックスの直書きをやめ、名前で確実に対象カードを取得する
+    if (tokenType === 'draw') { 
+        tokenName = "アナライズナギソ"; 
+    } else if (tokenType === 'burn') { 
+        tokenName = "ブリッツナギソ"; 
+    } else if (tokenType === 'heal') { 
+        tokenName = "エンシェントナギソ"; 
+    }
+    
+    tokenBase = this.cardPool.find(c => c.name === tokenName);
 
-            for (let i = 0; i < this.tokenSelectionCount; i++) {
-                this.playerDeck.push(createCardInstance(tokenBase));
-            }
-            this.playerDeck = shuffle(this.playerDeck);
-            this.addLog(`  └【機巧増幅】「${tokenName}」を ${this.tokenSelectionCount} 枚山札に加えてシャッフルした！`);
+    if (!tokenBase) {
+        console.error(`エラー: ${tokenName} が cardPool 内に見つかりません。`);
+        return;
+    }
 
-            this.isSelectingToken = false;
-            this.tokenSelectionCount = 0;
-            this.syncStateToServer();
-        },
+    for (let i = 0; i < this.tokenSelectionCount; i++) {
+        this.playerDeck.push(createCardInstance(tokenBase));
+    }
+    this.playerDeck = shuffle(this.playerDeck);
+    this.addLog(`  └【機巧増幅】「${tokenName}」を ${this.tokenSelectionCount} 枚山札に加えてシャッフルした！`);
+
+    this.isSelectingToken = false;
+    this.tokenSelectionCount = 0;
+    this.syncStateToServer();
+},
         triggerResonance(isPlayer) {
             const effects = isPlayer ? this.playerResonanceEffects : this.cpuResonanceEffects;
             if (effects.length === 0) return;
