@@ -402,11 +402,11 @@
             <div class="card playable" @click="selectToken('burn')" style="width: 230px; height: 330px; font-size: 14px !important; padding: 20px 15px; border-color: #dc3545 !important; box-shadow: 0 0 15px rgba(220, 53, 69, 0.8) !important;">
                 <div class="card-name" style="color: #ff8888; font-size: 18px; text-overflow: clip; white-space: normal;">ブリッツナギソ</div>
                 <div style="font-size: 14px; margin-bottom: 10px;">コ:1 / 攻:1</div>
-                <div class="card-ability" style="color: #dc3545; font-size: 14px; margin-top: 15px;">【雄叫び1】<br>【還元1】<br><br><span style="color:#aaa; font-size:12px; font-weight: normal;">敵に1ダメージを与え、マナを1回復する攻撃機巧。</span></div>
+                <div class="card-ability" style="color: #dc3545; font-size: 14px; margin-top: 15px;">【雄叫び2】<br>【還元1】<br><br><span style="color:#aaa; font-size:12px; font-weight: normal;">敵に1ダメージを与え、マナを1回復する攻撃機巧。</span></div>
             </div>
             <div class="card playable" @click="selectToken('heal')" style="width: 230px; height: 330px; font-size: 14px !important; padding: 20px 15px; border-color: #28a745 !important; box-shadow: 0 0 15px rgba(40, 167, 69, 0.8) !important;">
                 <div class="card-name" style="color: #88ff88; font-size: 18px; text-overflow: clip; white-space: normal;">エンシェントナギソ</div>
-                <div style="font-size: 14px; margin-bottom: 10px;">コ:2 / 攻:0</div>
+                <div style="font-size: 14px; margin-bottom: 10px;">コ:1 / 攻:0</div>
                 <div class="card-ability" style="color: #28a745; font-size: 14px; margin-top: 15px;">【神秘4】<br>【還元1】<br><br><span style="color:#aaa; font-size:12px; font-weight: normal;">自身の生命力を4ポイント修復し、マナを1回復する防衛機巧。</span></div>
             </div>
         </div>
@@ -607,7 +607,7 @@ const cardPool = [
     { name: "内喰みのナギソ", cost: 7, power: 0, abilities: [{ type: "manadestroy", value: 2 }], abilityText: "【崩壊2】" },
     { name: "嫌悪のナギソ", cost: 3, power: 0, abilities: [{ type: "costup", value: 1 }], abilityText: "【威圧1】" },
     { name: "ナギソの破片", cost: 4, power: 0, abilities: [{ type: "heal", value: 3 }, { type: "saidaimanahueru", value: 1}, { type: "draw", value: 1 }], abilityText: "【神秘3】 【恵沢1】 【流水1】" },
-    { name: "魔剣アクセサリー", cost: 20, power: 0, abilities: [{ type: "costheru", value: 1},{ type: "karyokuhueru", value: 3 }], abilityText: "【縮化1】 【連撃3】"},
+    { name: "魔剣アクセサリー", cost: 40, power: 0, abilities: [{ type: "costheru", value: 1},{ type: "karyokuhueru", value: 3 }], abilityText: "【縮化1】 【連撃3】"},
     { name: "ナギソブレッド", cost: 0, power: 2, abilities: [{ type: "jishoburn", value: 2 }], abilityText: "【反動2】"},
     { name: "ナギソの叫び", cost: 9, power: 0, abilities: [{ type: "costheru", value: 1 }, { type: "kenko", value: 4 }],abilityText: "【縮化1】 【剣呼4】"},
     { name: "願望のナギソ", cost: 7, power: 0, abilities: [{ type: "costheru", value: 1 }, { type: "draw", value: 2 }],abilityText: "【縮化1】 【流水2】"},
@@ -665,21 +665,21 @@ const cardPool = [
     { name: "永妖のナギソ", cost: 6, power: 0, abilities: [{ type: "madoutanzou", value: 3, grants: [{ type: "barrier", value: 1 , text: "【聖域1】" }, { type: "heal", value: 2, text: "【神秘2】"}]}], abilityText: "【魔導鍛造3(聖域1,神秘2)】" },
     { name: "覆釈のナギソ", cost: 7, power: 0, abilities: [{ type: "madoutanzou", value: 6, grants: [{ type: "heal", value: 3 , text: "【神秘3】" }]}], abilityText: "【魔導鍛造6(神秘3)】" },
     { name: "霜天のナギソ", cost: 7, power: 0, abilities: [{ type: "madoutanzou", value: 4, grants: [{ type: "deckdestroy", value: 1 , text: "【罰1】" }, { type: "draw", value: 1, text: "【流水1】"}, { type: "heal", value: 2, text: "【神秘2】"}]}], abilityText: "【魔導鍛造4(罰1,流水1,神秘2)" },
-    { name: "Bread Brade", cost: 18, power: 0, abilities: [{ type: "madoutanzou", value: 5, grants: [{ type: "karyokuhueru", value: 1 , text: "【連撃1】" }, { type: "heal", value: 2, text: "【神秘2】"}]}, { type: "costheru", value: 1 }], abilityText: "【魔導鍛造5(連撃1,神秘2)】 【縮化1】" },
-    { name: "機巧のナギソ", cost: 1, power: 0, abilities: [{ type: "kikouzouhuku", value: 2 }], abilityText: "【機巧増幅2】" },
-    { name: "勇気のナギソ", cost: 2, power: 0, abilities: [{ type: "kyoumei", effect: { type: "burn", value: 1 }, label: "雄叫び1" }], abilityText: "【共鳴(雄叫び1)】" },
+    { name: "Bread Brade", cost: 40, power: 0, abilities: [{ type: "madoutanzou", value: 3, grants: [{ type: "karyokuhueru", value: 1 , text: "【連撃1】" }, { type: "heal", value: 2, text: "【神秘2】"}]}, { type: "costheru", value: 1 }], abilityText: "【魔導鍛造3(連撃1,神秘2)】 【縮化1】" },
+    { name: "機巧のナギソ", cost: 1, power: 0, abilities: [{ type: "kikouzouhuku", value: 3 }], abilityText: "【機巧増幅3】" },
+    { name: "勇気のナギソ", cost: 2, power: 0, abilities: [{ type: "kyoumei", effect: { type: "burn", value: 2 }, label: "雄叫び2" }], abilityText: "【共鳴(雄叫び2)】" },
     { name: "起源のナギソ", cost: 2, power: 0, abilities: [{ type: "kikouzouhuku", value: 4 }], abilityText: "【機巧増幅4】" },
-    { name: "魔鋼剣ナギソ", cost: 3, power: 0, abilities: [{ type: "kyoumei", effect: { type: "heal", value: 2 }, label: "神秘2" }], abilityText: "【共鳴(神秘2)】" },
-    { name: "聖言のナギソ", cost: 2, power: 0, abilities: [{ type: "draw", value: 1 }, { type: "kikouzouhuku", value: 2 }], abilityText: "【流水1】 【機巧増幅2】" },
-    { name: "調和のナギソ", cost: 3, power: 0, abilities: [{ type: "kyoumei", effect: { type: "saidaimanahueru", value: 1 }, label: "恵沢1" }], abilityText: "【共鳴(恵沢1)】" },
-    { name: "寵刹のナギソ", cost: 6, power: 0, abilities: [{ type: "kikouzouhuku", value: 5 }, { type: "draw", value: 3 }, { type: "self_discard_select", value: 3 }], abilityText: "【機巧増幅3】 【流水3】 【流炎3】" },
+    { name: "魔鋼剣ナギソ", cost: 3, power: 0, abilities: [{ type: "kyoumei", effect: { type: "heal", value: 4 }, label: "神秘4" }], abilityText: "【共鳴(神秘4)】" },
+    { name: "聖言のナギソ", cost: 1, power: 0, abilities: [{ type: "draw", value: 1 }, { type: "kikouzouhuku", value: 2 }], abilityText: "【流水1】 【機巧増幅2】" },
+    { name: "調和のナギソ", cost: 4, power: 0, abilities: [{ type: "kyoumei", effect: { type: "saidaimanahueru", value: 1 }, label: "恵沢1" }], abilityText: "【共鳴(恵沢1)】" },
+    { name: "寵刹のナギソ", cost: 6, power: 0, abilities: [{ type: "kikouzouhuku", value: 5 }, { type: "draw", value: 3 }], abilityText: "【機巧増幅3】 【流水3】" },
     { name: "断絶のナギソ", cost: 5, power: 0, abilities: [{ type: "kyoumei", effect: { type: "discard", value: 1 }, label: "罪1" }], abilityText: "【共鳴(罪1)】" },
-    { name: "ナギソ・コア", cost: 4, power: 0, abilities: [{ type: "kikouzouhuku", value: 3 }, { type: "draw", value: 2 }], abilityText: "【機巧増幅3】 【流水2】" },
-    { name: "終焉のナギソ", cost: 8, power: 0, abilities: [{ type: "kyoumei", effect: { type: "burn", value: 5 }, label: "雄叫び5" }, { type: "madoutanzou", value: 4, grants: [{ type: "draw", value: 1, text: "流水1" }, { type: "heal", value: 2, text: "神秘2"}]}], abilityText: "【共鳴(雄叫び5)】 【魔導鍛造4(流水1,神秘2)】" },
-    { name: "アナライズナギソ", cost: 1, power: 0, abilities: [{ type: "draw", value: 1 }, { type: "manahueru", value: 1 }], abilityText: "【流水1】 【還元1】" },
-    { name: "ブリッツナギソ", cost: 1, power: 1, abilities: [{ type: "burn", value: 1 }, { type: "manahueru", value: 1 }], abilityText: "【雄叫び1】 【還元1】" },
-    { name: "エンシェントナギソ", cost: 2, power: 0, abilities: [{ type: "heal", value: 4 }, { type: "manahueru", value: 1 }], abilityText: "【神秘】 【還元1】" }
-];
+    { name: "ナギソ・コア", cost: 6, power: 0, abilities: [{ type: "kyoumei", effects: [{ type: "self_discard_select", value: 10 }, { type: "manahueru", value: 2 }, { type: "draw", value: 6 }]}, { type: "jishoburn", value: 10 }], abilityText: "【共鳴(流炎10,還元2,流水6)】 【反動10】" },
+    { name: "終焉のナギソ", cost: 8, power: 0, abilities: [{ type: "costheru", value: 1 }, { type: "kikouzouhuku", value: 10 }], abilityText: "【縮化1】 【機巧増幅10】" },
+    { name: "アナライズナギソ", cost: 1, power: 1, abilities: [{ type: "draw", value: 1 }, { type: "manahueru", value: 1 }], abilityText: "【流水1】 【還元1】" },
+    { name: "ブリッツナギソ", cost: 1, power: 2, abilities: [{ type: "burn", value: 2 }, { type: "manahueru", value: 1 }], abilityText: "【雄叫び2】 【還元1】" },
+    { name: "エンシェントナギソ", cost: 1, power: 0, abilities: [{ type: "heal", value: 4 }, { type: "manahueru", value: 1 }], abilityText: "【神秘4】 【還元1】" }
+]
 
 function generateId() { return Math.random().toString(36).substr(2, 9); }
 function createCardInstance(baseCard) { 
