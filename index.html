@@ -668,14 +668,14 @@ const cardPool = [
     { name: "Bread Brade", cost: 40, power: 0, abilities: [{ type: "madoutanzou", value: 3, grants: [{ type: "karyokuhueru", value: 1 , text: "【連撃1】" }, { type: "heal", value: 2, text: "【神秘2】"}]}, { type: "costheru", value: 1 }], abilityText: "【魔導鍛造3(連撃1,神秘2)】 【縮化1】" },
     { name: "機巧のナギソ", cost: 1, power: 0, abilities: [{ type: "kikouzouhuku", value: 3 }], abilityText: "【機巧増幅3】" },
     { name: "勇気のナギソ", cost: 2, power: 0, abilities: [{ type: "kyoumei", effect: { type: "burn", value: 2 }, label: "雄叫び2" }], abilityText: "【共鳴(雄叫び2)】" },
-    { name: "起源のナギソ", cost: 2, power: 0, abilities: [{ type: "kikouzouhuku", value: 4 }], abilityText: "【機巧増幅4】" },
+    { name: "起源のナギソ", cost: 2, power: 0, abilities: [{ type: "kikouzouhuku", value: 5 }], abilityText: "【機巧増幅5】" },
     { name: "魔鋼剣ナギソ", cost: 3, power: 0, abilities: [{ type: "kyoumei", effect: { type: "heal", value: 4 }, label: "神秘4" }], abilityText: "【共鳴(神秘4)】" },
     { name: "聖言のナギソ", cost: 1, power: 0, abilities: [{ type: "draw", value: 1 }, { type: "kikouzouhuku", value: 2 }], abilityText: "【流水1】 【機巧増幅2】" },
-    { name: "調和のナギソ", cost: 4, power: 0, abilities: [{ type: "kyoumei", effect: { type: "saidaimanahueru", value: 1 }, label: "恵沢1" }], abilityText: "【共鳴(恵沢1)】" },
-    { name: "寵刹のナギソ", cost: 6, power: 0, abilities: [{ type: "kikouzouhuku", value: 5 }, { type: "draw", value: 3 }], abilityText: "【機巧増幅3】 【流水3】" },
+    { name: "調和のナギソ", cost: 3, power: 0, abilities: [{ type: "kyoumei", effect: { type: "saidaimanahueru", value: 1 }, label: "恵沢1" }], abilityText: "【共鳴(恵沢1)】" },
+    { name: "寵刹のナギソ", cost: 6, power: 0, abilities: [{ type: "kikouzouhuku", value: 6 }, { type: "draw", value: 3 }], abilityText: "【機巧増幅6】 【流水3】" },
     { name: "断絶のナギソ", cost: 5, power: 0, abilities: [{ type: "kyoumei", effect: { type: "discard", value: 1 }, label: "罪1" }], abilityText: "【共鳴(罪1)】" },
-    { name: "ナギソ・コア", cost: 6, power: 0, abilities: [{ type: "kyoumei", effects: [{ type: "self_discard_select", value: 10 }, { type: "manahueru", value: 2 }, { type: "draw", value: 6 }]}, { type: "jishoburn", value: 10 }], abilityText: "【共鳴(流炎10,還元2,流水6)】 【反動10】" },
-    { name: "終焉のナギソ", cost: 8, power: 0, abilities: [{ type: "costheru", value: 1 }, { type: "kikouzouhuku", value: 10 }], abilityText: "【縮化1】 【機巧増幅10】" },
+    { name: "ナギソ・コア", cost: 6, power: 0, abilities: [{ type: "kyoumei", effects: [{ type: "self_discard_select", value: 10 }, { type: "manahueru", value: 2 }, { type: "draw", value: 6 }]}, { type: "jishoburn", value: 5 }], abilityText: "【共鳴(流炎10,還元2,流水6)】 【反動5】" },
+    { name: "終焉のナギソ", cost: 10, power: 0, abilities: [{ type: "costheru", value: 1 }, { type: "kikouzouhuku", value: 21 }], abilityText: "【縮化1】 【機巧増幅21】" },
     { name: "アナライズナギソ", cost: 1, power: 1, abilities: [{ type: "draw", value: 1 }, { type: "manahueru", value: 1 }], abilityText: "【流水1】 【還元1】" },
     { name: "ブリッツナギソ", cost: 1, power: 2, abilities: [{ type: "burn", value: 2 }, { type: "manahueru", value: 1 }], abilityText: "【雄叫び2】 【還元1】" },
     { name: "エンシェントナギソ", cost: 1, power: 0, abilities: [{ type: "heal", value: 4 }, { type: "manahueru", value: 1 }], abilityText: "【神秘4】 【還元1】" }
@@ -1259,12 +1259,16 @@ createApp({
                     }
                 }
             }
-            else if(type === "kyoumei") {
+                       else if(type === "kyoumei") {
+                // 👇 単一の effect と 複数の effects(配列) の両方を処理できるように展開します
+                const effectsToPush = ab.effects ? [...ab.effects] : (ab.effect ? [{ ...ab.effect }] : []);
+
                 if (isPlayerTrigger) {
-                    this.playerResonanceEffects.push({ ...ab.effect });
+                    // 展開した効果を全て配列にプッシュ
+                    this.playerResonanceEffects.push(...effectsToPush);
                     this.addLog(`  └【共鳴：${ab.label}】を獲得！以後、デッキが偶数枚になる度に能力が誘発する！`);
                 } else {
-                    this.cpuResonanceEffects.push({ ...ab.effect });
+                    this.cpuResonanceEffects.push(...effectsToPush);
                     this.addLog(`  └【共鳴：${ab.label}】相手が共鳴永続バフを獲得！`);
                 }
             }
