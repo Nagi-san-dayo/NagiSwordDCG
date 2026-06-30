@@ -71,23 +71,23 @@
             flex-shrink: 0;         
         }
 
-        /* 📦 カードプール（デッキ編集画面の横スクロール用） */
-        .scroll-grid { 
+        /* 📦 カードプール（デッキ編集画面の一覧用） */
+        .card-pool-list { 
             display: flex; 
+            flex-wrap: wrap;
             gap: 12px; 
-            overflow-x: auto; 
-            overflow-y: hidden;
+            overflow-y: auto; 
             padding: 15px 10px; 
-            border-bottom: 1px dashed #444; 
-            flex-shrink: 0; 
+            border: 1px dashed #444; 
             background: rgba(0, 0, 0, 0.2);
             border-radius: 8px;
-            scrollbar-width: auto; 
+            max-height: 45vh;
+            align-content: flex-start;
         }
-        .scroll-grid::-webkit-scrollbar {
-            height: 8px;
+        .card-pool-list::-webkit-scrollbar {
+            width: 8px;
         }
-        .scroll-grid::-webkit-scrollbar-thumb {
+        .card-pool-list::-webkit-scrollbar-thumb {
             background: #555;
             border-radius: 4px;
         }
@@ -214,7 +214,6 @@
             transition: transform 0.2s, box-shadow 0.2s;
         }
 
-        /* 🔄 選択破棄ターゲット時の強調エフェクト */
         .card.discard-target {
             border-color: #dc3545 !important;
             box-shadow: 0 0 15px rgba(220, 53, 69, 0.8), 0 6px 12px rgba(0,0,0,0.4) !important;
@@ -229,7 +228,6 @@
             to { box-shadow: 0 0 15px rgba(220, 53, 69, 0.8); }
         }
 
-        /* ✨ 追加：すでに選択された破棄カードの強調エフェクト */
         .card.discard-selected {
             border-color: #ffc107 !important;
             box-shadow: 0 0 20px rgba(255, 193, 7, 0.9), 0 6px 12px rgba(0,0,0,0.4) !important;
@@ -259,7 +257,6 @@
             transform: translate(-50%, 0); 
         }
 
-        /* 📊 スタック型リストアイテム */
         .stacked-item {
             display: flex; 
             justify-content: space-between; 
@@ -276,13 +273,11 @@
             background: #4a4a5a;
         }
 
-        /* 現在の編成リストの親コンテナの縦スクロールを最適化 */
         .game-screen > div:last-child > div[style*="max-height"] {
             max-height: 60vh !important;
             overflow-y: auto !important; 
         }
 
-        /* 🔘 デッキ選択・モード選択ボタン */
         .deck-btn {
             background: #3e3e4a;
             border: 2px solid #555;
@@ -298,7 +293,6 @@
         .deck-btn h3 { margin: 0 0 5px 0; font-size: 16px; color: #ffc107; }
         .deck-btn p { margin: 0; font-size: 12px; color: #ccc; }
 
-        /* 📊 プレイヤー＆CPUステータスボックス */
         .status-box {
             background: rgba(0, 0, 0, 0.4);
             padding: 10px 15px;
@@ -309,7 +303,6 @@
         .status-box h3 { margin: 0 0 5px 0; font-size: 16px; color: #fff; }
         .status-box p { margin: 0; font-size: 13px; color: #aaa; }
 
-        /* 📜 ログボックスとリスト */
         .log-box {
             background: rgba(0, 0, 0, 0.5);
             padding: 10px;
@@ -332,7 +325,6 @@
             padding: 4px 0;
         }
 
-        /* 👁️ 観戦中バッジ */
         .spectator-box {
             background: #17a2b8;
             color: white;
@@ -342,18 +334,16 @@
             border-radius: 8px;
             margin-bottom: 10px;
         }
-        /* 📜 タイトル画面の縦スクロール対応 */
         .title-screen {
             width: 100%;
-            height: 100%; /* 親要素(#app)の高さいっぱいに広げる */
-            overflow-y: auto; /* 縦方向に要素がはみ出した場合にスクロールバーを表示 */
-            overflow-x: hidden; /* 横スクロールは防ぐ */
-            padding-right: 10px; /* スクロールバーと文字が被らないように少し余白を確保 */
-            padding-bottom: 30px; /* 一番下までスクロールした時のための余白 */
+            height: 100%; 
+            overflow-y: auto; 
+            overflow-x: hidden; 
+            padding-right: 10px; 
+            padding-bottom: 30px; 
             box-sizing: border-box;
         }
 
-        /* 🎨 タイトル画面用スクロールバーの装飾（お好みで） */
         .title-screen::-webkit-scrollbar {
             width: 8px;
         }
@@ -364,6 +354,16 @@
         .title-screen::-webkit-scrollbar-track {
             background: transparent;
         }
+
+        /* 📖 辞書モーダルのグリッドレスポンシブ */
+        .dictionary-grid {
+            display: grid; 
+            grid-template-columns: 1fr 1fr; 
+            gap: 15px; 
+        }
+        @media (max-width: 768px) {
+            .dictionary-grid { grid-template-columns: 1fr; }
+        }
     </style>
 </head>
 <body>
@@ -371,6 +371,17 @@
 <div id="app">
     <div class="toast-notification" :class="{ 'show': editAlert }">
         {{ editAlert }}
+    </div>
+
+    <div v-if="showDictionary" class="matching-overlay" style="z-index: 200; background: rgba(0,0,0,0.92); padding: 5vh 5vw;">
+        <h2 style="color: #ffc107; margin-bottom: 20px;">📖 能力用語一覧</h2>
+        <div style="background: #232730; padding: 20px; border-radius: 10px; border: 1px solid #555; width: 100%; max-width: 800px; max-height: 70vh; overflow-y: auto; font-size: 14px;" class="dictionary-grid">
+            <div v-for="ability in abilityDictionary" :key="ability.name" style="background: #151518; padding: 12px; border-radius: 6px; border-left: 4px solid #007bff; text-align: left;">
+                <div style="font-weight: bold; color: #fff; margin-bottom: 5px;">【{{ ability.name }}】</div>
+                <div style="color: #ccc; font-size: 13px; line-height: 1.4;">{{ ability.desc }}</div>
+            </div>
+        </div>
+        <button class="cancel-match-btn" @click="showDictionary = false" style="margin-top: 25px; background: #6c757d;">閉じる</button>
     </div>
 
     <div v-if="activeNotice" class="card-notice-overlay" :key="noticeKey">
@@ -477,12 +488,20 @@
             </div>
             
             <h3>📦 カードプール (クリックで追加)</h3>
-            <div class="scroll-grid">
+            
+            <div style="margin-bottom: 10px;">
+                <input type="text" v-model="searchQuery" class="username-input" placeholder="🔍 カード名や能力（例: 流水, 反動）で検索...">
+            </div>
+
+            <div class="card-pool-list">
                 <div v-for="card in filteredCardPool" :key="card.originalIndex" class="card" :class="{'playable': getCardCountInEditingDeck(card.originalIndex) < 3, 'disabled': getCardCountInEditingDeck(card.originalIndex) >= 3}" @click="addCardToEditingDeck(card.originalIndex)">
                     <div class="card-name">{{ card.name }}</div>
                     <div>コ:{{ card.cost }} / 攻:{{ card.power }}</div>
                     <div v-if="card.abilityText" class="card-ability edit-pool" v-html="formatAbility(card.abilityText)"></div>
                     <div class="card-ability" style="color: #fff; margin-top: auto;">枚数: {{ getCardCountInEditingDeck(card.originalIndex) }} / 3</div>
+                </div>
+                <div v-if="filteredCardPool.length === 0" style="width: 100%; text-align: center; color: #888; padding: 20px;">
+                    条件に一致するカードが見つかりません。
                 </div>
             </div>
         </div>
@@ -575,6 +594,8 @@
                     <li v-for="(log, index) in logMessages" :key="index">{{ log }}</li>
                 </ul>
             </div>
+            
+            <button class="deck-btn" @click="showDictionary = true" style="padding: 10px; font-size: 13px;">📖 能力一覧を開く</button>
 
             <button v-if="isGameOver" class="game-over-btn" @click="resetToTitle">↩️ タイトルに戻る</button>
 
@@ -713,6 +734,37 @@ createApp({
             customDeckNames: Array(10).fill(""),
             currentDeckSlot: 0, selectedSlotIndex: null,           
             editingDeck: [], editingDeckName: "", editAlert: "", toastTimer: null, cardPool: cardPool,
+            searchQuery: "", // 🔍 検索用文字列
+            showDictionary: false, // 📖 辞書表示用フラグ
+            
+            // 📖 能力一覧データ
+            abilityDictionary: [
+                { name: "流水X", desc: "カードをX枚引く。" },
+                { name: "縮化X", desc: "手札にある時、他のカードを使用するたびコストがX下がる。" },
+                { name: "剣呼X", desc: "手札にランダムなカード(No.0〜29)をX枚生成する。" },
+                { name: "恵沢X", desc: "最大マナがX増加する。" },
+                { name: "還元X", desc: "マナがX回復する。" },
+                { name: "連撃X", desc: "このターンに使用したカード枚数×Xのダメージを相手に与える。" },
+                { name: "雄叫びX", desc: "相手にXダメージを与える。" },
+                { name: "反動X", desc: "反動で自分にXダメージを与える。" },
+                { name: "神秘X", desc: "自身のHPをX回復する。" },
+                { name: "罪X", desc: "相手の手札をランダムにX枚捨てる。" },
+                { name: "崩壊X", desc: "相手の最大マナをX減らす。" },
+                { name: "威圧X", desc: "相手の手札全てのコストを+Xする。" },
+                { name: "罰X", desc: "相手のデッキをX枚破壊する。" },
+                { name: "逆境X", desc: "自身のHPが相手より少ない場合、相手に追加でXダメージを与える。" },
+                { name: "奇跡X", desc: "自分の手札全てのコストを-Xする。" },
+                { name: "聖域X", desc: "次に受けるダメージを無効化するバリアをX回分展開する。" },
+                { name: "転禍為福X", desc: "相手より手札が少ない場合、このカードのコストがX下がる。" },
+                { name: "流炎X", desc: "自分の手札をX枚選択して捨てる。" },
+                { name: "漸次昂音X", desc: "手札にある他の「漸次昂音」カードの効果値を全て（漸次昂音を除き）+Xする。" },
+                { name: "贄X", desc: "骨カウンターをX増やす。（マイナス値の場合は骨を消費して発動可能になる）" },
+                { name: "契約X", desc: "相手にカードをX枚引かせる。" },
+                { name: "魔導鍛造X", desc: "特別な能力を付与された『ナギソブレッド』をX枚生成して手札に加える。" },
+                { name: "機巧増幅X", desc: "山札に機巧トークンを選択しX枚混ぜてシャッフルする。" },
+                { name: "共鳴", desc: "山札が奇数から偶数になるたびに発動する永続効果を得る。" }
+            ],
+
             playerHP: 30, cpuHP: 30,
             playerBarrier: 0, cpuBarrier: 0, 
             playerMaxMana: 1, playerCurrentMana: 1,
@@ -1104,7 +1156,8 @@ createApp({
             if (isPlayer && !this.isCpuMode) {
                 card.abilities.forEach(ab => {
                     if (ab.type === "kenko") {
-                        localSyncData.chosenCardIndices.push(Math.floor(Math.random() * this.cardPool.length));
+                        // 0〜29のカード群からランダム生成するように変更
+                        localSyncData.chosenCardIndices.push(Math.floor(Math.random() * 30));
                     }
                 });
             }
@@ -1181,36 +1234,35 @@ createApp({
                 if(reduce) c.cost = Math.max(0, c.cost - reduce.value);
             });
         },
-      selectToken(tokenType) {
-    let tokenBase = null;
-    let tokenName = "";
-    
-    // 【修正】インデックスの直書きをやめ、名前で確実に対象カードを取得する
-    if (tokenType === 'draw') { 
-        tokenName = "アナライズナギソ"; 
-    } else if (tokenType === 'burn') { 
-        tokenName = "ブリッツナギソ"; 
-    } else if (tokenType === 'heal') { 
-        tokenName = "エンシェントナギソ"; 
-    }
-    
-    tokenBase = this.cardPool.find(c => c.name === tokenName);
+        selectToken(tokenType) {
+            let tokenBase = null;
+            let tokenName = "";
+            
+            if (tokenType === 'draw') { 
+                tokenName = "アナライズナギソ"; 
+            } else if (tokenType === 'burn') { 
+                tokenName = "ブリッツナギソ"; 
+            } else if (tokenType === 'heal') { 
+                tokenName = "エンシェントナギソ"; 
+            }
+            
+            tokenBase = this.cardPool.find(c => c.name === tokenName);
 
-    if (!tokenBase) {
-        console.error(`エラー: ${tokenName} が cardPool 内に見つかりません。`);
-        return;
-    }
+            if (!tokenBase) {
+                console.error(`エラー: ${tokenName} が cardPool 内に見つかりません。`);
+                return;
+            }
 
-    for (let i = 0; i < this.tokenSelectionCount; i++) {
-        this.playerDeck.push(createCardInstance(tokenBase));
-    }
-    this.playerDeck = shuffle(this.playerDeck);
-    this.addLog(`  └【機巧増幅】「${tokenName}」を ${this.tokenSelectionCount} 枚山札に加えてシャッフルした！`);
+            for (let i = 0; i < this.tokenSelectionCount; i++) {
+                this.playerDeck.push(createCardInstance(tokenBase));
+            }
+            this.playerDeck = shuffle(this.playerDeck);
+            this.addLog(`  └【機巧増幅】「${tokenName}」を ${this.tokenSelectionCount} 枚山札に加えてシャッフルした！`);
 
-    this.isSelectingToken = false;
-    this.tokenSelectionCount = 0;
-    this.syncStateToServer();
-},
+            this.isSelectingToken = false;
+            this.tokenSelectionCount = 0;
+            this.syncStateToServer();
+        },
         triggerResonance(isPlayer) {
             const effects = isPlayer ? this.playerResonanceEffects : this.cpuResonanceEffects;
             if (effects.length === 0) return;
@@ -1259,12 +1311,10 @@ createApp({
                     }
                 }
             }
-                       else if(type === "kyoumei") {
-                // 👇 単一の effect と 複数の effects(配列) の両方を処理できるように展開します
+            else if(type === "kyoumei") {
                 const effectsToPush = ab.effects ? [...ab.effects] : (ab.effect ? [{ ...ab.effect }] : []);
 
                 if (isPlayerTrigger) {
-                    // 展開した効果を全て配列にプッシュ
                     this.playerResonanceEffects.push(...effectsToPush);
                     this.addLog(`  └【共鳴：${ab.label}】を獲得！以後、デッキが偶数枚になる度に能力が誘発する！`);
                 } else {
@@ -1396,12 +1446,13 @@ createApp({
                 if (this.isCpuMode || !isPlayerTrigger) {
                     for(let i=0; i<value; i++) {
                         if(isPlayerTrigger) {
-                            let randCard = createCardInstance(this.cardPool[Math.floor(Math.random() * this.cardPool.length)]);
+                            // 0〜29のカードから生成
+                            let randCard = createCardInstance(this.cardPool[Math.floor(Math.random() * 30)]);
                             if (this.playerHand.length < this.maxHandSize) this.playerHand.push(randCard);
                             else this.addLog(`🔥 手札満杯のため生成カードが燃破した！`);
                         } else {
                             if (this.isCpuMode) {
-                                let randCard = createCardInstance(this.cardPool[Math.floor(Math.random() * this.cardPool.length)]);
+                                let randCard = createCardInstance(this.cardPool[Math.floor(Math.random() * 30)]);
                                 if (this.cpuHand.length < this.maxHandSize) this.cpuHand.push(randCard);
                             } else {
                                 if (this.cpuHandLength < this.maxHandSize) this.cpuHandLength++;
@@ -1493,8 +1544,8 @@ createApp({
                 }
             }
             else if(type === "barrier") {
-                if(isPlayerTrigger) this.playerBarrier = value; 
-                else this.cpuBarrier = value;
+                if(isPlayerTrigger) this.playerBarrier += value; // 【修正】加算式にして蓄積可能に
+                else this.cpuBarrier += value;
                 
                 if (isPlayerTrigger) {
                     this.addLog(`  └【聖域${value}】自分に ${value} 回のダメージ無効バリアを展開した！`);
@@ -1631,6 +1682,7 @@ createApp({
         openDeckEditor(slotIndex) { 
             this.isEditMode = true; this.editAlert = ""; this.currentDeckSlot = slotIndex; 
             this.editingDeckName = this.customDeckNames[slotIndex] || `デッキ ${slotIndex + 1}`;
+            this.searchQuery = ""; // 検索ワード初期化
             this.editingDeck = this.customDecks[slotIndex] ? this.customDecks[slotIndex].map(i => ({ ...cardPool[i], poolIndex: i })) : []; 
         },
         getCardCountInEditingDeck(poolIndex) { return this.editingDeck.filter(c => c.poolIndex === poolIndex).length; },
@@ -1691,12 +1743,20 @@ createApp({
             });
             return Object.values(counts).sort((a, b) => a.cost - b.cost);
         },
-        /* 🛡️ 新設：デッキ編集画面用のフィルタリングされたカードプール */
+        /* 🛡️ 新設＆修正：検索対応のフィルタリングされたカードプール */
         filteredCardPool() {
             const tokens = ["アナライズナギソ", "ブリッツナギソ", "エンシェントナギソ"];
+            const query = this.searchQuery.toLowerCase().trim();
+            
             return this.cardPool
                 .map((card, index) => ({ ...card, originalIndex: index }))
-                .filter(card => !tokens.includes(card.name));
+                .filter(card => !tokens.includes(card.name))
+                .filter(card => {
+                    if (!query) return true;
+                    const nameMatch = card.name.toLowerCase().includes(query);
+                    const abilityMatch = (card.abilityText || "").toLowerCase().includes(query);
+                    return nameMatch || abilityMatch;
+                });
         }
     }
 }).mount('#app');
