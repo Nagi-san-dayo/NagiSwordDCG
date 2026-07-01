@@ -420,7 +420,7 @@
                 <div class="card-ability" style="color: #007bff; font-size: 14px; margin-top: 15px;">【流水1】<br>【還元1】<br><br><span style="color:#aaa; font-size:12px; font-weight: normal;">カードを1枚引き、マナを1回復する基本機巧。</span></div>
             </div>
             <div class="card playable" @click="selectToken('burn')" style="width: 230px; height: 330px; font-size: 14px !important; padding: 20px 15px; border-color: #dc3545 !important; box-shadow: 0 0 15px rgba(220, 53, 69, 0.8) !important;">
-                <div class="card-name" style="color: #ff8888; font-size: 18px; text-overflow: clip; white-space: normal;">ブリッツナギソ</div>
+                <div class="card-name" style="color: #ff8888; font-size: 18px; text-overflow: clip; white-space: normal;">レディアントナギソ</div>
                 <div style="font-size: 14px; margin-bottom: 10px;">コ:1 / 攻:1</div>
                 <div class="card-ability" style="color: #dc3545; font-size: 14px; margin-top: 15px;">【雄叫び2】<br>【還元1】<br><br><span style="color:#aaa; font-size:12px; font-weight: normal;">敵に1ダメージを与え、マナを1回復する攻撃機巧。</span></div>
             </div>
@@ -668,16 +668,16 @@ const cardPool = [
     { name: "水琴窟のナギソ", cost: 7, power: 0, abilities: [{ type: "zenjikouon", value: 1 }, { type: "costdown_all", value: 1 }], abilityText: "【漸次昂音1】 【奇跡1】"},
     { name: "澎湃轟々のナギソ", cost: 7, power: 0, abilities: [{ type: "zenjikouon", value: 1 }, { type: "karyokuhueru", value: 1 }], abilityText: "【漸次昂音1】 【連撃1】"},
     { name: "玲瓏のナギソ", cost: 5, power: 0, abilities: [{ type: "zenjikouon", value: 2 }, { type: "costheru", value: 1 }], abilityText: "【漸次昂音2】 【縮化1】"},
-    { name: "鼠骨短剣ナギソ", cost: 1, power: 0, abilities: [{ type: "nie", value: 1 }, { type: "draw", value: 1 }, { type: "revengeburn", value: 2 }], abilityText: "【贄1】 【流水1】 【逆境2】" },
-    { name: "兎骨懐剣ナギソ", cost: 3, power: 1, abilities: [{ type: "nie", value: 2 }, { type: "saidaimanahueru", value: 1 }], abilityText: "【贄2】 【恵沢1】" },
+    { name: "鼠骨短剣ナギソ", cost: 1, power: 1, abilities: [{ type: "nie", value: 2 }, { type: "draw", value: 1 }, { type: "revengeburn", value: 2 }], abilityText: "【贄2】 【流水1】 【逆境2】" },
+    { name: "兎骨懐剣ナギソ", cost: 2, power: 1, abilities: [{ type: "nie", value: 3 }, { type: "burn", value: 2 }], abilityText: "【贄2】 【雄叫び2】" },
     { name: "犬骨盾剣ナギソ", cost: 3, power: 4, abilities: [{ type: "nie", value: -2 }, { type: "costup", value: 1 },], abilityText: "【贄-2】 【威圧1】" },
-    { name: "猫骨細剣ナギソ", cost: 3, power: 3, abilities: [{ type: "nie", value: -2 }, { type: "draw", value: 2 }], abilityText: "【贄-2】 【流水2】" },
-    { name: "牛骨太刀ナギソ", cost: 4, power: 0, abilities: [{ type: "nie", value: 4 }, { type: "heal", value: 5 }], abilityText: "【贄4】 【神秘5】" },
-    { name: "虎骨大刀ナギソ", cost: 5, power: 6, abilities: [{ type: "nie", value: -4 }, { type: "burn", value: 4 }, { type: "costup", value: 2 }, { type: "self_discard_select", value: 2 }], abilityText: "【贄-4】 【雄叫び4】 【威圧2】 【流炎2】" },
-    { name: "狼骨双剣ナギソ", cost: 5, power: 4, abilities: [{ type: "nie", value: -3 }, { type: "burn", value: 3 }, { type: "karyokuhueru", value: 1 }, { type: "discard", value: 1 }], abilityText: "【贄-3】 【雄叫び3】 【連撃1】 【罪1】" },
-    { name: "熊骨突剣ナギソ", cost: 7, power: 8, abilities: [{ type: "nie", value: -4 }, { type: "burn", value: 5 }, { type: "manadestroy", value: 2 }, { type: "costup", value: 1 }, { type: "self_discard_select", value: 3 }], abilityText: "【贄-4】 【雄叫び5】 【崩壊2】 【威圧1】 【流炎3】" },
-    { name: "鯨骨長太刀ナギソ", cost: 7, power: 4, abilities: [{ type: "nie", value: 5 }, { type: "zenjikouon", value: 1 }, { type: "manahueru", value: 2 }, { type: "deckdestroy", value: 1 }, { type: "jishoburn", value: 5 }], abilityText: "【贄5】 【漸次昂音1】 【還元2】 【罰1】 【反動5】" },
-    { name: "獅子骨大剣ナギソ", cost: 8, power: 9, abilities: [{ type: "nie", value: -7 }, { type: "burn", value: 7 }, { type: "revengeburn", value: 5 }, { type: "costup", value: 3 }, { type: "manadestroy", value: 3 }, { type: "self_discard_select", value: 4 }], abilityText: "【贄-7】 【雄叫び7】 【逆境5】 【威圧3】 【崩壊3】 【流炎4】" },
+    { name: "猫骨細剣ナギソ", cost: 2, power: 3, abilities: [{ type: "nie", value: -2 }, { type: "draw", value: 2 }], abilityText: "【贄-2】 【流水2】" },
+    { name: "牛骨太刀ナギソ", cost: 4, power: 0, abilities: [{ type: "nie", value: 4 }, { type: "heal", value: 5 }, { type: "draw", value: 1 }], abilityText: "【贄4】 【神秘5】 【流水1】" },
+    { name: "虎骨大刀ナギソ", cost: 5, power: 6, abilities: [{ type: "nie", value: -4 }, { type: "burn", value: 4 }, { type: "costup", value: 2 }, { type: "self_discard_select", value: 1 }], abilityText: "【贄-4】 【雄叫び4】 【威圧2】 【流炎1】" },
+    { name: "狼骨双剣ナギソ", cost: 4, power: 4, abilities: [{ type: "nie", value: -2 }, { type: "burn", value: 3 }, { type: "discard", value: 1 }], abilityText: "【贄-2】 【雄叫び3】 【罪1】" },
+    { name: "熊骨突剣ナギソ", cost: 7, power: 8, abilities: [{ type: "nie", value: -4 }, { type: "burn", value: 5 }, { type: "manadestroy", value: 2 }, { type: "costup", value: 1 }], abilityText: "【贄-4】 【雄叫び5】 【崩壊2】 【威圧1】" },
+    { name: "鯨骨長太刀ナギソ", cost: 7, power: 4, abilities: [{ type: "nie", value: 5 }, { type: "zenjikouon", value: 1 }, { type: "manahueru", value: 2 }], abilityText: "【贄5】 【漸次昂音1】 【還元2】" },
+    { name: "獅子骨大剣ナギソ", cost: 0, power: 9, abilities: [{ type: "nie", value: -9 }, { type: "burn", value: 7 }, { type: "revengeburn", value: 5 }, { type: "costup", value: 3 }, { type: "manadestroy", value: 3 }], abilityText: "【贄-9】 【雄叫び7】 【逆境5】 【威圧3】 【崩壊3】" },
     { name: "血契のナギソ", cost: 1, power: 3, abilities: [{ type: "contract", value: 1 }, { type: "draw", value: 1 }], abilityText: "【契約1】 【流水1】" },
     { name: "宿痾のナギソ", cost: 1, power: 2, abilities: [{ type: "contract", value: 1 }, { type: "heal", value: 3 }, { type: "self_discard_select", value: 1 }], abilityText: "【契約1】 【神秘3】 【流炎1】"},
     { name: "瞬刻のナギソ", cost: 2, power: 4, abilities: [{ type: "contract", value: 1 }, { type: "lesshandcostdown", value: 2 }, { type: "self_discard_select", value: 1 }], abilityText: "【契約1】 【転禍為福2】 【流炎1】"},
@@ -687,7 +687,7 @@ const cardPool = [
     { name: "冥約のナギソ", cost: 8, power: 4, abilities: [{ type: "contract", value: 2 }, { type: "lesshandcostdown", value: 6 }, { type: "saidaimanahueru", value: 1 }, { type: "draw", value: 1 }], abilityText: "【契約2】 【転禍為福6】 【恵沢1】 【流水1】"},
     { name: "霊契のナギソ", cost: 6, power: 3, abilities: [{ type: "contract", value: 2 }, { type: "lesshandcostdown", value: 3 }, { type: "draw", value: 3 }], abilityText: "【契約2】 【転禍為福3】 【流水3】"},
     { name: "甘霖契のナギソ", cost: 9, power: 6, abilities: [{ type: "contract", value: 3 }, { type: "lesshandcostdown", value: 6 }, { type: "manahueru", value: 3 }], abilityText: "【契約3】 【転禍為福6】 【還元3】"},
-    { name: "天律神威ノ封縛鎖", cost: 20, power: 8, abilities: [{ type: "contract", value: 3 }, { type: "lesshandcostdown", value: 10 }, { type: "costheru", value: 1 }, { type: "costup", value: 10 }], abilityText: "【契約1】 【転禍為福10】 【縮化1】 【威圧10】"},
+    { name: "天律神威ノ封縛鎖", cost: 25, power: 8, abilities: [{ type: "contract", value: 3 }, { type: "lesshandcostdown", value: 10 }, { type: "costheru", value: 1 }, { type: "costup", value: 10 }], abilityText: "【契約1】 【転禍為福10】 【縮化1】 【威圧10】"},
     { name: "流麗のナギソ", cost: 1, power: 0, abilities: [{ type: "madoutanzou", value: 1, grants: [{ type: "draw", value: 1 , text: "【流水1】" }]}], abilityText: "【魔導鍛造1(流水1)】" },
     { name: "生命のナギソ", cost: 2, power: 0, abilities: [{ type: "madoutanzou", value: 2, grants: [{ type: "heal", value: 4 , text: "【神秘4】" }]}], abilityText: "【魔導鍛造2(神秘4)】" },
     { name: "飢救のナギソ", cost: 3, power: 0, abilities: [{ type: "madoutanzou", value: 1, grants: [{ type: "costdown_all", value: 1 , text: "【奇跡1】" }, { type: "heal", value: 2, text: "【神秘2】"}]}], abilityText: "【魔導鍛造1(奇跡1,神秘2)】" },
@@ -709,8 +709,8 @@ const cardPool = [
     { name: "ナギソ・コア", cost: 6, power: 0, abilities: [{ type: "kyoumei", effects: [{ type: "self_discard_select", value: 10 }, { type: "manahueru", value: 2 }, { type: "draw", value: 4 }]}, { type: "jishoburn", value: 5 }], abilityText: "【共鳴(流炎10,還元2,流水4)】 【反動5】" },
     { name: "終焉のナギソ", cost: 7, power: 0, abilities: [{ type: "kikouzouhuku", value: 15 }], abilityText: "【機巧増幅15】" },
     { name: "アナライズナギソ", cost: 1, power: 0, abilities: [{ type: "draw", value: 1 }, { type: "manahueru", value: 1 }], abilityText: "【流水1】 【還元1】" },
-    { name: "ブリッツナギソ", cost: 1, power: 2, abilities: [{ type: "burn", value: 2 }, { type: "manahueru", value: 1 }], abilityText: "【雄叫び2】 【還元1】" },
-    { name: "エンシェントナギソ", cost: 1, power: 0, abilities: [{ type: "heal", value: 4 }, { type: "manahueru", value: 1 }], abilityText: "【神秘4】 【還元1】" }
+    { name: "レディアントナギソ", cost: 0, power: 2, abilities: [{ type: "burn", value: 2 }, { type: "revengeburn", value: 2 }, { type: "manahueru", value: 1 }], abilityText: "【雄叫び2】 【逆境2】 【還元1】" },
+    { name: "エンシェントナギソ", cost: 0, power: 0, abilities: [{ type: "heal", value: 4 }, { type: "manahueru", value: 1 }], abilityText: "【神秘4】 【還元1】" }
 ]
 
 function generateId() { return Math.random().toString(36).substr(2, 9); }
@@ -1256,7 +1256,7 @@ createApp({
             if (tokenType === 'draw') { 
                 tokenName = "アナライズナギソ"; 
             } else if (tokenType === 'burn') { 
-                tokenName = "ブリッツナギソ"; 
+                tokenName = "レディアントナギソ"; 
             } else if (tokenType === 'heal') { 
                 tokenName = "エンシェントナギソ"; 
             }
