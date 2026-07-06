@@ -1201,8 +1201,19 @@ createApp({
 
             if (isPlayer) {
                 this.playerCurrentMana -= computedCost;
-                this.applyDamage(false, card.power); 
-                this.playerPlayedCountThisTurn++;
+
+const pierce = card.abilities.some(
+    ab => ab.type === "keisin" && card.power >= ab.value
+);
+
+if (pierce) {
+    this.cpuHP -= card.power;
+    this.addLog(`🗡️ 【逕侵穿突】聖域を貫通して${card.power}ダメージ！`);
+} else {
+    this.applyDamage(false, card.power);
+}
+
+this.playerPlayedCountThisTurn++;
                 
                 const targetIndex = this.playerHand.findIndex(c => c.id === card.id);
                 if (targetIndex !== -1) {
@@ -1213,8 +1224,19 @@ createApp({
                 this.scrollLog();
             } else {
                 this.cpuCurrentMana -= computedCost;
-                this.applyDamage(true, card.power); 
-                this.cpuPlayedCountThisTurn++;
+
+const pierce = card.abilities.some(
+    ab => ab.type === "keisin" && card.power >= ab.value
+);
+
+if (pierce) {
+    this.playerHP -= card.power;
+    this.addLog(`🗡️ 相手の【逕侵穿突】聖域を貫通して${card.power}ダメージ！`);
+} else {
+    this.applyDamage(true, card.power);
+}
+
+this.cpuPlayedCountThisTurn++;
                 
                 if (this.isCpuMode) {
                     const targetIndex = this.cpuHand.findIndex(c => c.id === card.id || c.name === card.name);
@@ -1662,21 +1684,6 @@ else if(type === "sennjin") {
         this.addLog(`  └【千刃${value}】相手の手札の全カードの攻撃力が ${value} 上がった！`);
     }
 }
-// 逕侵穿突nの処理
-else if(type === "keisin") {
-    // syncDataで貫通情報をチェック
-    const isPierced = syncData?.barrier_pierced === true;
-    if (isPierced) {
-        const targetBarrier = isPlayerTrigger ? 'cpuBarrier' : 'playerBarrier';
-        this[targetBarrier] = 0;
-    }
-    this.applyDamage(!isPlayerTrigger, value);
-    if (isPlayerTrigger) {
-        this.addLog(`  └【逕侵穿突${value}】${isPierced} 聖域を貫通して${value}ダメージ！`);
-    } else {
-        this.addLog(`  └【逕侵穿突${value}】${isPierced} 聖域を貫通して${value}ダメージ！`);
-    }
-} 
         },
         endPlayerTurn() {
             if(!this.isGameStarted || this.isGameOver || this.isSelectingToken) return;
