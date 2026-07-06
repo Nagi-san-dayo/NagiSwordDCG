@@ -723,7 +723,8 @@ const cardPool = [
     { name: "終焉のナギソ", cost: 7, power: 0, abilities: [{ type: "kikouzouhuku", value: 15 }], abilityText: "【機巧増幅15】", image: "images/mate.png" },
     { name: "アナライズナギソ", cost: 1, power: 0, abilities: [{ type: "draw", value: 1 }, { type: "manahueru", value: 1 }], abilityText: "【流水1】 【還元1】", image: "images/mate.png" },
     { name: "レディアントナギソ", cost: 0, power: 2, abilities: [{ type: "burn", value: 2 }, { type: "revengeburn", value: 2 }, { type: "manahueru", value: 1 }], abilityText: "【雄叫び2】 【逆境2】 【還元1】", image: "images/mate.png" },
-    { name: "エンシェントナギソ", cost: 0, power: 0, abilities: [{ type: "heal", value: 4 }, { type: "manahueru", value: 1 }], abilityText: "【神秘4】 【還元1】", image: "images/mate.png" }
+    { name: "エンシェントナギソ", cost: 0, power: 0, abilities: [{ type: "heal", value: 4 }, { type: "manahueru", value: 1 }], abilityText: "【神秘4】 【還元1】", image: "images/mate.png" },
+    { name: "千刃のナギソ", cost: 1, power: 0, abilities: [{ type: "sennjin", value: 1 }, { type: "keisin", value: 2 }], abilityText: "【千刃1】 【逕侵穿突2】", image: "images/mate.png" },
 ]
 
 function generateId() { return Math.random().toString(36).substr(2, 9); }
@@ -785,7 +786,9 @@ createApp({
                 { name: "契約X", desc: "相手にカードをX枚引かせる。" },
                 { name: "魔導鍛造X", desc: "特別な能力を付与された『ナギソブレッド』をX枚生成して手札に加える。" },
                 { name: "機巧増幅X", desc: "山札に機巧トークンを選択しX枚混ぜてシャッフルする。" },
-                { name: "共鳴", desc: "山札が奇数から偶数になるたびに発動する永続効果を得る。" }
+                { name: "共鳴", desc: "山札が奇数から偶数になるたびに発動する永続効果を得る。" },
+                { name: "千刃X", desc: "手札の全カードの攻撃力をX上げる。" },
+                { name: "逕侵穿突X", desc: "このカードの攻撃力がX以上の場合、相手の聖域を貫通してダメージを与える。" }
             ],
 
             playerHP: 30, cpuHP: 30,
@@ -901,6 +904,15 @@ createApp({
                 }
             }
         });
+        socket.on('opponent_play_card', (data) => {
+    // 貫通フラグがある場合はバリアを解除
+    if (data.syncData?.barrier_pierced) {
+        this.cpuBarrier = 0;
+    }
+    this.playCard(data.card, false, data.syncData); 
+    if (data.currentMana !== undefined) this.cpuCurrentMana = data.currentMana;
+    if (data.maxMana !== undefined) this.cpuMaxMana = data.maxMana;
+});
     },
     watch: {
         playerDeckLengthComputed(newLen, oldLen) {
@@ -1171,7 +1183,7 @@ createApp({
             const computedCost = this.getCardCost(card, isPlayer); 
             if (isPlayer && (!this.isPlayerTurn || this.playerCurrentMana < computedCost || !this.hasEnoughFlesh(card, true))) return;
 
-            let localSyncData = syncData || { chosenCardIndices: [], chosenZenjiIndices: [], discardIndex: -1 };
+            let localSyncData = syncData || { chosenCardIndices: [], chosenZenjiIndices: [], discardIndex: -1, barrier_pierced: false };
             const activeName = isPlayer ? this.userName : (this.isCpuMode ? '🤖 CPU' : '👤 相手');
             
             this.showCardNotice(activeName, card);
@@ -1228,6 +1240,12 @@ createApp({
                 socket.emit('play_card', { card: card, currentMana: this.playerCurrentMana, maxMana: this.playerMaxMana, syncData: localSyncData });
                 this.syncStateToServer(`👤 ${this.userName}が【${card.name}】を召喚！`);
             }
+// カード使用時に逕侵穿突チェック
+card.abilities.forEach(ab => {
+    if (ab.type === "keisin" && card.power >= ab.value) {
+        localSyncData.barrier_pierced = true;
+    }
+});
         },
         boostZenjiCards(cards, amount) {
             cards.forEach(c => {
@@ -1632,6 +1650,33 @@ createApp({
                     }
                 }
             }
+           // 千刃nの処理
+else if(type === "sennjin") {
+    const hand = isPlayerTrigger ? this.playerHand : (this.isCpuMode ? this.cpuHand : []);
+    hand.forEach(c => {
+        c.power += value;
+    });
+    if (isPlayerTrigger) {
+        this.addLog(`  └【千刃${value}】手札の全カードの攻撃力が ${value} 上がった！`);
+    } else {
+        this.addLog(`  └【千刃${value}】相手の手札の全カードの攻撃力が ${value} 上がった！`);
+    }
+}
+// 逕侵穿突nの処理
+else if(type === "keisin") {
+    // syncDataで貫通情報をチェック
+    const isPierced = syncData?.barrier_pierced === true;
+    if (isPierced) {
+        const targetBarrier = isPlayerTrigger ? 'cpuBarrier' : 'playerBarrier';
+        this[targetBarrier] = 0;
+    }
+    this.applyDamage(!isPlayerTrigger, value);
+    if (isPlayerTrigger) {
+        this.addLog(`  └【逕侵穿突${value}】${isPierced ? '聖域を貫通して' : ''}${value}ダメージ！`);
+    } else {
+        this.addLog(`  └【逕侵穿突${value}】${isPierced ? '聖域を貫通して' : ''}${value}ダメージ！`);
+    }
+} 
         },
         endPlayerTurn() {
             if(!this.isGameStarted || this.isGameOver || this.isSelectingToken) return;
