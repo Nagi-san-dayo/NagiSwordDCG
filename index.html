@@ -905,10 +905,6 @@ createApp({
             }
         });
         socket.on('opponent_play_card', (data) => {
-    // 貫通フラグがある場合はバリアを解除
-    if (data.syncData?.barrier_pierced) {
-        this.cpuBarrier = 0;
-    }
     this.playCard(data.card, false, data.syncData); 
     if (data.currentMana !== undefined) this.cpuCurrentMana = data.currentMana;
     if (data.maxMana !== undefined) this.cpuMaxMana = data.maxMana;
