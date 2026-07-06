@@ -422,19 +422,19 @@
         <p style="font-size: clamp(14px, 1.4vw, 20px); margin-bottom: 4vh;">山札に加えるナギソトークンを1種選択してください（{{ tokenSelectionCount }}枚追加してシャッフル）</p>
         <div style="display: flex; gap: 3vw; justify-content: center; width: 100%; max-width: 1000px; flex-wrap: wrap;">
             <div class="card playable" @click="selectToken('draw')" style="width: 230px; height: 350px; font-size: 14px !important; padding: 20px 15px;">
-                <img src="images/analyze.png" class="card-image" alt="analyze">
+                <img src="images/mate.png" class="card-image" alt="analyze">
                 <div class="card-name" style="font-size: 18px; text-overflow: clip; white-space: normal;">アナライズナギソ</div>
                 <div style="font-size: 14px; margin-bottom: 10px;">コ:1 / 攻:0</div>
                 <div class="card-ability" style="color: #007bff; font-size: 14px; margin-top: 15px;">【流水1】<br>【還元1】<br><br><span style="color:#aaa; font-size:12px; font-weight: normal;">カードを1枚引き、マナを1回復する基本機巧。</span></div>
             </div>
             <div class="card playable" @click="selectToken('burn')" style="width: 230px; height: 350px; font-size: 14px !important; padding: 20px 15px; border-color: #dc3545 !important; box-shadow: 0 0 15px rgba(220, 53, 69, 0.8) !important;">
-                <img src="images/radiant.png" class="card-image" alt="radiant">
+                <img src="images/mate.png" class="card-image" alt="radiant">
                 <div class="card-name" style="color: #ff8888; font-size: 18px; text-overflow: clip; white-space: normal;">レディアントナギソ</div>
                 <div style="font-size: 14px; margin-bottom: 10px;">コ:1 / 攻:1</div>
                 <div class="card-ability" style="color: #dc3545; font-size: 14px; margin-top: 15px;">【雄叫び2】<br>【還元1】<br><br><span style="color:#aaa; font-size:12px; font-weight: normal;">敵に1ダメージを与え、マナを1回復する攻撃機巧。</span></div>
             </div>
             <div class="card playable" @click="selectToken('heal')" style="width: 230px; height: 350px; font-size: 14px !important; padding: 20px 15px; border-color: #28a745 !important; box-shadow: 0 0 15px rgba(40, 167, 69, 0.8) !important;">
-                <img src="images/ancient.png" class="card-image" alt="ancient">
+                <img src="images/mate.png" class="card-image" alt="ancient">
                 <div class="card-name" style="color: #88ff88; font-size: 18px; text-overflow: clip; white-space: normal;">エンシェントナギソ</div>
                 <div style="font-size: 14px; margin-bottom: 10px;">コ:1 / 攻:0</div>
                 <div class="card-ability" style="color: #28a745; font-size: 14px; margin-top: 15px;">【神秘4】<br>【還元1】<br><br><span style="color:#aaa; font-size:12px; font-weight: normal;">自身の生命力を4ポイント修復し、マナを1回復する防衛機巧。</span></div>
