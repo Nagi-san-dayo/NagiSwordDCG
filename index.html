@@ -727,7 +727,7 @@ const cardPool = [
     { name: "千刃のナギソ", cost: 1, power: 0, abilities: [{ type: "sennjin", value: 1 }, { type: "keisin", value: 2 }], abilityText: "【千刃1】 【逕侵穿突2】", image: "images/mate.png" },
 ]
 
-function generateId() { return Math.random().toString(36).substr(2, 9); }
+function generateId() { return Math.random().toString(36).substr(2, 11); }
 function createCardInstance(baseCard) { 
     return { 
         ...baseCard, 
@@ -904,11 +904,6 @@ createApp({
                 }
             }
         });
-        socket.on('opponent_play_card', (data) => {
-    this.playCard(data.card, false, data.syncData); 
-    if (data.currentMana !== undefined) this.cpuCurrentMana = data.currentMana;
-    if (data.maxMana !== undefined) this.cpuMaxMana = data.maxMana;
-});
     },
     watch: {
         playerDeckLengthComputed(newLen, oldLen) {
