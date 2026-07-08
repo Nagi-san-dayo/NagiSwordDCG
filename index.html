@@ -724,7 +724,16 @@ const cardPool = [
     { name: "アナライズナギソ", cost: 1, power: 0, abilities: [{ type: "draw", value: 1 }, { type: "manahueru", value: 1 }], abilityText: "【流水1】 【還元1】", image: "images/mate.png" },
     { name: "レディアントナギソ", cost: 0, power: 2, abilities: [{ type: "burn", value: 2 }, { type: "revengeburn", value: 2 }, { type: "manahueru", value: 1 }], abilityText: "【雄叫び2】 【逆境2】 【還元1】", image: "images/mate.png" },
     { name: "エンシェントナギソ", cost: 0, power: 0, abilities: [{ type: "heal", value: 4 }, { type: "manahueru", value: 1 }], abilityText: "【神秘4】 【還元1】", image: "images/mate.png" },
-    { name: "千刃のナギソ", cost: 1, power: 0, abilities: [{ type: "sennjin", value: 1 }, { type: "keisin", value: 2 }], abilityText: "【千刃1】 【逕侵穿突2】", image: "images/mate.png" },
+    { name: "叛槍ナギソ", cost: 0, power: 0, abilities: [{ type: "sennjin", value: 1 }], abilityText: "【千刃1】", image: "images/mate.png" },
+    { name: "叛刃ナギソ", cost: 1, power: 0, abilities: [{ type: "sennjin", value: 1 }, { type: "draw", value: 1 }], abilityText: "【千刃1】 【流水1】", image: "images/mate.png" },
+    { name: "叛牙ナギソ", cost: 2, power: 0, abilities: [{ type: "sennjin", value: 1 }, { type: "heal", value: 3 }], abilityText: "【千刃1】 【神秘3】", image: "images/mate.png" },
+    { name: "叛爪ナギソ", cost: 2, power: 0, abilities: [{ type: "sennjin", value: 1 }, { type: "contract", value: 1 }, { type: "draw", value: 2 }], abilityText: "【千刃1】 【契約1】 【流水2】", image: "images/mate.png" },
+    { name: "叛鎚ナギソ", cost: 3, power: 0, abilities: [{ type: "sennjin", value: 2 }, { type: "manahueru", value: 2 }], abilityText: "【千刃2】 【還元2】", image: "images/mate.png" },
+    { name: "叛伐斧ナギソ", cost: 3, power: 0, abilities: [{ type: "sennjin", value: 2 }, { type: "madoutanzou", value: 1, grants: [{ type: "sennjin", value: 2, text: "【千刃2】"}]}], abilityText: "【千刃2】 【魔導鍛造(千刃2)】", image: "images/mate.png" },
+    { name: "叛盾斧ナギソ", cost: 4, power: 0, abilities: [{ type: "sennjin", value: 2 }, { type: "keisin", value: 4 }], abilityText: "【千刃2】 【逕侵穿突4】", image: "images/mate.png" },
+    { name: "叛棍ナギソ", cost: 5, power: 0, abilities: [{ type: "sennjin", value: 3 }, { type: "costheru", value: 1 }], abilityText: "【千刃3】 【縮化1】", image: "images/mate.png" },
+    { name: "叛断刀ナギソ", cost: 5, power: 0, abilities: [{ type: "sennjin", value: 3 }, { type: "costdown_all", value: 1 }], abilityText: "【千刃3】 【奇跡1】", image: "images/mate.png" },
+    { name: "千刃ナギソ", cost: 6, power: 0, abilities: [{ type: "sennjin", value: 3 }, { type: "madoutanzou", value: 3, grants: [{ type: "sennjin", value: 3, text: "【千刃3】"}, { type: "keisin", value: 3, text: "【逕侵穿突3】"}]}], abilityText: "【千刃3】 【魔導鍛造3(千刃3,逕侵穿突3)】", image: "images/mate.png" },
 ]
 
 function generateId() { return Math.random().toString(36).substr(2, 11); }
