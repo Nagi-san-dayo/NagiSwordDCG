@@ -634,7 +634,7 @@ const { createApp, ref, nextTick } = Vue;
 
 // 🃏 カードプールデータ (各カードに image プロパティを追加)
 const cardPool = [
-    { name: "ナギソ 試作品", cost: 1, power: 40, abilities: [], abilityText: "", image: "images/nagiso_00.png" },
+    { name: "ナギソ 試作品", cost: 1, power: 4, abilities: [], abilityText: "", image: "images/nagiso_00.png" },
     { name: "ナギソの返り血", cost: 1, power: 2, abilities: [{ type: "draw", value: 1 }], abilityText: "【流水1】", image: "images/mate.png" },
     { name: "ナギソ使役", cost: 0, power: 0, abilities: [{ type: "costheru", value: 1 }, { type: "kenko", value: 2 }], abilityText: "【縮化1】 【剣呼2】", image: "images/mate.png" },
     { name: "ナギソ指南書", cost: 3, power: 0, abilities: [{ type: "saidaimanahueru", value: 1 }, { type: "draw", value: 1 }], abilityText: "【恵沢1】 【流水1】", image: "images/mate.png" },
@@ -682,7 +682,7 @@ const cardPool = [
     { name: "澎湃轟々のナギソ", cost: 7, power: 0, abilities: [{ type: "zenjikouon", value: 1 }, { type: "karyokuhueru", value: 1 }], abilityText: "【漸次昂音1】 【連撃1】", image: "images/mate.png" },
     { name: "玲瓏のナギソ", cost: 5, power: 0, abilities: [{ type: "zenjikouon", value: 2 }, { type: "costheru", value: 1 }], abilityText: "【漸次昂音2】 【縮化1】", image: "images/mate.png" },
     { name: "鼠骨短剣ナギソ", cost: 1, power: 1, abilities: [{ type: "nie", value: 2 }, { type: "draw", value: 1 }, { type: "revengeburn", value: 2 }], abilityText: "【贄2】 【流水1】 【逆境2】", image: "images/mate.png" },
-    { name: "兎骨懐剣ナギソ", cost: 2, power: 1, abilities: [{ type: "nie", value: 3 }, { type: "burn", value: 2 }], abilityText: "【贄2】 【雄叫び2】", image: "images/mate.png" },
+    { name: "兎骨懐剣ナギソ", cost: 2, power: 1, abilities: [{ type: "nie", value: 3 }, { type: "burn", value: 2 }], abilityText: "【贄3】 【雄叫び2】", image: "images/mate.png" },
     { name: "犬骨盾剣ナギソ", cost: 3, power: 4, abilities: [{ type: "nie", value: -2 }, { type: "costup", value: 1 },], abilityText: "【贄-2】 【威圧1】", image: "images/mate.png" },
     { name: "猫骨細剣ナギソ", cost: 2, power: 3, abilities: [{ type: "nie", value: -2 }, { type: "draw", value: 2 }], abilityText: "【贄-2】 【流水2】", image: "images/mate.png" },
     { name: "牛骨太刀ナギソ", cost: 4, power: 0, abilities: [{ type: "nie", value: 4 }, { type: "heal", value: 5 }, { type: "draw", value: 1 }], abilityText: "【贄4】 【神秘5】 【流水1】", image: "images/mate.png" },
@@ -690,7 +690,7 @@ const cardPool = [
     { name: "狼骨双剣ナギソ", cost: 4, power: 4, abilities: [{ type: "nie", value: -2 }, { type: "burn", value: 3 }, { type: "discard", value: 1 }], abilityText: "【贄-2】 【雄叫び3】 【罪1】", image: "images/mate.png" },
     { name: "熊骨突剣ナギソ", cost: 7, power: 8, abilities: [{ type: "nie", value: -4 }, { type: "burn", value: 5 }, { type: "manadestroy", value: 2 }, { type: "costup", value: 1 }], abilityText: "【贄-4】 【雄叫び5】 【崩壊2】 【威圧1】", image: "images/mate.png" },
     { name: "鯨骨長太刀ナギソ", cost: 7, power: 4, abilities: [{ type: "nie", value: 5 }, { type: "zenjikouon", value: 1 }, { type: "manahueru", value: 2 }], abilityText: "【贄5】 【漸次昂音1】 【還元2】", image: "images/mate.png" },
-    { name: "獅子骨大剣ナギソ", cost: 0, power: 9, abilities: [{ type: "nie", value: -9 }, { type: "burn", value: 7 }, { type: "revengeburn", value: 5 }, { type: "costup", value: 3 }, { type: "manadestroy", value: 3 }], abilityText: "【贄-9】 【雄叫び7】 【逆境5】 【威圧3】 【崩壊3】", image: "images/mate.png" },
+    { name: "獅子骨大剣ナギソ", cost: 0, power: 9, abilities: [{ type: "nie", value: -15 }, { type: "burn", value: 7 }, { type: "revengeburn", value: 5 }, { type: "costup", value: 3 }, { type: "manadestroy", value: 3 }], abilityText: "【贄-9】 【雄叫び7】 【逆境5】 【威圧3】 【崩壊3】", image: "images/mate.png" },
     { name: "血契のナギソ", cost: 1, power: 2, abilities: [{ type: "contract", value: 1 }, { type: "draw", value: 1 }], abilityText: "【契約1】 【流水1】", image: "images/mate.png" },
     { name: "宿痾のナギソ", cost: 1, power: 2, abilities: [{ type: "contract", value: 1 }, { type: "heal", value: 3 }, { type: "self_discard_select", value: 1 }], abilityText: "【契約1】 【神秘3】 【流炎1】", image: "images/mate.png" },
     { name: "瞬刻のナギソ", cost: 2, power: 3, abilities: [{ type: "contract", value: 1 }, { type: "lesshandcostdown", value: 2 }, { type: "self_discard_select", value: 1 }], abilityText: "【契約1】 【転禍為福2】 【流炎1】", image: "images/mate.png" },
@@ -734,7 +734,7 @@ const cardPool = [
     { name: "叛棍ナギソ", cost: 5, power: 0, abilities: [{ type: "sennjin", value: 2 }, { type: "costheru", value: 1 }], abilityText: "【千刃2】 【縮化1】", image: "images/mate.png" },
     { name: "叛断刀ナギソ", cost: 5, power: 0, abilities: [{ type: "sennjin", value: 3 }, { type: "costdown_all", value: 1 }], abilityText: "【千刃3】 【奇跡1】", image: "images/mate.png" },
     { name: "千刃ナギソ", cost: 7, power: 0, abilities: [{ type: "sennjin", value: 3 }, { type: "madoutanzou", value: 3, grants: [{ type: "sennjin", value: 3, text: "【千刃3】"}, { type: "keisin", value: 3, text: "【逕侵穿突3】"}]}], abilityText: "【千刃3】 【魔導鍛造3(千刃3,逕侵穿突3)】", image: "images/mate.png" },
-    { name: "恨鴉骨槍ナギソ", cost: 3, power: 0, abilities: [{ type: "nie", value: 5 }, { type: "jishoburn", value: 2 }], abilityText: "【贄5】 【反動2】", image: "images/mate.png" },
+    { name: "恨鴉骨槍ナギソ", cost: 3, power: 0, abilities: [{ type: "nie", value: 4 }, { type: "jishoburn", value: 2 }], abilityText: "【贄】 【反動2】", image: "images/mate.png" },
     { name: "犀骨盾斧ナギソ", cost: 4, power: 4, abilities: [{ type: "nie", value: -2 }, { type: "burn", value: 12 }], abilityText: "【贄-2】 【雄叫び12】", image: "images/mate.png" },
 ]
 
