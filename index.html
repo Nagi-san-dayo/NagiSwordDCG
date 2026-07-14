@@ -641,7 +641,7 @@ const cardPool = [
     { name: "ナギソの研磨", cost: 2, power: 2, abilities: [{ type: "manahueru", value: 2 }], abilityText: "【還元2】", image: "images/mate.png" },
     { name: "ナギソの分割", cost: 5, power: 3, abilities: [{ type: "costheru", value: 1 }, { type: "draw", value: 1 }], abilityText: "【縮化1】 【流水1】", image: "images/mate.png" },
     { name: "ナギソの手入れ", cost: 2, power: 0, abilities: [{ type: "costheru", value: 1 }, { type: "draw", value: 1 }], abilityText: "【縮化1】 【流水1】", image: "images/mate.png" },
-    { name: "双剣ナギソ", cost: 3, power: 0, abilities: [{ type: "karyokuhueru", value: 1 }], abilityText: "【連撃1】", image: "images/nagiso_07.png" },
+    { name: "双剣ナギソ", cost: 2, power: 0, abilities: [{ type: "karyokuhueru", value: 1 }], abilityText: "【連撃1】", image: "images/nagiso_07.png" },
     { name: "ナギソ封印書", cost: 2, power: 3, abilities: [{ type: "draw", value: 1 }, { type: "manahueru", value: 1 }], abilityText: "【流水1】 【還元1】", image: "images/mate.png" },
     { name: "炎剣ナギソ", cost: 2, power: 5, abilities: [{ type: "burn", value: 3 }, { type: "jishoburn", value: 3 }], abilityText: "【雄叫び3】 【反動3】", image: "images/mate.png" },
     { name: "魔剣ナギソ", cost: 10, power: 30, abilities: [], abilityText: "", image: "images/nagiso_10.png" },
@@ -652,7 +652,7 @@ const cardPool = [
     { name: "内喰みのナギソ", cost: 7, power: 0, abilities: [{ type: "manadestroy", value: 2 }], abilityText: "【崩壊2】", image: "images/mate.png" },
     { name: "嫌悪のナギソ", cost: 3, power: 0, abilities: [{ type: "costup", value: 1 }], abilityText: "【威圧1】", image: "images/mate.png" },
     { name: "ナギソの破片", cost: 4, power: 0, abilities: [{ type: "heal", value: 3 }, { type: "saidaimanahueru", value: 1}, { type: "draw", value: 1 }], abilityText: "【神秘3】 【恵沢1】 【流水1】", image: "images/mate.png" },
-    { name: "魔剣アクセサリー", cost: 40, power: 0, abilities: [{ type: "costheru", value: 1},{ type: "karyokuhueru", value: 3 }], abilityText: "【縮化1】 【連撃3】", image: "images/mate.png" },
+    { name: "魔剣アクセサリー", cost: 20, power: 0, abilities: [{ type: "costheru", value: 1},{ type: "karyokuhueru", value: 3 }], abilityText: "【縮化1】 【連撃3】", image: "images/mate.png" },
     { name: "ナギソブレッド", cost: 0, power: 2, abilities: [{ type: "jishoburn", value: 2 }], abilityText: "【反動2】", image: "images/mate.png" },
     { name: "ナギソの叫び", cost: 7, power: 0, abilities: [{ type: "costheru", value: 1 }, { type: "kenko", value: 5 }],abilityText: "【縮化1】 【剣呼5】", image: "images/mate.png" },
     { name: "願望のナギソ", cost: 9, power: 0, abilities: [{ type: "costheru", value: 1 }, { type: "draw", value: 2 }],abilityText: "【縮化1】 【流水2】", image: "images/mate.png" },
@@ -736,6 +736,7 @@ const cardPool = [
     { name: "千刃ナギソ", cost: 7, power: 0, abilities: [{ type: "sennjin", value: 3 }, { type: "madoutanzou", value: 3, grants: [{ type: "sennjin", value: 3, text: "【千刃3】"}, { type: "keisin", value: 3, text: "【逕侵穿突3】"}]}], abilityText: "【千刃3】 【魔導鍛造3(千刃3,逕侵穿突3)】", image: "images/mate.png" },
     { name: "恨鴉骨槍ナギソ", cost: 3, power: 0, abilities: [{ type: "nie", value: 4 }, { type: "jishoburn", value: 2 }], abilityText: "【贄4】 【反動2】", image: "images/mate.png" },
     { name: "犀骨盾斧ナギソ", cost: 4, power: 4, abilities: [{ type: "nie", value: -2 }, { type: "burn", value: 12 }], abilityText: "【贄-2】 【雄叫び12】", image: "images/mate.png" },
+    { name: "ナギソの侵攻", cost: 12, power: 0, abilities: [{ type: "costheru", value: 1 }, { type: "kyoumei", effects: [{ type: "madoutanzou", value: 1, grants: [{ type: "heal", value: 2, text: "【神秘2】" }, { type: "kikouzouhuku", value: 2, text: "【機巧増幅2】"}]}]}], abilityText: "【縮化1】 【共鳴(魔導鍛造1(神秘2,機巧増幅2))】", image: "images/mate.png" },
 ]
 
 function generateId() { return Math.random().toString(36).substr(2, 11); }
