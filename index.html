@@ -738,6 +738,16 @@ const cardPool = [
     { name: "犀骨盾斧ナギソ", cost: 4, power: 4, abilities: [{ type: "nie", value: -2 }, { type: "burn", value: 12 }], abilityText: "【贄-2】 【雄叫び12】", image: "images/mate.png" },
     { name: "ナギソの侵攻", cost: 12, power: 0, abilities: [{ type: "costheru", value: 1 }, { type: "kyoumei", effects: [{ type: "madoutanzou", value: 1, grants: [{ type: "heal", value: 2, text: "【神秘2】" }, { type: "kikouzouhuku", value: 2, text: "【機巧増幅2】"}]}]}], abilityText: "【縮化1】 【共鳴(魔導鍛造1(神秘2,機巧増幅2))】", image: "images/mate.png" },
     { name: "鎮静のナギソ", cost: 6, power: 0, abilities: [{ type: "lesshandcostdown", value: 4 }, { type: "self_discard_select", value: 1 }, { type: "heal", value: 8 }, { type: "barrier", value: 2 }], abilityText: "【転禍為福4】 【流炎1】 【神秘8】 【聖域2】", image: "images/mate.png" },
+    { name: "煌宵のナギソ", cost: 1, power: 0, abilities: [{ type: "onmyo_in", value: 1 }, { type: "draw", value: 1 }], abilityText: "【陰陽・陰1】 【流水1】", image: "images/mate.png" },
+    { name: "瞑闇のナギソ", cost: 2, power: 0, abilities: [{ type: "onmyo_yo", value: 1 }, { type: "burn", value: 1 }], abilityText: "【陰陽・陽1】 【雄叫び1】", image: "images/mate.png" },
+    { name: "理気のナギソ", cost: 3, power: 0, abilities: [{ type: "onmyo_yo", value: 2 }, { type: "sennjin", value: 1 }, { type: "draw", value: 2 }], abilityText: "【陰陽・陽2】 【千刃1】 【流水2】", image: "images/mate.png" },
+    { name: "双極のナギソ", cost: 4, power: 0, abilities: [{ type: "onmyo_in", value: 2 }, { type: "discard", value: 1 }], abilityText: "【陰陽・陰2】 【罪1】", image: "images/mate.png" },
+    { nmae: "幽明のナギソ", cost: 5, power: 3, abilities: [{ type: "onmyo_yo", value: 3 }, { type: "saidaimanahueru", value: 1 }, { type: "heal", value: 3 }], abilityText: "【陰陽・陽3】 【恵沢1】 【神秘3】", image: "images/mate.png" },
+    { name: "輪廻のナギソ", cost: 6, power: 4, abilities: [{ type: "onmyo_in", value: 3 }, { type: "costup", value: 1 }, { type: "revengeburn", value: 5 }], abilityText: "【陰陽・陰3】 【威圧1】 【逆境5】", image: "images/mate.png" },
+    { name: "天廻のナギソ", cost: 7, power: 0, abilities: [{ type: "onmyo_yo", value: 4 }, { type: "costdown_all", value: 1 }, { type: "barrier", value: 2 }], abilityText: "【陰陽・陽4】 【奇跡1】 【聖域2】", image: "images/mate.png" },
+    { name: "黒蝕のナギソ", cost: 8, power: 8, abilities: [{ type: "onmyo_in", value: 4 }, { type: "lesshandcostdown", value: 4 }, { type: "manadestroy", value: 1 }], abilityText: "【陰陽・陰4】 【転禍為福4】 【崩壊1】", image: "images/mate.png" },
+    { name: "雷狼のナギソ", cost: 9, power: 0, abilities: [{ type: "onmyo_yo", value: 5 }, { type: "manahueru", value: 4 }, { type: "draw", value: 2 }, { type: "costdown_all", value: 2 }, { type: "heal", value: 10 }], abilityText: "【陰陽・陽5】 【還元4】 【流水2】 【奇跡2】 【神秘10】", image: "images/mate.png" },
+    { name: "天嵐ノ刀【雨津】", cost: 10, power: 5, abilities: [{ type: "onmyo_in", value: 5 }, { type: "revengeburn", value: 10 }, { type: "burn", value: 5 }, { type: "karyokuhueru", value: 1 }, { type: "keisin", value: 8 }], abilityText: "【陰陽・陰5】 【逆境10】 【雄叫び5】 【連撃1】 【逕侵穿突8】", iage: "images/mate.png" },
 ]
 
 function generateId() { return Math.random().toString(36).substr(2, 11); }
@@ -801,7 +811,10 @@ createApp({
                 { name: "機巧増幅X", desc: "山札に機巧トークンを選択しX枚混ぜてシャッフルする。" },
                 { name: "共鳴", desc: "山札が奇数から偶数になるたびに発動する永続効果を得る。" },
                 { name: "千刃X", desc: "手札の全カードの攻撃力をX上げる。" },
-                { name: "逕侵穿突X", desc: "このカードの攻撃力がX以上の場合、相手の聖域を貫通してダメージを与える。" }
+                { name: "逕侵穿突X", desc: "このカードの攻撃力がX以上の場合、相手の聖域を貫通してダメージを与える。" },
+                { name: "陰陽・陰X", desc: "プール内から『陰陽・陽』を持つカードをランダムに1枚生成し、その効果の数値を+Xして手札に加える。" },
+                { name: "陰陽・陽X", desc: "プール内から『陰陽・陰』を持つカードをランダムに1枚生成し、その攻撃力を+Xして手札に加える。" },
+
             ],
 
             playerHP: 30, cpuHP: 30,
@@ -1187,7 +1200,7 @@ createApp({
             const computedCost = this.getCardCost(card, isPlayer); 
             if (isPlayer && (!this.isPlayerTurn || this.playerCurrentMana < computedCost || !this.hasEnoughFlesh(card, true))) return;
 
-            let localSyncData = syncData || { chosenCardIndices: [], chosenZenjiIndices: [], discardIndex: -1, barrier_pierced: false };
+            let localSyncData = syncData || { chosenCardIndices: [], chosenZenjiIndices: [], chosenOnmyoIndices: [], discardIndex: -1, barrier_pierced: false };
             const activeName = isPlayer ? this.userName : (this.isCpuMode ? '🤖 CPU' : '👤 相手');
             
             this.showCardNotice(activeName, card);
@@ -1200,6 +1213,14 @@ createApp({
                             localSyncData.chosenCardIndices.push(Math.floor(Math.random() * 30));
                         }
                     }
+                            else if (ab.type === "onmyo_in") {
+            const yoCards = this.cardPool.map((c, i) => ({c, i})).filter(item => item.c.abilities.some(a => a.type === "onmyo_yo"));
+            if (yoCards.length > 0) localSyncData.chosenOnmyoIndices.push(yoCards[Math.floor(Math.random() * yoCards.length)].i);
+        }
+        else if (ab.type === "onmyo_yo") {
+            const inCards = this.cardPool.map((c, i) => ({c, i})).filter(item => item.c.abilities.some(a => a.type === "onmyo_in"));
+            if (inCards.length > 0) localSyncData.chosenOnmyoIndices.push(inCards[Math.floor(Math.random() * inCards.length)].i);
+        }
                 });
             }
 
@@ -1688,6 +1709,65 @@ else if(type === "sennjin") {
         this.addLog(`  └【千刃${value}】相手の手札の全カードの攻撃力が ${value} 上がった！`);
     }
 }
+// ▼ 新能力：陰陽（隠/陽）の処理を追加 ▼
+else if (type === "onmyo_in" || type === "onmyo_yo") {
+    const isYin = type === "onmyo_in";
+    const targetType = isYin ? "onmyo_yo" : "onmyo_in";
+    const typeName = isYin ? "陰陽・陰" : "陰陽・陽";
+    const targetName = isYin ? "陰陽・陽" : "陰陽・陰";
+
+    this.addLog(isPlayerTrigger ? `  └【${typeName}${value}】${targetName}のカードを生成！` : `  └【${typeName}${value}】相手が${targetName}のカードを生成！`);
+
+    let targetIndex = -1;
+
+    if (this.isCpuMode) {
+        // CPU戦モード: 完全ランダム
+        const validCards = this.cardPool.map((c, i) => ({c, i})).filter(item => item.c.abilities.some(a => a.type === targetType));
+        if (validCards.length > 0) targetIndex = validCards[Math.floor(Math.random() * validCards.length)].i;
+    } else {
+        // オンライン戦モード: 生成済みの乱数インデックスを消費して完全同期
+        if (syncData && syncData.chosenOnmyoIndices && syncData.chosenOnmyoIndices.length > 0) {
+            targetIndex = syncData.chosenOnmyoIndices.shift();
+        }
+    }
+
+    if (targetIndex !== -1) {
+        let newCard = createCardInstance(this.cardPool[targetIndex]);
+        
+        if (isYin) {
+            // 陰陽・隠の効果：アビリティの数値を強化
+            newCard.abilities.forEach(a => {
+                if (a.value !== undefined) a.value += value;
+            });
+            // テキスト表記も更新
+            if (newCard.abilityText) {
+                newCard.abilityText = newCard.abilityText.replace(/\d+/g, (m) => parseInt(m) + value);
+            }
+        } else {
+            // 陰陽・陽の効果：攻撃力を強化
+            newCard.power += value;
+        }
+
+        // 手札に追加
+        if (isPlayerTrigger) {
+            if (this.playerHand.length < this.maxHandSize) {
+                this.playerHand.push(newCard);
+            } else {
+                this.addLog(`🔥 手札満杯のため生成カードが燃破した！`);
+            }
+        } else {
+            if (!this.isCpuMode) {
+                if (this.cpuHandLength < this.maxHandSize) this.cpuHandLength++;
+                else this.addLog(`🔥 相手の手札が上限(10枚)を超えているため、カードが1枚燃破した！`);
+            } else {
+                if (this.cpuHand.length < this.maxHandSize) this.cpuHand.push(newCard);
+            }
+        }
+    } else {
+        this.addLog(`⚠️ 生成可能な${targetName}のカードがプールに存在しませんでした。`);
+    }
+}
+
         },
         endPlayerTurn() {
             if(!this.isGameStarted || this.isGameOver || this.isSelectingToken) return;
