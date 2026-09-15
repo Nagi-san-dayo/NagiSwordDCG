@@ -729,7 +729,7 @@ const cardPool = [
     { name: "叛牙ナギソ", cost: 2, power: 0, abilities: [{ type: "sennjin", value: 1 }, { type: "heal", value: 3 }], abilityText: "【千刃1】 【神秘3】", image: "images/mate.png" },
     { name: "叛爪ナギソ", cost: 3, power: 0, abilities: [{ type: "sennjin", value: 1 }, { type: "contract", value: 1 }, { type: "draw", value: 2 }], abilityText: "【千刃1】 【契約1】 【流水2】", image: "images/mate.png" },
     { name: "叛鎚ナギソ", cost: 3, power: 0, abilities: [{ type: "sennjin", value: 2 }, { type: "manahueru", value: 2 }], abilityText: "【千刃2】 【還元2】", image: "images/mate.png" },
-    { name: "叛伐斧ナギソ", cost: 3, power: 0, abilities: [{ type: "madoutanzou", value: 1, grants: [{ type: "sennjin", value: 2, text: "【千刃2】"}]}], abilityText: "【魔導鍛造(千刃2)】", image: "images/mate.png" },
+    { name: "叛伐斧ナギソ", cost: 3, power: 0, abilities: [{ type: "madoutanzou", value: 1, grants: [{ type: "sennjin", value: 2, text: "【千刃2】"}]}], abilityText: "【魔導鍛造1(千刃2)】", image: "images/mate.png" },
     { name: "叛盾斧ナギソ", cost: 4, power: 0, abilities: [{ type: "sennjin", value: 2 }, { type: "keisin", value: 4 }], abilityText: "【千刃2】 【逕侵穿突4】", image: "images/mate.png" },
     { name: "叛棍ナギソ", cost: 5, power: 0, abilities: [{ type: "sennjin", value: 2 }, { type: "costheru", value: 1 }], abilityText: "【千刃2】 【縮化1】", image: "images/mate.png" },
     { name: "叛断刀ナギソ", cost: 5, power: 0, abilities: [{ type: "sennjin", value: 3 }, { type: "costdown_all", value: 1 }], abilityText: "【千刃3】 【奇跡1】", image: "images/mate.png" },
@@ -748,6 +748,17 @@ const cardPool = [
     { name: "黒蝕のナギソ", cost: 8, power: 8, abilities: [{ type: "onmyo_in", value: 4 }, { type: "lesshandcostdown", value: 4 }, { type: "manadestroy", value: 1 }], abilityText: "【陰陽・陰4】 【転禍為福4】 【崩壊1】", image: "images/mate.png" },
     { name: "雷狼のナギソ", cost: 9, power: 0, abilities: [{ type: "onmyo_yo", value: 5 }, { type: "manahueru", value: 4 }, { type: "draw", value: 2 }, { type: "costdown_all", value: 2 }, { type: "heal", value: 10 }], abilityText: "【陰陽・陽5】 【還元4】 【流水2】 【奇跡2】 【神秘10】", image: "images/mate.png" },
     { name: "天嵐ノ刀【雨津】", cost: 10, power: 5, abilities: [{ type: "onmyo_in", value: 5 }, { type: "revengeburn", value: 10 }, { type: "burn", value: 5 }, { type: "karyokuhueru", value: 1 }, { type: "keisin", value: 8 }], abilityText: "【陰陽・陰5】 【逆境10】 【雄叫び5】 【連撃1】 【逕侵穿突8】", image: "images/mate.png" },
+    { name: "不撓のナギソ", cost: 0, power: 0, abilities: [{ type: "fuwa", value: 1 }, { type: "self_discard_select", value: 2 }, { type: "draw", value: 2 }], abilityText: "【不和1】 【流炎2】 【流水2】", image: "images/mate.png" },
+    { name: "不同のナギソ", cost: 0, power: 0, abilities: [{ type: "fuwa", value: 2 }, { type: "kenko", value: 3 }], abilityText: "【不和2】 【剣呼3】",image: "images/mate.png" },
+    { name: "不燃のナギソ", cost: 1, power: 0, abilities: [{ type: "fuwa", value: 2 }, { type: "draw", value: 3 }], abilityText: "【不和2】 【流水3】",image: "images/mate.png" },
+    { name: "不自由のナギソ", cost: 2, power: 0, abilities: [{ type: "fuwa", value: 2 }, { type: "contract", value: 7 }], abilityText: "【不和2】 【契約7】",image: "images/mate.png" },
+    { name: "不動のナギソ", cost: 2, power: 3, abilities: [{ type: "fuwa", value: 2 }, { type: "barrier", value: 2 }], abilityText: "【不和2】 【聖域2】",image: "images/mate.png" },
+    { name: "不壊のナギソ", cost: 2, power: 0, abilities: [{ type: "fuwa", value: 1 }, { type: "zenjikouon", value: 1 }, { type: "saidaimanahueru" , value: 1 }], abilityText: "【不和1】 【漸次昂音1】 【恵沢1】",image: "images/mate.png" },
+    { name: "不朽のナギソ", cost: 5, power: 3, abilities: [{ type: "fuwa", value: 3 }, { type: "madoutanzou", value: 9, grants: [{ type: "heal", value: 1, text: "【神秘1】" }, { type: "revengeburn", value: 1, text: "【逆境1】"}]}], abilityText: "【不和3】 【魔導鍛造9(神秘1,逆境1)】",image: "images/mate.png" },
+    { name: "不全のナギソ", cost: 6, power: 2, abilities: [{ type: "fuwa", value: 2 }, { type: "costheru", value: 6 }, { type: "karyokuhueru", value: 2 }], abilityText: "【不和2】 【縮化6】 【連撃2】",image: "images/mate.png" },
+    { name: "不幸のナギソ", cost: 10, power: 0, abilities: [{ type: "fuwa", value: 3 }, { type: "lesshandcostdown", value: 5 }, { type: "discard", value: 3 }, { type: "manadestroy", value: 2 }, { type: "costup", value: 2 }], abilityText: "【不和3】 【転禍為福5】 【罪3】 【崩壊2】 【威圧2】",image: "images/mate.png" },
+    { name: "一神のナギソ", cost: 13, power: 0, abilities: [{ type: "fuwa", value: 1 }, { type: "zenjikouon", value: 1 }, { type: "lesshandcostdown", value: 4 }, { type: "heal", value: 1 }, { type: "costdown_all", value: 1 }, { type: "barrier", value: 1 }], abilityText: "【不和1】 【漸次昂音1】 【転禍為福4】 【神秘1】 【奇跡1】 【聖域1】",image: "images/mate.png" },
+
 ]
 
 function generateId() { return Math.random().toString(36).substr(2, 11); }
@@ -814,6 +825,8 @@ createApp({
                 { name: "逕侵穿突X", desc: "このカードの攻撃力がX以上の場合、相手の聖域を貫通してダメージを与える。" },
                 { name: "陰陽・陰X", desc: "プール内から『陰陽・陽』を持つカードをランダムに1枚生成し、その効果の数値を+Xして手札に加える。" },
                 { name: "陰陽・陽X", desc: "プール内から『陰陽・陰』を持つカードをランダムに1枚生成し、その攻撃力を+Xして手札に加える。" },
+                { name: "不和X", desc: "デッキから不和を持つカードをX枚捨てる。" },
+
 
             ],
 
@@ -1765,6 +1778,35 @@ else if (type === "onmyo_in" || type === "onmyo_yo") {
         }
     } else {
         this.addLog(`⚠️ 生成可能な${targetName}のカードがプールに存在しませんでした。`);
+    }
+}
+else if(type === "fuwa") {
+    if (isPlayerTrigger) {
+        let discardedCount = 0;
+        // 配列のズレを防ぐため、デッキの末尾から検索して削除
+        for (let i = this.playerDeck.length - 1; i >= 0 && discardedCount < value; i--) {
+            if (this.playerDeck[i].abilities.some(a => a.type === "fuwa")) {
+                this.playerDeck.splice(i, 1);
+                discardedCount++;
+            }
+        }
+        this.addLog(`  └【不和${value}】デッキから不和を持つカードを ${discardedCount} 枚捨てた！`);
+    } else {
+        if (this.isCpuMode) {
+            let discardedCount = 0;
+            for (let i = this.cpuDeck.length - 1; i >= 0 && discardedCount < value; i--) {
+                if (this.cpuDeck[i].abilities.some(a => a.type === "fuwa")) {
+                    this.cpuDeck.splice(i, 1);
+                    discardedCount++;
+                }
+            }
+            this.addLog(`  └【不和${value}】相手がデッキから不和を持つカードを ${discardedCount} 枚捨てた！`);
+        } else {
+            // オンライン対戦時の相手側処理（相手の正確なデッキ内容はクライアント側にないため、山札の枚数のみを減らす）
+            const reduction = Math.min(this.cpuDeckLength, value);
+            this.cpuDeckLength = Math.max(0, this.cpuDeckLength - reduction);
+            this.addLog(`  └【不和${value}】相手がデッキから不和を持つカードを捨てた！`);
+        }
     }
 }
 
