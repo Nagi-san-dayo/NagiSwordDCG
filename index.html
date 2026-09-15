@@ -596,12 +596,12 @@
             <div class="hand-container">
                 <div v-for="card in playerHand" :key="card.id" 
                      class="card" 
-                     :class="{ 
-                         'playable': !isSpectator && isPlayerTurn && !isGameOver && !isSelectingDiscard && playerCurrentMana >= getCardCost(card, true) && hasEnoughFlesh(card, true) && !isSelectingToken, 
-                         'disabled': isSpectator || !isPlayerTurn || isGameOver || isSelectingToken || (!isSelectingDiscard && (playerCurrentMana < getCardCost(card, true) || !hasEnoughFlesh(card, true))),
-                         'discard-target': isSelectingDiscard && pendingCardToPlay && card.id !== pendingCardToPlay.id,
-                         'discard-selected': pendingDiscardIds.includes(card.id)
-                     }"
+                :class="{ 
+                 'playable': !isSpectator && isPlayerTurn && !isGameOver && !isSelectingDiscard && playerCurrentMana >= getCardCost(card, true) && hasEnoughFlesh(card, true) && hasEnoughTomoshibi(card) && !isSelectingToken, 
+                 'disabled': isSpectator || !isPlayerTurn || isGameOver || isSelectingToken || (!isSelectingDiscard && (playerCurrentMana < getCardCost(card, true) || !hasEnoughFlesh(card, true) || !hasEnoughTomoshibi(card))),
+                 'discard-target': isSelectingDiscard && pendingCardToPlay && card.id !== pendingCardToPlay.id,
+                 'discard-selected': pendingDiscardIds.includes(card.id)
+                }"
                      @click="!isSpectator && handleHandCardClick(card)">
                     <img :src="card.image" class="card-image" alt="card-img">
                     <div class="card-name">{{ card.name }}</div>
@@ -826,8 +826,7 @@ createApp({
                 { name: "陰陽・陰X", desc: "プール内から『陰陽・陽』を持つカードをランダムに1枚生成し、その効果の数値を+Xして手札に加える。" },
                 { name: "陰陽・陽X", desc: "プール内から『陰陽・陰』を持つカードをランダムに1枚生成し、その攻撃力を+Xして手札に加える。" },
                 { name: "不和X", desc: "デッキから不和を持つカードをX枚捨てる。" },
-
-
+                { name: "灯火X", desc: "自分のターン中にマナが回復（還元、ターン開始時の回復）した時、この数値を-1する。灯火が0になるとこのカードを使えるようになる。" },
             ],
 
             playerHP: 30, cpuHP: 30,
@@ -1182,7 +1181,7 @@ createApp({
                 return;
             }
 
-            if (!this.isPlayerTurn || this.isGameOver || this.playerCurrentMana < this.getCardCost(card, true) || !this.hasEnoughFlesh(card, true)) return;
+            if (!this.isPlayerTurn || this.isGameOver || this.playerCurrentMana < this.getCardCost(card, true) || !this.hasEnoughFlesh(card, true) || !this.hasEnoughTomoshibi(card)) return;
 
             const needsDiscard = card.abilities.find(a => a.type === "self_discard_select");
             if (needsDiscard && this.playerHand.length > 1) {
@@ -1502,8 +1501,10 @@ card.abilities.forEach(ab => {
                 else this.cpuCurrentMana = Math.min(this.cpuMaxMana, this.cpuCurrentMana + value);
                 if (isPlayerTrigger) {
                     this.addLog(`  └【還元${value}】マナが ${value} 回復！`);
+                    this.reduceTomoshibia(true);
                 } else {
                     this.addLog(`  └【還元${value}】相手のマナが ${value} 回復！`);
+                    if (this.isCpuMode) this.reduceTomoshibi(false);
                 }
             } 
             else if(type === "saidaimanahueru") {
@@ -1823,6 +1824,7 @@ else if(type === "fuwa") {
                 this.addLog("=== CPUのターン ===");
                 this.cpuMaxMana = Math.min(this.totalMaxManaLimit, this.cpuMaxMana + 1);
                 this.cpuCurrentMana = this.cpuMaxMana;
+                this.reduveTomoshibi(true);
                 this.drawCard(false);
                 setTimeout(() => { this.cpuAction(); }, 1200);
             } else {
@@ -1854,6 +1856,7 @@ else if(type === "fuwa") {
             
             this.playerMaxMana = Math.min(this.totalMaxManaLimit, this.playerMaxMana + 1);
             this.playerCurrentMana = this.playerMaxMana;
+            this.reduceTomoshibi(true);
 
             if (this.isFirstTurn) {
                 this.addLog("※先攻1ターン目のためドローはありません。");
@@ -1930,6 +1933,50 @@ else if(type === "fuwa") {
             if (this.gameMode === 'online_room') return 'ルームマッチ';
             if (this.gameMode === 'spectate') return '観戦モード';
             return '';
+        },
+                hasEnoughTomoshibi(card) {
+            const t = card.abilities.find(a => a.type === "tomoshibi");
+            return !t || t.value <= 0;
+        },
+        reduceTomoshibi(isPlayer) {
+            let hand = isPlayer ? this.playerHand : this.cpuHand;
+            let reduced = false;
+            hand.forEach(c => {
+                const t = c.abilities.find(a => a.type === "tomoshibi");
+                if (t && t.value > 0) {
+                    t.value = Math.max(0, t.value - 1);
+                    // テキスト上の数値もリアルタイムで減らして視覚的にわかりやすくする
+                    if (c.abilityText) {
+                        c.abilityText = c.abilityText.replace(/【灯火\d+】/, `【灯火${t.value}】`);
+                    }
+                    reduced = true;
+                }
+            });
+            if (reduced && isPlayer) {
+                this.addLog(`🔥 マナ回復により、手札の【灯火】が進行した！`);
+            }
+        },
+        hasEnoughTomoshibi(card) {
+            const t = card.abilities.find(a => a.type === "tomoshibi");
+            return !t || t.value <= 0;
+        },
+        reduceTomoshibi(isPlayer) {
+            let hand = isPlayer ? this.playerHand : this.cpuHand;
+            let reduced = false;
+            hand.forEach(c => {
+                const t = c.abilities.find(a => a.type === "tomoshibi");
+                if (t && t.value > 0) {
+                    t.value = Math.max(0, t.value - 1);
+                    // テキスト上の数値もリアルタイムで減らして視覚的にわかりやすくする
+                    if (c.abilityText) {
+                        c.abilityText = c.abilityText.replace(/【灯火\d+】/, `【灯火${t.value}】`);
+                    }
+                    reduced = true;
+                }
+            });
+            if (reduced && isPlayer) {
+                this.addLog(`🔥 マナ回復により、手札の【灯火】が進行した！`);
+            }
         },
         enemyDisplayName() { return this.isSpectator ? this.p2Name : (this.isCpuMode ? '🤖 CPU' : '👤 对戦相手'); },
         playerDisplayName() { return this.isSpectator ? this.p1Name : this.userName; },
