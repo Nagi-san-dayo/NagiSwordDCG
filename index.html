@@ -597,8 +597,8 @@
                 <div v-for="card in playerHand" :key="card.id" 
                      class="card" 
                      :class="{ 
-                         'playable': !isSpectator && isPlayerTurn && !isGameOver && !isSelectingDiscard && playerCurrentMana >= getCardCost(card, true) && hasEnoughFlesh(card, true) && !isSelectingToken, 
-                         'disabled': isSpectator || !isPlayerTurn || isGameOver || isSelectingToken || (!isSelectingDiscard && (playerCurrentMana < getCardCost(card, true) || !hasEnoughFlesh(card, true))),
+                         'playable': !isSpectator && isPlayerTurn && !isGameOver && !isSelectingDiscard && playerCurrentMana >= getCardCost(card, true) && hasEnoughFlesh(card, true) && isTomoshibiReady(card) && !isSelectingToken, 
+                         'disabled': isSpectator || !isPlayerTurn || isGameOver || isSelectingToken || !isTomoshibiReady(card) || (!isSelectingDiscard && (playerCurrentMana < getCardCost(card, true) || !hasEnoughFlesh(card, true))),
                          'discard-target': isSelectingDiscard && pendingCardToPlay && card.id !== pendingCardToPlay.id,
                          'discard-selected': pendingDiscardIds.includes(card.id)
                      }"
@@ -758,6 +758,17 @@ const cardPool = [
     { name: "不全のナギソ", cost: 6, power: 2, abilities: [{ type: "fuwa", value: 2 }, { type: "costheru", value: 6 }, { type: "karyokuhueru", value: 2 }], abilityText: "【不和2】 【縮化6】 【連撃2】",image: "images/mate.png" },
     { name: "不幸のナギソ", cost: 10, power: 0, abilities: [{ type: "fuwa", value: 3 }, { type: "lesshandcostdown", value: 5 }, { type: "discard", value: 3 }, { type: "manadestroy", value: 2 }, { type: "costup", value: 2 }], abilityText: "【不和3】 【転禍為福5】 【罪3】 【崩壊2】 【威圧2】",image: "images/mate.png" },
     { name: "一神のナギソ", cost: 13, power: 0, abilities: [{ type: "fuwa", value: 1 }, { type: "zenjikouon", value: 1 }, { type: "lesshandcostdown", value: 4 }, { type: "heal", value: 1 }, { type: "costdown_all", value: 1 }, { type: "barrier", value: 1 }], abilityText: "【不和1】 【漸次昂音1】 【転禍為福4】 【神秘1】 【奇跡1】 【聖域1】",image: "images/mate.png" },
+    { name: "微光のナギソ", cost: 1, power: 0, abilities: [{ type: "manahueru", value: 1 }, { type: "kenko", value: 1 }], abilityText: "【還元1】 【剣呼1】", image: "images/mate.png" },
+    { name: "ナギソ松明", cost: 1, power: 1, abilities: [{ type: "tomoshibi", value: 2 }, { type: "manahueru", value: 1 }, { type: "draw", value: 1 }], abilityText: "【灯火2】 【還元1】 【流水1】", image: "images/mate.png" },
+    { name: "ナギソ灯油", cost: 2, power: 0, abilities: [{ type: "manahueru", value: 1 }, { type: "heal", value: 2 }, { type: "draw", value: 1 }], abilityText: "【還元1】 【神秘2】 【流水1】", image: "images/mate.png" },
+    { name: "明暗のナギソ", cost: 2, power: 0, abilities: [{ type: "tomoshibi", value: 4 }, { type: "manahueru", value: 2 }, { type: "saidaimanahueru", value: 1 }], abilityText: "【灯火4】 【還元2】 【恵沢1】", image: "images/mate.png" },
+    { name: "灯台のナギソ", cost: 3, power: 5, abilities: [{ type: "tomoshibi", value: 3 }, { type: "contract", value: 1 }, { type: "draw", value: 3 }], abilityText: "【灯火3】 【契約1】 【流水3】", image: "images/mate.png" },
+    { name: "源命のナギソ", cost: 3, power: 0, abilities: [{ type: "tomoshibi", value: 7 }, { type: "madoutanzou", value: 3, grants: [{ type: "manahueru", value: 1, text: "【還元1】" }, { type: "heal", value: 2, text: "【神秘2】" }]}], abilityText: "【灯火7】 【魔導鍛造3(還元1,神秘2)】", image: "images/mate.png" },
+    { name: "証明のナギソ", cost: 3, power: 0, abilities: [{ type: "tomoshibi", value: 3 }, { type: "kikouzouhuku", value: 8 }], abilityText: "【灯火3】 【機巧増幅8】", image: "images/mate.png" },
+    { name: "月明のナギソ", cost: 6, power: 4, abilities: [{ type: "tomoshibi", value: 5 }, { type: "costup", value: 2 }, { type: "manahueru", value: 2 }], abilityText: "【灯火5】 【威圧2】 【還元2】", image: "images/mate.png" },
+    { name: "白昼夢のナギソ", cost: 5, power: 7, abilities: [{ type: "tomoshibi", value: 15 }, { type: "manadestroy", value: 10 }, { type: "barrier", value: 5 }], abilityText: "【灯火15】 【崩壊10】 【聖域5】", image: "images/mate.png" },
+    { name: "黒昼照のナギソ", cost: 8, power: 8, abilities: [{ type: "tomoshibi", value: 8 }, { type: "deckdestroy", value: 10 }, { type: "manahueru", value: 8 }], abilityText: "【灯火8】 【罰10】 【還元8】", image: "images/mate.png" },
+
 
 ]
 
@@ -826,8 +837,7 @@ createApp({
                 { name: "陰陽・陰X", desc: "プール内から『陰陽・陽』を持つカードをランダムに1枚生成し、その効果の数値を+Xして手札に加える。" },
                 { name: "陰陽・陽X", desc: "プール内から『陰陽・陰』を持つカードをランダムに1枚生成し、その攻撃力を+Xして手札に加える。" },
                 { name: "不和X", desc: "デッキから不和を持つカードをX枚捨てる。" },
-
-
+                { name: "灯火X", desc: "手札にある時、自分のターン開始時および『還元』発動時に数値が1減る。数値が0の時のみこのカードを使用できる。" },
             ],
 
             playerHP: 30, cpuHP: 30,
@@ -957,6 +967,35 @@ createApp({
         }
     },
     methods: {
+                isTomoshibiReady(card) {
+            const tomoshibi = card.abilities.find(a => a.type === "tomoshibi");
+            // 灯火が存在し、かつ数値が1以上なら使用不可
+            if (tomoshibi && tomoshibi.value > 0) return false;
+            return true;
+        },
+        reduceTomoshibi(isPlayer) {
+            if (!isPlayer && !this.isCpuMode) return false;
+            let hand = isPlayer ? this.playerHand : this.cpuHand;
+            let reduced = false;
+            
+            hand.forEach(c => {
+                const tomoshibi = c.abilities.find(ab => ab.type === "tomoshibi");
+                if (tomoshibi && tomoshibi.value > 0) {
+                    tomoshibi.value--;
+                    reduced = true;
+                    // 表示用テキストの更新 (【灯火X】を【灯火X-1】に書き換え)
+                    if (c.abilityText) {
+                        c.abilityText = c.abilityText.replace(/【灯火(\d+)】/, `【灯火${tomoshibi.value}】`);
+                    }
+                }
+            });
+            
+            // オンライン対応：変更があればサーバーに同期
+            if (reduced && isPlayer && !this.isCpuMode && !this.isSpectator) {
+                 this.syncStateToServer();
+            }
+            return reduced;
+        },
         formatAbility(text) {
             if (!text) return "";
             return text.replace(/[\s　]+/g, '<br>');
@@ -1181,8 +1220,7 @@ createApp({
                 }
                 return;
             }
-
-            if (!this.isPlayerTurn || this.isGameOver || this.playerCurrentMana < this.getCardCost(card, true) || !this.hasEnoughFlesh(card, true)) return;
+            if (!this.isPlayerTurn || this.isGameOver || this.playerCurrentMana < this.getCardCost(card, true) || !this.hasEnoughFlesh(card, true) || !this.isTomoshibiReady(card)) return;
 
             const needsDiscard = card.abilities.find(a => a.type === "self_discard_select");
             if (needsDiscard && this.playerHand.length > 1) {
@@ -1210,8 +1248,10 @@ createApp({
                 if (!this.cpuHand.some(c => c.id === card.id || c.name === card.name)) return;
             }
 
-            const computedCost = this.getCardCost(card, isPlayer); 
-            if (isPlayer && (!this.isPlayerTurn || this.playerCurrentMana < computedCost || !this.hasEnoughFlesh(card, true))) return;
+           
+const computedCost = this.getCardCost(card, isPlayer); 
+if (isPlayer && (!this.isPlayerTurn || this.playerCurrentMana < computedCost || !this.hasEnoughFlesh(card, true) || !this.isTomoshibiReady(card))) return;
+
 
             let localSyncData = syncData || { chosenCardIndices: [], chosenZenjiIndices: [], chosenOnmyoIndices: [], discardIndex: -1, barrier_pierced: false };
             const activeName = isPlayer ? this.userName : (this.isCpuMode ? '🤖 CPU' : '👤 相手');
@@ -1497,15 +1537,24 @@ card.abilities.forEach(ab => {
                     this.addLog(`  └【雄叫び${value}】あなたに ${value} ダメージ！`);
                 }
             } 
-            else if(type === "manahueru") {
+                        else if(type === "manahueru") {
                 if(isPlayerTrigger) this.playerCurrentMana = Math.min(this.playerMaxMana, this.playerCurrentMana + value);
                 else this.cpuCurrentMana = Math.min(this.cpuMaxMana, this.cpuCurrentMana + value);
                 if (isPlayerTrigger) {
                     this.addLog(`  └【還元${value}】マナが ${value} 回復！`);
+                    // ★追加：還元の発動によって自分の灯火を減らす
+                    if(this.reduceTomoshibi(true)) {
+                        this.addLog(`  └✨ 還元発動により、手札の【灯火】が減少した！`);
+                    }
                 } else {
                     this.addLog(`  └【還元${value}】相手のマナが ${value} 回復！`);
+                    // ★追加：還元の発動によって相手（CPU時のみ）の灯火を減らす
+                    if(this.isCpuMode && this.reduceTomoshibi(false)) {
+                        this.addLog(`  └✨ 還元発動により、相手の手札の【灯火】が減少した！`);
+                    }
                 }
             } 
+
             else if(type === "saidaimanahueru") {
                 if(isPlayerTrigger) this.playerMaxMana = Math.min(this.totalMaxManaLimit, this.playerMaxMana + value);
                 else this.cpuMaxMana = Math.min(this.totalMaxManaLimit, this.cpuMaxMana + value);
@@ -1849,6 +1898,16 @@ else if(type === "fuwa") {
         endCpuTurn() {
             if(!this.isGameStarted || this.isGameOver) return;
             this.isPlayerTurn = true;
+            // あなたのターン開始時
+if (this.reduceTomoshibi(true)) {
+    this.addLog(`✨ ターン開始により、手札の【灯火】が減少した！`);
+}
+
+// CPUのターン開始時 (CPUモードの場合)
+if (this.isCpuMode && this.reduceTomoshibi(false)) {
+    this.addLog(`✨ ターン開始により、相手の手札の【灯火】が減少した！`);
+}
+
             this.cpuPlayedCountThisTurn = 0;
             this.addLog(`=== あなたのターン ===`);
             
