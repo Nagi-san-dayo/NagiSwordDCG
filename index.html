@@ -768,7 +768,6 @@ const cardPool = [
     { name: "月明のナギソ", cost: 6, power: 4, abilities: [{ type: "tomoshibi", value: 5 }, { type: "costup", value: 2 }, { type: "manahueru", value: 2 }], abilityText: "【灯火5】 【威圧2】 【還元2】", image: "images/mate.png" },
     { name: "白昼夢のナギソ", cost: 5, power: 7, abilities: [{ type: "tomoshibi", value: 15 }, { type: "manadestroy", value: 10 }, { type: "barrier", value: 5 }], abilityText: "【灯火15】 【崩壊10】 【聖域5】", image: "images/mate.png" },
     { name: "黒昼照のナギソ", cost: 8, power: 8, abilities: [{ type: "tomoshibi", value: 8 }, { type: "deckdestroy", value: 10 }, { type: "manahueru", value: 8 }], abilityText: "【灯火8】 【罰10】 【還元8】", image: "images/mate.png" },
-    { name: "呪泥のナギソ", cost: 2, power: 0, abilities: [{ type: "osen", value: 5 }], abilityText: "【汚染5】", image: "images/mate.png"}
 ]
 
 function generateId() { return Math.random().toString(36).substr(2, 11); }
@@ -837,7 +836,6 @@ createApp({
                 { name: "陰陽・陽X", desc: "プール内から『陰陽・陰』を持つカードをランダムに1枚生成し、その攻撃力を+Xして手札に加える。" },
                 { name: "不和X", desc: "デッキから不和を持つカードをX枚捨てる。" },
                 { name: "灯火X", desc: "手札にある時、自分のターン開始時および『還元』発動時に数値が1減る。数値が0の時のみこのカードを使用できる。" },
-                { name: "汚染X", desc: "相手の山札に「汚染トークン(5/0/引いた時マナ-1)」をX枚埋めてシャッフルする。" },
             ],
 
             playerHP: 30, cpuHP: 30,
@@ -1151,13 +1149,6 @@ createApp({
                     return;
                 } 
                 let drawnCard = this.playerDeck.shift();
-// --- 汚染トークンを引いた時の処理 ---
-if (drawnCard.name === "汚染トークン") {
-    this.playerCurrentMana = Math.max(0, this.playerCurrentMana - 1);
-    this.addLog(`⚠️ 【汚染トークン】を引いた!マナが1減少した!`);
-}
-// ------------------------------------
-
 if (this.playerHand.length < this.maxHandSize) {
     this.playerHand.push(drawnCard);
                 } else {
@@ -1167,14 +1158,6 @@ if (this.playerHand.length < this.maxHandSize) {
                 if (this.isCpuMode) {
                     if (this.cpuDeck.length === 0) { this.addLog(`💀 【LO】相手の山札が0枚のため勝利しました。`); this.cpuHP = 0; this.checkWinLose(); return; }
                    let drawnCard = this.cpuDeck.shift();
-
-// --- CPUが汚染トークンを引いた時の処理 ---
-if (drawnCard.name === "汚染トークン") {
-    this.cpuCurrentMana = Math.max(0, this.cpuCurrentMana - 1);
-    this.addLog(`⚠️ 相手が【汚染トークン】を引いた!相手のマナが1減少した!`);
-}
-// ------------------------------------------
-
 if (this.cpuHand.length < this.maxHandSize) {
     this.cpuHand.push(drawnCard);
                     } else {
@@ -1360,39 +1343,7 @@ card.abilities.forEach(ab => {
     if (ab.type === "keisin" && card.power >= ab.value) {
         localSyncData.barrier_pierced = true;
     }
-    if (ab.type === "osen") {
-    let tokens = [];
-    // 汚染の数値分トークンを生成
-    for (let i = 0; i < ab.value; i++) {
-        tokens.push(createCardInstance({
-            name: "汚染トークン",
-            cost: 5,
-            power: 0,
-            abilities: [],
-            abilityText: "還元-1",
-            image: "images/mate.png"
-        }));
-    }
-    
-    if (isPlayer) {
-        if (this.isCpuMode) {
-            // CPU戦: ローカルにある相手(CPU)のデッキに追加してシャッフル
-            this.cpuDeck.push(...tokens);
-            this.cpuDeck = shuffle(this.cpuDeck);
-        } else {
-            // オンライン戦: 実際の追加処理は相手のクライアント側で isPlayer=false として実行されるため、こちらは表示上のデッキ枚数のみを加算
-            this.cpuDeckLength += ability.value;
-        }
-        this.addLog(`☠️ 相手の山札に【汚染トークン】を${ability.value}枚埋め込んでシャッフルした！`);
-    } else {
-        // 相手(CPU・オンラインの相手)が汚染を使用した場合: 自分のデッキに追加してシャッフル
-        this.playerDeck.push(...tokens);
-        this.playerDeck = shuffle(this.playerDeck);
-        this.addLog(`⚠️ あなたの山札に【汚染トークン】を${ability.value}枚埋め込まれた！`);
-    }
-}
-});
-        },
+        });
         boostZenjiCards(cards, amount) {
             cards.forEach(c => {
                 const hasZenji = c.abilities.some(ab => ab.type === "zenjikouon");
@@ -1412,7 +1363,7 @@ card.abilities.forEach(ab => {
                     }
                 }
             });
-        },
+        };
         reduceCost(isPlayer, playedCardId = null) {
             if(!isPlayer && !this.isCpuMode) return; 
             let hand = isPlayer ? this.playerHand : this.cpuHand;
