@@ -1154,7 +1154,7 @@ createApp({
 // --- 汚染トークンを引いた時の処理 ---
 if (drawnCard.name === "汚染トークン") {
     this.playerCurrentMana = Math.max(0, this.playerCurrentMana - 1);
-    this.addLog(`⚠️ 【汚染トークン】を引いた！マナが1減少した！`);
+    this.addLog(`⚠️ 【汚染トークン】を引いた!マナが1減少した!`);
 }
 // ------------------------------------
 
@@ -1171,20 +1171,20 @@ if (this.playerHand.length < this.maxHandSize) {
 // --- CPUが汚染トークンを引いた時の処理 ---
 if (drawnCard.name === "汚染トークン") {
     this.cpuCurrentMana = Math.max(0, this.cpuCurrentMana - 1);
-    this.addLog(`⚠️ 相手が【汚染トークン】を引いた！相手のマナが1減少した！`);
+    this.addLog(`⚠️ 相手が【汚染トークン】を引いた!相手のマナが1減少した!`);
 }
 // ------------------------------------------
 
 if (this.cpuHand.length < this.maxHandSize) {
     this.cpuHand.push(drawnCard);
                     } else {
-                        this.addLog(`🔥 相手の手札が上限(10枚)を超えているため、カードが1枚燃破した！`);
+                        this.addLog(`🔥 相手の手札が上限(10枚)を超えているため、カードが1枚燃破した!`);
                     }
                 } else {
                     if (this.cpuHandLength < this.maxHandSize) {
                         this.cpuHandLength++;
                     } else {
-                        this.addLog(`🔥 相手の手札が上限(10枚)を超えているため、カードが1枚燃破した！`);
+                        this.addLog(`🔥 相手の手札が上限(10枚)を超えているため、カードが1枚燃破した!`);
                     }
                     this.cpuDeckLength--;
                 }
@@ -1360,10 +1360,10 @@ card.abilities.forEach(ab => {
     if (ab.type === "keisin" && card.power >= ab.value) {
         localSyncData.barrier_pierced = true;
     }
-    if (ability.type === "osen") {
+    if (ab.type === "osen") {
     let tokens = [];
     // 汚染の数値分トークンを生成
-    for (let i = 0; i < ability.value; i++) {
+    for (let i = 0; i < ab.value; i++) {
         tokens.push(createCardInstance({
             name: "汚染トークン",
             cost: 5,
