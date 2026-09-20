@@ -1360,6 +1360,37 @@ card.abilities.forEach(ab => {
     if (ab.type === "keisin" && card.power >= ab.value) {
         localSyncData.barrier_pierced = true;
     }
+    if (ability.type === "osen") {
+    let tokens = [];
+    // 汚染の数値分トークンを生成
+    for (let i = 0; i < ability.value; i++) {
+        tokens.push(createCardInstance({
+            name: "汚染トークン",
+            cost: 5,
+            power: 0,
+            abilities: [],
+            abilityText: "還元-1",
+            image: "images/mate.png"
+        }));
+    }
+    
+    if (isPlayer) {
+        if (this.isCpuMode) {
+            // CPU戦: ローカルにある相手(CPU)のデッキに追加してシャッフル
+            this.cpuDeck.push(...tokens);
+            this.cpuDeck = shuffle(this.cpuDeck);
+        } else {
+            // オンライン戦: 実際の追加処理は相手のクライアント側で isPlayer=false として実行されるため、こちらは表示上のデッキ枚数のみを加算
+            this.cpuDeckLength += ability.value;
+        }
+        this.addLog(`☠️ 相手の山札に【汚染トークン】を${ability.value}枚埋め込んでシャッフルした！`);
+    } else {
+        // 相手(CPU・オンラインの相手)が汚染を使用した場合: 自分のデッキに追加してシャッフル
+        this.playerDeck.push(...tokens);
+        this.playerDeck = shuffle(this.playerDeck);
+        this.addLog(`⚠️ あなたの山札に【汚染トークン】を${ability.value}枚埋め込まれた！`);
+    }
+}
 });
         },
         boostZenjiCards(cards, amount) {
