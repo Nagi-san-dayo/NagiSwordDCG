@@ -29,7 +29,7 @@ let roomWaiting = {}; // ルームマッチ待機用（選手）
 let rooms = {};       // 稼働中の全ゲームルームの状態管理用
 
 // Discord Webhookの設定
-const DISCORD_WEBHOOK_URL = process.env.DISCORD_WEBHOOK_URL || 'https://discord.com/api/webhooks/1518900355314876436/7Z5OzTyRuWKGs41wvBD_JglIhQTt-ollfXOhezA7wDn1aObo38nZZNHC-ct1AWbCQKmG';
+const DISCORD_WEBHOOK_URL = process.env.DISCORD_WEBHOOK_URL;
 
 async function notifyDiscord(message) {
   if (!DISCORD_WEBHOOK_URL) return;
