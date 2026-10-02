@@ -1,0 +1,105 @@
+# index.html を更新すると、Godot 版（unityroom 用）の index.pck を自動で作る。
+#
+# - main に push されたとき: リリース「godot-latest」の index.pck を差し替える
+#   https://github.com/<このリポジトリ>/releases/download/godot-latest/index.pck
+# - プルリクエストのとき: 実行結果ページの「Artifacts」から index.pck をダウンロードできる（マージ前の確認用）
+# - Actions タブの「Run workflow」から手動でも実行できる
+name: Godot 版ビルド
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - index.html
+      - images/**
+      - godot/**
+      - .github/workflows/godot.yml
+  pull_request:
+    paths:
+      - index.html
+      - images/**
+      - godot/**
+      - .github/workflows/godot.yml
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: godot-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  GODOT_VERSION: 4.6.2
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+
+      - name: Godot と Web 用エクスポートテンプレートを用意
+        id: godot-cache
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/godot
+            ~/.local/share/godot/export_templates
+          key: godot-${{ env.GODOT_VERSION }}-web
+
+      - name: Godot をダウンロード
+        if: steps.godot-cache.outputs.cache-hit != 'true'
+        run: |
+          base="https://github.com/godotengine/godot/releases/download/${GODOT_VERSION}-stable"
+          mkdir -p ~/godot
+          curl -fsSL -o /tmp/godot.zip "$base/Godot_v${GODOT_VERSION}-stable_linux.x86_64.zip"
+          unzip -q /tmp/godot.zip -d ~/godot
+          mv ~/godot/Godot_v${GODOT_VERSION}-stable_linux.x86_64 ~/godot/godot
+          curl -fsSL -o /tmp/templates.tpz "$base/Godot_v${GODOT_VERSION}-stable_export_templates.tpz"
+          # 使うのは Web（スレッドなし）のテンプレートだけ（キャッシュを小さくするため）
+          unzip -q /tmp/templates.tpz 'templates/web_nothreads_*' 'templates/icudt_godot.dat' 'templates/version.txt' -d /tmp
+          dest=~/.local/share/godot/export_templates/${GODOT_VERSION}.stable
+          mkdir -p "$dest"
+          mv /tmp/templates/* "$dest/"
+
+      - name: index.html からカードデータを反映
+        run: node godot/tools/sync_from_html.mjs
+
+      - name: リソースを読み込み
+        run: ~/godot/godot --headless --path godot --import
+
+      - name: CPU 戦の自動テスト（全カード入りのランダムデッキ込みで 60 試合）
+        run: |
+          ~/godot/godot --headless --path godot -s tests/sim.gd 2>&1 | tee /tmp/sim.log
+          grep -q "SIM RESULTS" /tmp/sim.log
+          if grep -q "SCRIPT ERROR" /tmp/sim.log; then
+            echo "::error::テスト中にスクリプトエラーが出ました（上のログを確認してください）"
+            exit 1
+          fi
+
+      - name: Web 版をエクスポート
+        run: |
+          mkdir -p godot/build/web
+          ~/godot/godot --headless --path godot --export-release "Web" build/web/index.html
+          test -s godot/build/web/index.pck
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: index-pck
+          path: godot/build/web/index.pck
+
+      - name: リリース「godot-latest」を更新
+        if: github.event_name != 'pull_request' && github.ref == 'refs/heads/main'
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh release delete godot-latest --cleanup-tag --yes || true
+          gh release create godot-latest godot/build/web/index.pck \
+            --target "$GITHUB_SHA" \
+            --title "Godot 版（unityroom 用 index.pck）" \
+            --notes "index.html の最新内容（$(git log -1 --format='%h %s')）からビルドした index.pck です。unityroom のゲーム投稿画面からアップロードしてください。"
