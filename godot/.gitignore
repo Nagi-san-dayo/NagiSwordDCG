@@ -1,0 +1,6 @@
+.godot/
+build/
+
+# tools/sync_from_html.mjs が index.html から生成する（index.html が唯一の正）
+data/
+images/
