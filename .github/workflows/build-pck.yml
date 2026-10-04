@@ -20,19 +20,15 @@ jobs:
 
       - name: PCKファイルの作成（全ファイル対象）
         run: |
-          # 1. パッキングしたいファイルだけをまとめる専用フォルダを作成
           mkdir build_target
-          
-          # 2. rsyncコマンドを使って、全ファイルを build_target にコピー
-          # ※ .gitフォルダや.githubフォルダ、ダウンロードしたツール自体は除外します
           rsync -av --exclude='.git' --exclude='.github' --exclude='godotpcktool' --exclude='build_target' ./ build_target/
-          
-          # 3. フォルダ内に移動して、中身をすべて（*）パッキングする
           cd build_target
-          ../godotpcktool ../game_full.pck -a a *
+          # 出力ファイル名を game_full.pck から index.pck に変更
+          ../godotpcktool ../index.pck -a a *
 
       - name: 成果物(PCK)をGitHubに保存
         uses: actions/upload-artifact@v4
         with:
-          name: game-full-pck
-          path: game_full.pck
+          name: index-pck-file
+          path: index.pck
+
