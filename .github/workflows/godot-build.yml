@@ -1,0 +1,44 @@
+name: Package Node Server & Godot Web
+
+on:
+  push:
+    branches:
+      - main
+  workflow_dispatch:
+
+jobs:
+  build-and-package:
+    runs-on: ubuntu-latest
+    steps:
+      - name: リポジトリのコードをチェックアウト
+        uses: actions/checkout@v4
+
+      - name: Node.jsのセットアップ
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20' # Node.jsのバージョンはお好みに合わせて
+
+      - name: サーバー環境の準備とパッケージ化
+        run: |
+          # デプロイ用のフォルダを作成
+          mkdir -p release
+          
+          # リポジトリ内の必要なファイルを release フォルダにコピー
+          # （※ファイルがリポジトリの直下にある想定です）
+          cp *.pck release/ || true
+          cp *.wasm release/ || true
+          cp *.js release/ || true   # server.jsやGodotの起動JSを含む
+          cp index.html release/ || true
+          cp package.json release/ || true
+          
+          # パッケージのインストール (package.jsonがある場合)
+          cd release
+          if [ -f "package.json" ]; then
+            npm install --production
+          fi
+
+      - name: ビルド結果の保存 (Artifact)
+        uses: actions/upload-artifact@v4
+        with:
+          name: web-server-package
+          path: release/
