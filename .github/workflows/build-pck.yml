@@ -1,6 +1,5 @@
-name: Auto Build PCK
+name: Auto Build PCK (No Godot Binary)
 
-# index.html か server.js が更新された時だけ実行する
 on:
   push:
     paths:
@@ -8,26 +7,29 @@ on:
       - 'server.js'
 
 jobs:
-  build:
+  build-pck-tool:
     runs-on: ubuntu-latest
     steps:
       - name: リポジトリをチェックアウト
         uses: actions/checkout@v4
 
-      - name: Godotエンジンのダウンロード (例としてv4.2.1)
-        run: |
-          wget https://github.com/godotengine/godot/releases/download/4.7.1-stable/Godot_v4.7.1-stable_linux.x86_64.zip
-          unzip Godot_v4.7.1-stable_linux.x86_64.zip
-          mv Godot_v4.7.1-stable_linux.x86_64 godot_cli
-          chmod +x godot_cli
+      - name: Pythonのセットアップ
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.10'
 
-      - name: PCKファイルの出力
+      - name: PCKパッキングツールの取得（例: godot-pck-tool）
         run: |
-          # "Web" の部分は export_presets.cfg で設定した名前に合わせる
-          ./godot_cli --headless --export-pack "Web" update_data.pck
+          git clone https://github.com/hhyyry/godot-pck-tool.git
+          pip install -r godot-pck-tool/requirements.txt
+
+      - name: 指定ファイルをPCKにパッキング
+        run: |
+          # ツールを使用して index.html と server.js だけをPCK化するコマンド例
+          python godot-pck-tool/pck.py pack update_data.pck index.html server.js
 
       - name: 成果物(PCK)をGitHubに保存
         uses: actions/upload-artifact@v4
         with:
-          name: pck-file
+          name: mod-pck-file
           path: update_data.pck
