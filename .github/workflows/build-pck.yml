@@ -29,13 +29,11 @@ jobs:
         run: |
           mkdir -p build
           
-          # 1. アセットの事前インポート（Godot4系の自動ビルドで必須の処理）
-          ./Godot_v4.7.1-stable_linux.x86_64 --headless --editor --quit || true
+          # 1. 事前インポートを実行
+          ./Godot_v4.7.1-stable_linux.x86_64 --headless --editor --quit
           
-          # 2. 絶対パス（フルパス）でプロジェクトを指定してPCKを書き出す
-          PROJECT_DIR=$(pwd)
-          ./Godot_v4.7.1-stable_linux.x86_64 --headless --path "$PROJECT_DIR" --export-pack "Web" "$PROJECT_DIR/build/game.pck"
-
+          # 2. Godot 4の正しい順序（--pathを先に、プリセット名と出力先を後に指定）
+          ./Godot_v4.7.1-stable_linux.x86_64 --headless --path . --export-pack "Web" build/game.pck
 
       - name: Upload PCK as Artifact
         uses: actions/upload-artifact@v4
