@@ -1,4 +1,4 @@
-name: Build for unityroom
+name: Zip for unityroom
 
 on:
   push:
@@ -12,29 +12,14 @@ jobs:
       - name: リポジトリのコードを取得
         uses: actions/checkout@v4
 
-      - name: Godotのセットアップ
-        uses: chickensoft-games/setup-godot@v2
-        with:
-          version: 4.2.1 # ※実際のGodotのバージョンに合わせてください
-          use-dotnet: false
-          include-templates: true
-
-      - name: Web(HTML5)用エクスポート
-        run: |
-          mkdir -p build/web
-          godot --headless --export-release "Web" build/web/index.html
-
-      - name: カスタムファイルの結合
-        run: |
-          cp index.html build/web/index.html
-
       - name: unityroom用のZIPファイルを作成
         run: |
-          cd build/web
-          zip -r ../unityroom_game.zip *
+          # リポジトリ内のすべてのファイルをZIP化します
+          # （※GitHub用の管理ファイルや、unityroomで動かない server.js は除外します）
+          zip -r unityroom_game.zip . -x "*.git*" -x ".github/*" -x "server.js"
 
       - name: ZIPファイルをGitHubに保存（ダウンロード用）
         uses: actions/upload-artifact@v4
         with:
           name: unityroom-zip
-          path: build/unityroom_game.zip
+          path: unityroom_game.zip
