@@ -28,8 +28,14 @@ jobs:
       - name: Export PCK for unityroom
         run: |
           mkdir -p build
-          # Web設定を使って直接 .pck ファイルのみを書き出す
-          ./Godot_v4.7.1-stable_linux.x86_64 --headless --path . --export-pack "Web" build/game.pck
+          
+          # 1. アセットの事前インポート（Godot4系の自動ビルドで必須の処理）
+          ./Godot_v4.7.1-stable_linux.x86_64 --headless --editor --quit || true
+          
+          # 2. 絶対パス（フルパス）でプロジェクトを指定してPCKを書き出す
+          PROJECT_DIR=$(pwd)
+          ./Godot_v4.7.1-stable_linux.x86_64 --headless --path "$PROJECT_DIR" --export-pack "Web" "$PROJECT_DIR/build/game.pck"
+
 
       - name: Upload PCK as Artifact
         uses: actions/upload-artifact@v4
