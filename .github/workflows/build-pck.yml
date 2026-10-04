@@ -1,4 +1,4 @@
-name: Godot Web Build and Deploy
+name: Generate Godot PCK
 
 on:
   push:
@@ -6,27 +6,33 @@ on:
       - main
 
 jobs:
-  export:
+  export-pck:
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout Source Code
-        uses: actions/checkout@v3
+      - name: Checkout Code
+        uses: actions/checkout@v4
 
-      - name: Export Godot Web Build
-        id: build
-        uses: firebelley/godot-export@v5.2.1
+      - name: Download Godot & Templates
+        run: |
+          # Godot 4.7.1本体のダウンロードと実行権限の付与
+          wget -q https://github.com/godotengine/godot/releases/download/4.7.1-stable/Godot_v4.7.1-stable_linux.x86_64.zip
+          unzip Godot_v4.7.1-stable_linux.x86_64.zip
+          chmod +x Godot_v4.7.1-stable_linux.x86_64
+          
+          # エクスポートテンプレートのダウンロードと正規フォルダへの配置
+          wget -q https://github.com/godotengine/godot/releases/download/4.7.1-stable/Godot_v4.7.1-stable_export_templates.tpz
+          unzip Godot_v4.7.1-stable_export_templates.tpz
+          mkdir -p ~/.local/share/godot/export_templates/4.7.1.stable
+          mv templates/* ~/.local/share/godot/export_templates/4.7.1.stable/
+
+      - name: Export PCK for unityroom
+        run: |
+          mkdir -p build
+          # Web設定を使って直接 .pck ファイルのみを書き出す
+          ./Godot_v4.7.1-stable_linux.x86_64 --headless --path . --export-pack "Web" build/game.pck
+
+      - name: Upload PCK as Artifact
+        uses: actions/upload-artifact@v4
         with:
-          godot_executable_download_url: https://github.com/godotengine/godot/releases/download/4.7.1-stable/Godot_v4.7.1-stable_linux.x86_64.zip
-          godot_export_templates_download_url: https://github.com/godotengine/godot/releases/download/4.7.1-stable/Godot_v4.7.1-stable_export_templates.tpz
-          relative_project_path: ./
-          archive_output: false
-
-          export_debug: false
-          use_preset_export_path: false
-          export_preset_name: "HTML5" # export_presets.cfgに設定した名前
-
-      - name: Deploy to GitHub Pages
-        uses: peaceiris/actions-gh-pages@v3
-        with:
-          github_token: ${{ secrets.GITHUB_TOKEN }}
-          publish_dir: ./build # ビルドされたファイル（.html, .wasm, .pckなど）が出力されるディレクトリ
+          name: unityroom-pck-file
+          path: build/game.pck
