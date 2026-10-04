@@ -1,0 +1,36 @@
+name: Auto Build PCK
+
+# index.html か server.js が更新された時だけ実行する
+on:
+  push:
+    paths:
+      - 'index.html'
+      - 'server.js'
+
+jobs:
+  build-pck:
+    runs-on: ubuntu-latest
+    steps:
+      - name: リポジトリをチェックアウト
+        uses: actions/checkout@v4
+
+      - name: GodotPckToolのダウンロードとセットアップ
+        run: |
+          # ツール（Linux版バイナリ）の最新版をダウンロードして実行権限を付与
+          wget https://github.com/hhyyrylainen/GodotPckTool/releases/latest/download/godotpcktool
+          chmod +x godotpcktool
+
+      - name: PCKファイルの作成
+        run: |
+          # index.html と server.js を update_data.pck の中にパッキングする
+          # ※デフォルトでGodot 4系のPCKとして作成されます
+          ./godotpcktool update_data.pck -a a index.html server.js
+
+          # 【補足】もしGodot 3.x系のプロジェクトで読み込ませたい場合は、以下のようバージョンを指定してください
+          # ./godotpcktool update_data.pck -a a index.html server.js --set-godot-version 3.5.0
+
+      - name: 成果物(PCK)をGitHubに保存
+        uses: actions/upload-artifact@v4
+        with:
+          name: update-data-pck # ダウンロード時のZipファイル名になります
+          path: update_data.pck
