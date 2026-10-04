@@ -1,0 +1,33 @@
+name: Auto Build PCK
+
+# index.html か server.js が更新された時だけ実行する
+on:
+  push:
+    paths:
+      - 'index.html'
+      - 'server.js'
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: リポジトリをチェックアウト
+        uses: actions/checkout@v4
+
+      - name: Godotエンジンのダウンロード (例としてv4.2.1)
+        run: |
+          wget https://github.com/godotengine/godot/releases/download/4.7.1-stable/Godot_v4.7.1-stable_linux.x86_64.zip
+          unzip Godot_v4.7.1-stable_linux.x86_64.zip
+          mv Godot_v4.7.1-stable_linux.x86_64 godot_cli
+          chmod +x godot_cli
+
+      - name: PCKファイルの出力
+        run: |
+          # "Web" の部分は export_presets.cfg で設定した名前に合わせる
+          ./godot_cli --headless --export-pack "Web" update_data.pck
+
+      - name: 成果物(PCK)をGitHubに保存
+        uses: actions/upload-artifact@v4
+        with:
+          name: pck-file
+          path: update_data.pck
