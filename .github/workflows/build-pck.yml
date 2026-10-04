@@ -1,4 +1,4 @@
-name: Build Unityroom ZIP
+name: Build Unityroom ZIP (Godot 4.x)
 
 on:
   push:
@@ -25,30 +25,36 @@ jobs:
           ../godotpcktool ../index.pck -a a *
           cd ..
 
-      - name: 2. Godot Web用エンジンのダウンロード (例: v4.2.1)
+      - name: 2. Godot 4.x Web用エンジンのダウンロード
         run: |
-          # 公式からWeb用のエクスポートテンプレートをダウンロード
+          # ⚠️ 4.2.1の部分を実際のバージョンに合わせてください
           wget https://downloads.tuxfamily.org/godotengine/4.2.1/Godot_v4.2.1-stable_export_templates.tpz
-          # tpzは実質zipなので解凍する
+          
+          # 解凍する (tpzを展開)
           unzip Godot_v4.2.1-stable_export_templates.tpz
+          
+          # Godot 4.x はWebファイルがさらにZIP圧縮されているため、それも解凍する
+          unzip templates/web_release.zip -d web_engine
           
       - name: 3. Unityroom用ファイルの組み立て
         run: |
           mkdir unityroom_upload
           
-          # 自分のPCKを配置
+          # PCKとHTMLを配置
           mv index.pck unityroom_upload/
-          
-          # 自分のindex.htmlを配置 (リポジトリにある独自のものを使用)
-          # ※もしリポジトリのhtmlを使わず、Godot公式のhtmlを使いたい場合は下2行はコメントアウトし、
-          # mv templates/webassembly_release.html unityroom_upload/index.html を使います
           mv index.html unityroom_upload/
           
-          # Godotのエンジン本体(wasm, js)をリネームして配置
-          mv templates/webassembly_release.wasm unityroom_upload/index.wasm
-          mv templates/webassembly_release.js unityroom_upload/index.js
+          # Godot 4.x のエンジンファイルをそれぞれリネームして配置
+          mv web_engine/godot.wasm unityroom_upload/index.wasm
+          mv web_engine/godot.js unityroom_upload/index.js
+          mv web_engine/godot.worker.js unityroom_upload/index.worker.js
           
-          # Unityroom用にZIPに固める
+          # バージョンによっては audio.worklet が存在するため、あれば配置
+          if [ -f web_engine/godot.audio.worklet.js ]; then
+            mv web_engine/godot.audio.worklet.js unityroom_upload/index.audio.worklet.js
+          fi
+          
+          # ZIP化
           cd unityroom_upload
           zip -r ../unityroom_game.zip *
 
