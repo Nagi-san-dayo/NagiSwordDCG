@@ -1,0 +1,43 @@
+name: Build PCK Package
+
+on:
+  push:
+    branches: [ main, master ]
+  pull_request:
+    branches: [ main, master ]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      # 1. リポジトリのコードをチェックアウト
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      # 2. Node.jsのセットアップ (必要に応じて依存関係をインストールする場合)
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+        node-version: '20'
+
+      - name: Install dependencies
+        run: npm ci
+
+      # 3. 指定したファイルをまとめる処理
+      # ここでは例として tar あるいは zip コマンドを使い、拡張子を .pck にして出力します
+      - name: Create index.pck
+        run: |
+          # アーカイブ化したいファイルやディレクトリを指定して index.pck として固める
+          # 例: tar コマンドを使用する場合
+          tar -cvf index.pck index.html server.js package.json image/
+          
+          # ※もしzip形式で固めて拡張子をpckにしたい場合はこちら：
+          # zip -r index.pck index.html server.js package.json image/
+
+      # 4. 生成した index.pck を成果物（Artifact）として保存する
+      - name: Upload artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: compiled-pck
+          path: index.pck
