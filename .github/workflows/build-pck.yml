@@ -1,4 +1,4 @@
-name: Build Unityroom Files (No ZIP)
+name: Godot Web Build and Deploy
 
 on:
   push:
@@ -6,58 +6,25 @@ on:
       - main
 
 jobs:
-  build-web-game:
+  export:
     runs-on: ubuntu-latest
     steps:
-      - name: リポジトリをチェックアウト
-        uses: actions/checkout@v4
+      - name: Checkout Source Code
+        uses: actions/checkout@v3
 
-      - name: GodotPckToolのダウンロード
-        run: |
-          wget https://github.com/hhyyrylainen/GodotPckTool/releases/latest/download/godotpcktool
-          chmod +x godotpcktool
-
-      - name: 1. index.pck の作成
-        run: |
-          mkdir build_target
-          rsync -av --exclude='.git' --exclude='.github' --exclude='godotpcktool' --exclude='build_target' ./ build_target/
-          
-          # build_targetフォルダの中身を再帰的にすべてパッキング
-          ./godotpcktool index.pck -a a build_target/
-
-      - name: 2. Godot 4.x Web用エンジンのダウンロード
-        run: |
-          # 安定している公式GitHubから4.2.1のテンプレートを取得
-          wget https://github.com/godotengine/godot/releases/download/4.2.1-stable/Godot_v4.2.1-stable_export_templates.tpz
-          
-          # 解凍 (tpzを展開)
-          unzip Godot_v4.2.1-stable_export_templates.tpz
-          
-          # Godot 4.x用のWebファイルをさらに解凍
-          unzip templates/web_release.zip -d web_engine
-          
-      - name: 3. Unityroom用ファイルの準備
-        run: |
-          mkdir unityroom_upload
-          
-          # 自分が作ったPCKとHTMLを配置
-          mv index.pck unityroom_upload/
-          mv index.html unityroom_upload/
-          
-          # Godotエンジンの各ファイルをリネームして配置
-          mv web_engine/godot.wasm unityroom_upload/index.wasm
-          mv web_engine/godot.js unityroom_upload/index.js
-          mv web_engine/godot.worker.js unityroom_upload/index.worker.js
-          
-          # audio.workletが存在する場合はそれも配置
-          if [ -f web_engine/godot.audio.worklet.js ]; then
-            mv web_engine/godot.audio.worklet.js unityroom_upload/index.audio.worklet.js
-          fi
-          
-          # ⚠️ ここでZIP圧縮は行わず、フォルダの中身をそのまま残します
-
-      - name: 成果物をGitHubに保存
-        uses: actions/upload-artifact@v4
+      - name: Build Godot HTML5
+        uses: firebelley/godot-export@v4.7.1
         with:
-          name: unityroom-files # ダウンロード時のZIP名になります
-          path: unityroom_upload/* # フォルダ内の全ファイルを個別に保存
+          godot_executable_download_url: https://downloads.tuxfamily.org/godotengine/4.7.1/Godot_v4.7.1-stable_linux_headless.64.zip
+          godot_export_templates_download_url: https://downloads.tuxfamily.org/godotengine/4.7.1/Godot_v4.7.1-stable_export_templates.tpz
+          relative_project_path: ./
+          archive_output: true
+          export_debug: false
+          use_preset_export_path: false
+          export_preset_name: "HTML5" # export_presets.cfgに設定した名前
+
+      - name: Deploy to GitHub Pages
+        uses: peaceiris/actions-gh-pages@v3
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          publish_dir: ./build # ビルドされたファイル（.html, .wasm, .pckなど）が出力されるディレクトリ
