@@ -27,14 +27,15 @@ jobs:
 
       - name: 2. Godot 4.x Web用エンジンのダウンロード
         run: |
-          # ⚠️ 4.2.1の部分を実際のバージョンに合わせてください
-          wget https://downloads.tuxfamily.org/godotengine/4.2.1/Godot_v4.2.1-stable_export_templates.tpz
+          # 取得元をより安定しているGitHub公式リポジトリに変更
+          wget https://github.com/godotengine/godot/releases/download/4.2.1-stable/Godot_v4.2.1-stable_export_templates.tpz
           
           # 解凍する (tpzを展開)
           unzip Godot_v4.2.1-stable_export_templates.tpz
           
           # Godot 4.x はWebファイルがさらにZIP圧縮されているため、それも解凍する
           unzip templates/web_release.zip -d web_engine
+
           
       - name: 3. Unityroom用ファイルの組み立て
         run: |
