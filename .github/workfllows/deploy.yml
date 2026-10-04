@@ -1,0 +1,42 @@
+name: Build for unityroom
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: リポジトリのコードを取得
+        uses: actions/checkout@v4
+
+      - name: Godotのセットアップ
+        uses: abarichello/godot-ci@v3
+        with:
+          version: 4.2.1 # ※実際のGodotのバージョンに合わせてください
+          export_template: true
+
+      - name: Web(HTML5)用エクスポート
+        run: |
+          mkdir -p build/web
+          godot --headless --export-release "Web" build/web/index.html
+
+      - name: カスタムファイルの結合
+        run: |
+          # 自作の index.html などを上書き
+          # ※unityroomでは動きませんが、必要に応じて画像やCSSもここでコピーします
+          cp custom_web/index.html build/web/index.html
+
+      - name: unityroom用のZIPファイルを作成
+        run: |
+          # フォルダ内に入って、中身だけを直接ZIP化する（unityroomの仕様）
+          cd build/web
+          zip -r ../unityroom_game.zip *
+
+      - name: ZIPファイルをGitHubに保存（ダウンロード用）
+        uses: actions/upload-artifact@v4
+        with:
+          name: unityroom-zip
+          path: build/unityroom_game.zip
