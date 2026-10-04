@@ -23,21 +23,20 @@ jobs:
           mkdir -p ~/.local/share/godot/export_templates/4.7.1.stable
           mv templates/* ~/.local/share/godot/export_templates/4.7.1.stable/
 
-      - name: Export PCK for unityroom
+      - name: Export Web Build and Extract PCK
         run: |
-          mkdir -p build
+          mkdir -p build_output
+          mkdir -p final_pck
           
-          # カレントディレクトリを明示し、--pathのあとにプロジェクトのあるフォルダを指定
+          # 一度通常のWebエクスポート（index.htmlやpckを含む一式）として出力する
           PROJECT_PATH="$(pwd)"
+          ./Godot_v4.7.1-stable_linux.x86_64 --headless --path "$PROJECT_PATH" --export-release "Web" "$PROJECT_PATH/build_output/index.html"
           
-          # アセットの事前インポート
-          ./Godot_v4.7.1-stable_linux.x86_64 --headless --path "$PROJECT_PATH" --editor --quit
-          
-          # PCKファイルの書き出し
-          ./Godot_v4.7.1-stable_linux.x86_64 --headless --path "$PROJECT_PATH" --export-pack "Web" "$PROJECT_PATH/build/game.pck"
+          # 出力された中から .pck ファイルだけを回収してリネームする
+          find build_output -name "*.pck" -exec cp {} final_pck/game.pck \;
 
       - name: Upload PCK as Artifact
         uses: actions/upload-artifact@v4
         with:
           name: unityroom-pck-file
-          path: build/game.pck
+          path: final_pck/game.pck
