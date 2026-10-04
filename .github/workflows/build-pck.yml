@@ -1,13 +1,12 @@
-name: Auto Build Full PCK
+name: Build Unityroom ZIP
 
-# メインブランチにプッシュされた時に実行（条件はお好みで変更してください）
 on:
   push:
     branches:
       - main
 
 jobs:
-  build-full-pck:
+  build-web-game:
     runs-on: ubuntu-latest
     steps:
       - name: リポジトリをチェックアウト
@@ -18,17 +17,43 @@ jobs:
           wget https://github.com/hhyyrylainen/GodotPckTool/releases/latest/download/godotpcktool
           chmod +x godotpcktool
 
-      - name: PCKファイルの作成（全ファイル対象）
+      - name: 1. index.pck の作成
         run: |
           mkdir build_target
           rsync -av --exclude='.git' --exclude='.github' --exclude='godotpcktool' --exclude='build_target' ./ build_target/
           cd build_target
-          # 出力ファイル名を game_full.pck から index.pck に変更
           ../godotpcktool ../index.pck -a a *
+          cd ..
 
-      - name: 成果物(PCK)をGitHubに保存
+      - name: 2. Godot Web用エンジンのダウンロード (例: v1.7.1)
+        run: |
+          # 公式からWeb用のエクスポートテンプレートをダウンロード
+          wget https://downloads.tuxfamily.org/godotengine/4.7.1/Godot_v4.7.1-stable_export_templates.tpz
+          # tpzは実質zipなので解凍する
+          unzip Godot_v4.7.1-stable_export_templates.tpz
+          
+      - name: 3. Unityroom用ファイルの組み立て
+        run: |
+          mkdir unityroom_upload
+          
+          # 自分のPCKを配置
+          mv index.pck unityroom_upload/
+          
+          # 自分のindex.htmlを配置 (リポジトリにある独自のものを使用)
+          # ※もしリポジトリのhtmlを使わず、Godot公式のhtmlを使いたい場合は下2行はコメントアウトし、
+          # mv templates/webassembly_release.html unityroom_upload/index.html を使います
+          mv index.html unityroom_upload/
+          
+          # Godotのエンジン本体(wasm, js)をリネームして配置
+          mv templates/webassembly_release.wasm unityroom_upload/index.wasm
+          mv templates/webassembly_release.js unityroom_upload/index.js
+          
+          # Unityroom用にZIPに固める
+          cd unityroom_upload
+          zip -r ../unityroom_game.zip *
+
+      - name: 成果物(Unityroom用ZIP)をダウンロード
         uses: actions/upload-artifact@v4
         with:
-          name: index-pck-file
-          path: index.pck
-
+          name: unityroom-upload-file
+          path: unityroom_game.zip
