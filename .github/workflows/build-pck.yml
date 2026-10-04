@@ -14,12 +14,10 @@ jobs:
 
       - name: Download Godot & Templates
         run: |
-          # Godot 4.7.1本体のダウンロードと実行権限の付与
           wget -q https://github.com/godotengine/godot/releases/download/4.7.1-stable/Godot_v4.7.1-stable_linux.x86_64.zip
           unzip Godot_v4.7.1-stable_linux.x86_64.zip
           chmod +x Godot_v4.7.1-stable_linux.x86_64
           
-          # エクスポートテンプレートのダウンロードと正規フォルダへの配置
           wget -q https://github.com/godotengine/godot/releases/download/4.7.1-stable/Godot_v4.7.1-stable_export_templates.tpz
           unzip Godot_v4.7.1-stable_export_templates.tpz
           mkdir -p ~/.local/share/godot/export_templates/4.7.1.stable
@@ -29,11 +27,14 @@ jobs:
         run: |
           mkdir -p build
           
-          # 1. 事前インポートを実行
-          ./Godot_v4.7.1-stable_linux.x86_64 --headless --editor --quit
+          # カレントディレクトリを明示し、--pathのあとにプロジェクトのあるフォルダを指定
+          PROJECT_PATH="$(pwd)"
           
-          # 2. Godot 4の正しい順序（--pathを先に、プリセット名と出力先を後に指定）
-          ./Godot_v4.7.1-stable_linux.x86_64 --headless --path . --export-pack "Web" build/game.pck
+          # アセットの事前インポート
+          ./Godot_v4.7.1-stable_linux.x86_64 --headless --path "$PROJECT_PATH" --editor --quit
+          
+          # PCKファイルの書き出し
+          ./Godot_v4.7.1-stable_linux.x86_64 --headless --path "$PROJECT_PATH" --export-pack "Web" "$PROJECT_PATH/build/game.pck"
 
       - name: Upload PCK as Artifact
         uses: actions/upload-artifact@v4
