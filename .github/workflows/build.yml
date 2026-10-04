@@ -3,7 +3,7 @@ name: Build for unityroom
 on:
   push:
     branches:
-      - main
+      - main # ※ブランチ名が master の場合は master に書き換えてください
 
 jobs:
   build:
@@ -13,10 +13,11 @@ jobs:
         uses: actions/checkout@v4
 
       - name: Godotのセットアップ
-        uses: abarichello/godot-ci@v3
+        uses: chickensoft-games/setup-godot@v2
         with:
           version: 4.2.1 # ※実際のGodotのバージョンに合わせてください
-          export_template: true
+          use-dotnet: false
+          include-templates: true
 
       - name: Web(HTML5)用エクスポート
         run: |
@@ -25,13 +26,10 @@ jobs:
 
       - name: カスタムファイルの結合
         run: |
-          # 自作の index.html などを上書き
-          # ※unityroomでは動きませんが、必要に応じて画像やCSSもここでコピーします
-          cp custom_web/index.html build/web/index.html
+          cp index.html build/web/index.html
 
       - name: unityroom用のZIPファイルを作成
         run: |
-          # フォルダ内に入って、中身だけを直接ZIP化する（unityroomの仕様）
           cd build/web
           zip -r ../unityroom_game.zip *
 
