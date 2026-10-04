@@ -1,36 +1,38 @@
-name: Auto Build PCK
+name: Auto Build Full PCK
 
-# index.html か server.js が更新された時だけ実行する
+# メインブランチにプッシュされた時に実行（条件はお好みで変更してください）
 on:
   push:
-    paths:
-      - 'index.html'
-      - 'server.js'
+    branches:
+      - main
 
 jobs:
-  build-pck:
+  build-full-pck:
     runs-on: ubuntu-latest
     steps:
       - name: リポジトリをチェックアウト
         uses: actions/checkout@v4
 
-      - name: GodotPckToolのダウンロードとセットアップ
+      - name: GodotPckToolのダウンロード
         run: |
-          # ツール（Linux版バイナリ）の最新版をダウンロードして実行権限を付与
           wget https://github.com/hhyyrylainen/GodotPckTool/releases/latest/download/godotpcktool
           chmod +x godotpcktool
 
-      - name: PCKファイルの作成
+      - name: PCKファイルの作成（全ファイル対象）
         run: |
-          # index.html と server.js を update_data.pck の中にパッキングする
-          # ※デフォルトでGodot 4系のPCKとして作成されます
-          ./godotpcktool update_data.pck -a a index.html server.js
-
-          # 【補足】もしGodot 3.x系のプロジェクトで読み込ませたい場合は、以下のようバージョンを指定してください
-          # ./godotpcktool update_data.pck -a a index.html server.js --set-godot-version 3.5.0
+          # 1. パッキングしたいファイルだけをまとめる専用フォルダを作成
+          mkdir build_target
+          
+          # 2. rsyncコマンドを使って、全ファイルを build_target にコピー
+          # ※ .gitフォルダや.githubフォルダ、ダウンロードしたツール自体は除外します
+          rsync -av --exclude='.git' --exclude='.github' --exclude='godotpcktool' --exclude='build_target' ./ build_target/
+          
+          # 3. フォルダ内に移動して、中身をすべて（*）パッキングする
+          cd build_target
+          ../godotpcktool ../game_full.pck -a a *
 
       - name: 成果物(PCK)をGitHubに保存
         uses: actions/upload-artifact@v4
         with:
-          name: update-data-pck # ダウンロード時のZipファイル名になります
-          path: update_data.pck
+          name: game-full-pck
+          path: game_full.pck
