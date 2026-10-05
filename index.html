@@ -379,6 +379,35 @@
         @media (max-width: 768px) {
             .dictionary-grid { grid-template-columns: 1fr; }
         }
+                /* 📸 デッキ確認画面用スタイル */
+        .deck-preview-overlay {
+            position: absolute; top: 0; left: 0; width: 100vw; height: 100dvh;
+            background: #1e1e24; z-index: 300; display: flex; flex-direction: column;
+            padding: 2vh 2vw; box-sizing: border-box;
+        }
+        .deck-preview-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            grid-template-rows: repeat(10, 1fr);
+            gap: 0.8vh 1vw;
+            flex-grow: 1;
+            overflow: hidden;
+        }
+        .preview-card {
+            background: #3e3e4a; border: 1px solid #555; border-radius: 4px;
+            display: flex; justify-content: space-between; align-items: center;
+            padding: 0 10px; box-sizing: border-box;
+        }
+        .preview-cost {
+            background: #007bff; color: white; border-radius: 50%;
+            width: 3vh; height: 3vh; display: inline-flex; justify-content: center; align-items: center; font-weight: bold; font-size: 1.5vh; flex-shrink: 0;
+        }
+        .preview-name {
+            margin-left: 10px; font-weight: bold; font-size: 1.8vh; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; color: #fff;
+        }
+        .preview-power {
+            color: #ff8888; font-weight: bold; font-size: 1.8vh; flex-shrink: 0;
+        }
     </style>
 </head>
 <body>
@@ -534,6 +563,12 @@
             <button class="game-over-btn" @click="cancelEditor" style="background:#6c757d; margin-bottom: 15px;">❌ 変更を破棄して戻る</button>
 
             <button class="deck-btn" @click="showDictionary = true" style="padding: 10px; font-size: 13px; margin-bottom: 10px;">📖 能力一覧を開く</button>
+                        <!-- 追加: デッキ確認＆デッキコードボタン -->
+            <button class="deck-btn" @click="showDeckPreview = true" style="padding: 10px; font-size: 13px; margin-bottom: 10px; border-color: #007bff;">📸 デッキ確認 (全画面スクリーンショット用)</button>
+            <div style="display: flex; gap: 10px; margin-bottom: 10px;">
+                <button class="deck-btn" @click="exportDeckCode" style="flex: 1; padding: 10px; font-size: 13px;">📤 デッキコード出力</button>
+                <button class="deck-btn" @click="importDeckCode" style="flex: 1; padding: 10px; font-size: 13px;">📥 デッキコード読込</button>
+            </div>
 
             <h3>🃏 現在の編成 (クリックで1枚減らす)</h3>
             <div style="display: flex; flex-direction: column; gap: 6px; max-height: 80vh; overflow-y: auto; padding-right: 5px;">
@@ -625,6 +660,23 @@
             <button v-if="!isSpectator" class="end-btn" :class="{ 'active': isPlayerTurn && !isGameOver && !isSelectingToken, 'disabled': !isPlayerTurn || isGameOver || isSelectingToken }" @click="endPlayerTurn" :disabled="!isPlayerTurn || isGameOver || isSelectingToken">
                 {{ isPlayerTurn ? 'ターン終了' : '相手のターン中' }}
             </button>
+        </div>
+    </div>
+        <!-- 📸 デッキ確認用オーバーレイ -->
+    <div v-if="showDeckPreview" class="deck-preview-overlay">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
+            <h2 style="margin:0; color:#ffc107;">📸 デッキ確認 ({{ editingDeck.length }} / 30 枚)</h2>
+            <button class="game-over-btn" style="width: auto; margin:0; padding: 10px 20px;" @click="showDeckPreview = false">❌ 閉じる</button>
+        </div>
+        <div class="deck-preview-grid">
+            <!-- 3列10行で30枚表示 -->
+            <div v-for="(card, i) in sortedEditingDeck" :key="i" class="preview-card">
+                <div style="display: flex; align-items: center; overflow: hidden;">
+                    <span class="preview-cost">{{ card.cost }}</span>
+                    <span class="preview-name">{{ card.name }}</span>
+                </div>
+                <span class="preview-power">攻:{{ card.power }}</span>
+            </div>
         </div>
     </div>
 </div>
@@ -805,7 +857,9 @@ createApp({
             currentDeckSlot: 0, selectedSlotIndex: null,           
             editingDeck: [], editingDeckName: "", editAlert: "", toastTimer: null, cardPool: cardPool,
             searchQuery: "", 
-            showDictionary: false, 
+            showDictionary: false,
+            showDeckPreview: false,
+
             
             abilityDictionary: [
                 { name: "流水X", desc: "カードをX枚引く。" },
@@ -1979,7 +2033,44 @@ if (this.isCpuMode && this.reduceTomoshibi(false)) {
             localStorage.setItem("nagiso_custom_deck_names", JSON.stringify(this.customDeckNames)); 
             this.isEditMode = false; 
         },
-        cancelEditor() { this.isEditMode = false; }
+        cancelEditor() { this.isEditMode = false; },
+        exportDeckCode() {
+            if (this.editingDeck.length === 0) {
+                if (this.toastTimer) clearTimeout(this.toastTimer);
+                this.editAlert = "❌ デッキが空です。";
+                this.toastTimer = setTimeout(() => { this.editAlert = ""; }, 2500);
+                return;
+            }
+            // poolIndexを配列にしてBase64エンコードする
+            const indices = this.editingDeck.map(c => c.poolIndex);
+            const code = btoa(JSON.stringify(indices));
+            
+            prompt("以下のデッキコードをコピーしてください:", code);
+        },
+        importDeckCode() {
+            const code = prompt("デッキコードを入力してください:");
+            if (!code) return;
+            try {
+                // Base64デコードして配列に戻す
+                const indices = JSON.parse(atob(code));
+                if (!Array.isArray(indices)) throw new Error("Invalid format");
+                
+                this.editingDeck = [];
+                indices.forEach(idx => {
+                    if (this.cardPool[idx] && this.editingDeck.length < 30) {
+                        this.editingDeck.push({ ...this.cardPool[idx], poolIndex: idx });
+                    }
+                });
+                
+                if (this.toastTimer) clearTimeout(this.toastTimer);
+                this.editAlert = `✅ デッキを ${this.editingDeck.length} 枚読み込みました。`;
+                this.toastTimer = setTimeout(() => { this.editAlert = ""; }, 2500);
+            } catch (e) {
+                if (this.toastTimer) clearTimeout(this.toastTimer);
+                this.editAlert = "❌ 無効なデッキコードです。";
+                this.toastTimer = setTimeout(() => { this.editAlert = ""; }, 2500);
+            }
+        }
     },
     computed: {
         isCpuMode() { return this.gameMode === 'cpu'; },
@@ -2019,6 +2110,9 @@ if (this.isCpuMode && this.reduceTomoshibi(false)) {
                     const abilityMatch = (card.abilityText || "").toLowerCase().includes(query);
                     return nameMatch || abilityMatch;
                 });
+        },
+        sortedEditingDeck() {
+            return [...this.editingDeck].sort((a, b) => a.cost - b.cost);
         }
     }
 }).mount('#app');
