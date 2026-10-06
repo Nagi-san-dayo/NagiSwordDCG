@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>ナギソDCG - 完全フル同期＆観戦対応版（イラスト実装Ver）</title>
+    <title>ナギソDCG - 完全フル同期＆観戦対応版（抜刀属性・リタイア機能実装）</title>
     <script src="https://unpkg.com/vue@3/dist/vue.global.js"></script>
     <script src="https://cdn.socket.io/4.7.5/socket.io.min.js"></script>
     <style>
@@ -447,7 +447,7 @@
     </div>
 
     <div v-if="isSelectingToken" class="matching-overlay" style="background: rgba(0, 0, 0, 0.95); padding: 5vh 2vw;">
-        <h2 style="color: #007bff; font-size: clamp(24px, 2.5vw, 36px); margin-bottom: 5px;">⚙️ 機巧増幅 ⚙️</h2>
+        <h2 style="color: #007bff; font-size: clamp(24px, 2.5vw, 36px); margin-bottom: 5px;">⚙️ 機巧増幅 ⚙️️</h2>
         <p style="font-size: clamp(14px, 1.4vw, 20px); margin-bottom: 4vh;">山札に加えるナギソトークンを1種選択してください（{{ tokenSelectionCount }}枚追加してシャッフル）</p>
         <div style="display: flex; gap: 3vw; justify-content: center; width: 100%; max-width: 1000px; flex-wrap: wrap;">
             <div class="card playable" @click="selectToken('draw')" style="width: 230px; height: 350px; font-size: 14px !important; padding: 20px 15px;">
@@ -535,6 +535,17 @@
                 <input type="text" v-model="editingDeckName" class="username-input" placeholder="デッキ名を入力してください">
             </div>
             
+            <div style="margin-bottom: 15px; background: #232730; padding: 10px; border-radius: 8px; border: 1px solid #ffc107;">
+                <h3 style="color: #ffc107; margin-top: 0; font-size: 15px;">⚔️ 抜刀属性（ターンの初めに使用したカードに付与）</h3>
+                <div style="display: flex; gap: 10px; flex-wrap: wrap; font-size: 13px;">
+                    <label><input type="radio" value="fire" v-model="editingDeckAttribute"> 🔥 火 (コスト+1/2回発動)</label>
+                    <label><input type="radio" value="water" v-model="editingDeckAttribute"> 💧 水 (攻撃力分ドロー)</label>
+                    <label><input type="radio" value="wind" v-model="editingDeckAttribute"> 🌪️ 風 (コスト-2)</label>
+                    <label><input type="radio" value="thunder" v-model="editingDeckAttribute"> ⚡ 雷 (攻撃力2倍)</label>
+                    <label><input type="radio" value="earth" v-model="editingDeckAttribute"> 🪨 土 (聖域1展開)</label>
+                </div>
+            </div>
+
             <h3>📦 カードプール (クリックで追加)</h3>
             
             <div style="margin-bottom: 10px;">
@@ -557,8 +568,9 @@
 
         <div style="display: flex; flex-direction: column; justify-content: flex-start; gap: 10px;">
             <p style="font-weight: bold; margin: 10px 0 5px 0; font-size: 16px; text-align: center;">現在の合計枚数: ({{ editingDeck.length }} / 30 枚)</p>
-            <button class="end-btn" :class="{ 'active': editingDeck.length === 30, 'disabled': editingDeck.length !== 30 }" :disabled="editingDeck.length !== 30" @click="saveAndCloseEditor">
-                {{ editingDeck.length === 30 ? '💾 デッキを保存してタイトルへ' : '30枚に調整してください' }}
+            
+            <button class="end-btn" :class="{ 'active': editingDeck.length === 30 && editingDeckAttribute, 'disabled': editingDeck.length !== 30 || !editingDeckAttribute }" :disabled="editingDeck.length !== 30 || !editingDeckAttribute" @click="saveAndCloseEditor">
+                {{ editingDeck.length === 30 && editingDeckAttribute ? '💾 デッキを保存してタイトルへ' : '30枚の編成と抜刀属性を選択してください' }}
             </button>
             <button class="game-over-btn" @click="cancelEditor" style="background:#6c757d; margin-bottom: 15px;">❌ 変更を破棄して戻る</button>
 
@@ -609,7 +621,7 @@
                     <span v-if="cpuBarrier > 0">🛡️[聖域:{{ cpuBarrier }}]</span> 
                     (マナ: {{ cpuCurrentMana }}/{{ cpuMaxMana }})
                 </h3>
-                <p>山札: {{ cpuDeckLengthComputed }} 枚 <span :style="{color: cpuDeckLengthComputed % 2 === 0 ? '#007bff' : '#fff'}">（{{ cpuDeckLengthComputed % 2 === 0 ? '🧬 共鳴中' : '非共鳴' }}）</span> / 手札: {{ cpuHandLengthComputed }} 枚 / 🦴骨: {{ isSpectator ? p2FleshCounter : cpuFleshCounter }}</p>
+                <p>⚔️ 抜刀: {{ getAttributeName(isSpectator ? p2Attribute : cpuDeckAttribute) }} / 山札: {{ cpuDeckLengthComputed }} 枚 <span :style="{color: cpuDeckLengthComputed % 2 === 0 ? '#007bff' : '#fff'}">（{{ cpuDeckLengthComputed % 2 === 0 ? '🧬 共鳴中' : '非共鳴' }}）</span> / 手札: {{ cpuHandLengthComputed }} 枚 / 🦴骨: {{ isSpectator ? p2FleshCounter : cpuFleshCounter }}</p>
                 <div v-if="cpuResonanceEffects.length > 0" style="font-size:11px; color:#6f42c1;">★ 敵の共鳴能力数: {{ cpuResonanceEffects.length }}</div>
             </div>
 
@@ -619,7 +631,7 @@
                     <span v-if="playerBarrier > 0">🛡️[聖域:{{ playerBarrier }}]</span> 
                     (マナ: {{ playerCurrentMana }}/{{ playerMaxMana }})
                 </h3>
-                <p>山札: {{ playerDeckLengthComputed }} 枚 <span :style="{color: playerDeckLengthComputed % 2 === 0 ? '#007bff' : '#fff'}">（{{ playerDeckLengthComputed % 2 === 0 ? '🧬 共鳴中' : '非共鳴' }}）</span> / <b>手札: {{ playerHandLengthComputed }} 枚</b> / 🦴骨: {{ isSpectator ? p1FleshCounter : playerFleshCounter }}</p>
+                <p>⚔️ 抜刀: {{ getAttributeName(isSpectator ? p1Attribute : selectedDeckAttribute) }} / 山札: {{ playerDeckLengthComputed }} 枚 <span :style="{color: playerDeckLengthComputed % 2 === 0 ? '#007bff' : '#fff'}">（{{ playerDeckLengthComputed % 2 === 0 ? '🧬 共鳴中' : '非共鳴' }}）</span> / <b>手札: {{ playerHandLengthComputed }} 枚</b> / 🦴骨: {{ isSpectator ? p1FleshCounter : playerFleshCounter }}</p>
                 <div v-if="playerResonanceEffects.length > 0" style="font-size:11px; color:#ffc107;">★ あなたの獲得共鳴能力数: {{ playerResonanceEffects.length }}</div>
             </div>
 
@@ -656,6 +668,8 @@
             <button class="deck-btn" @click="showDictionary = true" style="padding: 10px; font-size: 13px;">📖 能力一覧を開く</button>
 
             <button v-if="isGameOver" class="game-over-btn" @click="resetToTitle">↩️ タイトルに戻る</button>
+
+            <button v-if="!isSpectator && !isGameOver" class="game-over-btn" style="background: #dc3545;" @click="surrender">🏳️ リタイアする</button>
 
             <button v-if="!isSpectator" class="end-btn" :class="{ 'active': isPlayerTurn && !isGameOver && !isSelectingToken, 'disabled': !isPlayerTurn || isGameOver || isSelectingToken }" @click="endPlayerTurn" :disabled="!isPlayerTurn || isGameOver || isSelectingToken">
                 {{ isPlayerTurn ? 'ターン終了' : '相手のターン中' }}
@@ -734,7 +748,7 @@ const cardPool = [
     { name: "澎湃轟々のナギソ", cost: 6, power: 0, abilities: [{ type: "zenjikouon", value: 1 }, { type: "karyokuhueru", value: 1 }], abilityText: "【漸次昂音1】 【連撃1】", image: "images/mate.png" },
     { name: "玲瓏のナギソ", cost: 5, power: 0, abilities: [{ type: "zenjikouon", value: 3 }, { type: "costheru", value: 1 }], abilityText: "【漸次昂音2】 【縮化1】", image: "images/mate.png" },
     { name: "鼠骨短剣ナギソ", cost: 1, power: 1, abilities: [{ type: "nie", value: 2 }, { type: "draw", value: 1 }, { type: "revengeburn", value: 2 }], abilityText: "【贄2】 【流水1】 【逆境2】", image: "images/mate.png" },
-    { name: "兎骨懐剣ナギソ", cost: 2, power: 1, abilities: [{ type: "nie", value: 3 }, { type: "burn", value: 2 }], abilityText: "【贄3】 【雄叫び2】", image: "images/mate.png" },
+    { name: "兎骨懐剣ナギソ", cost: 2, power: 1, abilities: [{ type: "nie", value: 3 }, { type: "burn", value: 2 }], abilityText: "【雄叫び2】 【贄3】", image: "images/mate.png" },
     { name: "犬骨盾剣ナギソ", cost: 3, power: 4, abilities: [{ type: "nie", value: -2 }, { type: "costup", value: 1 },], abilityText: "【贄-2】 【威圧1】", image: "images/mate.png" },
     { name: "猫骨細剣ナギソ", cost: 2, power: 3, abilities: [{ type: "nie", value: -2 }, { type: "draw", value: 2 }], abilityText: "【贄-2】 【流水2】", image: "images/mate.png" },
     { name: "牛骨太刀ナギソ", cost: 4, power: 0, abilities: [{ type: "nie", value: 4 }, { type: "heal", value: 5 }, { type: "draw", value: 1 }], abilityText: "【贄4】 【神秘5】 【流水1】", image: "images/mate.png" },
@@ -819,10 +833,8 @@ const cardPool = [
     { name: "証明のナギソ", cost: 3, power: 0, abilities: [{ type: "tomoshibi", value: 2 }, { type: "kikouzouhuku", value: 8 }], abilityText: "【灯火2】 【機巧増幅8】", image: "images/mate.png" },
     { name: "月明のナギソ", cost: 6, power: 4, abilities: [{ type: "tomoshibi", value: 4 }, { type: "costup", value: 2 }, { type: "manahueru", value: 2 }], abilityText: "【灯火4】 【威圧2】 【還元2】", image: "images/mate.png" },
     { name: "白昼夢のナギソ", cost: 5, power: 7, abilities: [{ type: "tomoshibi", value: 10 }, { type: "manadestroy", value: 10 }, { type: "barrier", value: 5 }], abilityText: "【灯火10】 【崩壊10】 【聖域5】", image: "images/mate.png" },
-    { name: "黒昼照のナギソ", cost: 8, power: 8, abilities: [{ type: "tomoshibi", value: 6 }, { type: "deckdestroy", value: 10 }, { type: "manahueru", value: 8 }], abilityText: "【灯火6】 【罰10】 【還元8】", image: "images/mate.png" },
-
-
-]
+    { name: "黒昼照のナギソ", cost: 8, power: 8, abilities: [{ type: "tomoshibi", value: 6 }, { type: "deckdestroy", value: 10 }, { type: "manahueru", value: 8 }], abilityText: "【灯火6】 【罰10】 【還元8】", image: "images/mate.png" }
+];
 
 function generateId() { return Math.random().toString(36).substr(2, 11); }
 function createCardInstance(baseCard) { 
@@ -854,12 +866,19 @@ createApp({
             roomName: '',
             customDecks: Array(10).fill(null),
             customDeckNames: Array(10).fill(""),
+            customDeckAttributes: Array(10).fill(""),
             currentDeckSlot: 0, selectedSlotIndex: null,           
-            editingDeck: [], editingDeckName: "", editAlert: "", toastTimer: null, cardPool: cardPool,
+            editingDeck: [], editingDeckName: "", editingDeckAttribute: "", editAlert: "", toastTimer: null, cardPool: cardPool,
             searchQuery: "", 
             showDictionary: false,
             showDeckPreview: false,
-
+            
+            selectedDeckAttribute: "",
+            cpuDeckAttribute: "",
+            p1FirstCardThisTurn: true,
+            cpuFirstCardThisTurn: true,
+            p1Attribute: "",
+            p2Attribute: "",
             
             abilityDictionary: [
                 { name: "流水X", desc: "カードをX枚引く。" },
@@ -927,6 +946,8 @@ createApp({
         if (savedDecks) { try { this.customDecks = JSON.parse(savedDecks); } catch(e){} }
         const savedNames = localStorage.getItem("nagiso_custom_deck_names");
         if (savedNames) { try { this.customDeckNames = JSON.parse(savedNames); } catch(e){} }
+        const savedAttr = localStorage.getItem("nagiso_custom_deck_attributes");
+        if (savedAttr) { try { this.customDeckAttributes = JSON.parse(savedAttr); } catch(e){} }
 
         socket = io('https://nagisworddcg-0.onrender.com/');
 
@@ -961,6 +982,7 @@ createApp({
             this.cpuDeckLength = data.deckLength;
             this.cpuBarrier = data.barrier || 0; 
             if (data.fleshCounter !== undefined) this.cpuFleshCounter = data.fleshCounter;
+            if (data.attribute) this.cpuDeckAttribute = data.attribute;
             
             if (data.latestLog && this.logMessages[this.logMessages.length - 1] !== data.latestLog) {
                 this.logMessages.push(data.latestLog);
@@ -987,6 +1009,8 @@ createApp({
             this.p2FleshCounter = state.p2.fleshCounter || 0;
             this.p1Name = state.p1.name;
             this.p2Name = state.p2.name;
+            this.p1Attribute = state.p1.attribute || "";
+            this.p2Attribute = state.p2.attribute || "";
             this.isPlayerTurn = state.isP1Turn;
             if (state.latestLog && this.logMessages[this.logMessages.length - 1] !== state.latestLog) {
                 this.logMessages.push(state.latestLog);
@@ -1021,9 +1045,22 @@ createApp({
         }
     },
     methods: {
-                isTomoshibiReady(card) {
+        getAttributeName(attr) {
+            const names = { fire: '🔥 火', water: '💧 水', wind: '🌪️ 風', thunder: '⚡ 雷', earth: '🪨 土' };
+            return names[attr] || '未設定';
+        },
+        surrender() {
+            if (confirm("本当にリタイアして降参しますか？")) {
+                this.addLog(`🏳️ ${this.userName} は降参した...`);
+                this.playerHP = 0;
+                this.checkWinLose();
+                if (!this.isCpuMode && !this.isSpectator) {
+                    this.syncStateToServer(`🏳️ ${this.userName} は降参した...`);
+                }
+            }
+        },
+        isTomoshibiReady(card) {
             const tomoshibi = card.abilities.find(a => a.type === "tomoshibi");
-            // 灯火が存在し、かつ数値が1以上なら使用不可
             if (tomoshibi && tomoshibi.value > 0) return false;
             return true;
         },
@@ -1037,14 +1074,12 @@ createApp({
                 if (tomoshibi && tomoshibi.value > 0) {
                     tomoshibi.value--;
                     reduced = true;
-                    // 表示用テキストの更新 (【灯火X】を【灯火X-1】に書き換え)
                     if (c.abilityText) {
                         c.abilityText = c.abilityText.replace(/【灯火(\d+)】/, `【灯火${tomoshibi.value}】`);
                     }
                 }
             });
             
-            // オンライン対応：変更があればサーバーに同期
             if (reduced && isPlayer && !this.isCpuMode && !this.isSpectator) {
                  this.syncStateToServer();
             }
@@ -1080,6 +1115,23 @@ createApp({
             this.logMessages = ["モードとデッキを選んでゲームを始めてね！"];
         },
         handleDeckSelect(type, slotIndex = null) {
+            if (type === 'custom') {
+                if (!this.customDeckAttributes[slotIndex]) {
+                    alert("このデッキには抜刀属性が設定されていません。編集から属性を選んでください。");
+                    return;
+                }
+                this.selectedDeckAttribute = this.customDeckAttributes[slotIndex];
+            } else {
+                if (type === 'agro') this.selectedDeckAttribute = 'thunder';
+                else if (type === 'ramp') this.selectedDeckAttribute = 'wind';
+                else if (type === 'combo') this.selectedDeckAttribute = 'water';
+            }
+            
+            if (this.gameMode === 'cpu') {
+                const attrs = ['fire', 'water', 'wind', 'thunder', 'earth'];
+                this.cpuDeckAttribute = attrs[Math.floor(Math.random() * attrs.length)];
+            }
+
             this.selectedDeckType = type;
             this.selectedSlotIndex = slotIndex; 
             
@@ -1125,6 +1177,9 @@ createApp({
             this.tokenSelectionCount = 0;
             this.playerResonanceEffects = [];
             this.cpuResonanceEffects = [];
+            
+            this.p1FirstCardThisTurn = true;
+            this.cpuFirstCardThisTurn = true;
 
             let pPool = [];
             if(type === 'agro') pPool = [0,0,0, 1,1,1, 2,2,2, 4,4,4, 9,9,9, 11,11,11, 12,12,12, 16,16,16, 19,19,19, 25,25,25].map(i => cardPool[i]);
@@ -1152,6 +1207,16 @@ createApp({
         },
         getCardCost(card, isPlayer) {
             let cost = card.cost;
+            
+            // 抜刀属性の適用
+            if (isPlayer && this.p1FirstCardThisTurn) {
+                if (this.selectedDeckAttribute === 'wind') cost -= 2;
+                if (this.selectedDeckAttribute === 'fire') cost += 1;
+            } else if (!isPlayer && this.cpuFirstCardThisTurn) {
+                if (this.cpuDeckAttribute === 'wind') cost -= 2;
+                if (this.cpuDeckAttribute === 'fire') cost += 1;
+            }
+
             const pHandLen = this.playerHand.length;
             const cHandLen = this.isCpuMode ? this.cpuHand.length : this.cpuHandLength;
             
@@ -1302,10 +1367,8 @@ createApp({
                 if (!this.cpuHand.some(c => c.id === card.id || c.name === card.name)) return;
             }
 
-           
-const computedCost = this.getCardCost(card, isPlayer); 
-if (isPlayer && (!this.isPlayerTurn || this.playerCurrentMana < computedCost || !this.hasEnoughFlesh(card, true) || !this.isTomoshibiReady(card))) return;
-
+            const computedCost = this.getCardCost(card, isPlayer); 
+            if (isPlayer && (!this.isPlayerTurn || this.playerCurrentMana < computedCost || !this.hasEnoughFlesh(card, true) || !this.isTomoshibiReady(card))) return;
 
             let localSyncData = syncData || { chosenCardIndices: [], chosenZenjiIndices: [], chosenOnmyoIndices: [], discardIndex: -1, barrier_pierced: false };
             const activeName = isPlayer ? this.userName : (this.isCpuMode ? '🤖 CPU' : '👤 相手');
@@ -1315,37 +1378,32 @@ if (isPlayer && (!this.isPlayerTurn || this.playerCurrentMana < computedCost || 
             if (isPlayer && !this.isCpuMode) {
                 card.abilities.forEach(ab => {
                     if (ab.type === "kenko") {
-                        // ★修正: 剣呼の数値（ab.value）の回数分ループして生成する
                         for (let i = 0; i < ab.value; i++) {
                             localSyncData.chosenCardIndices.push(Math.floor(Math.random() * 30));
                         }
                     }
-                            else if (ab.type === "onmyo_in") {
-            const yoCards = this.cardPool.map((c, i) => ({c, i})).filter(item => item.c.abilities.some(a => a.type === "onmyo_yo"));
-            if (yoCards.length > 0) localSyncData.chosenOnmyoIndices.push(yoCards[Math.floor(Math.random() * yoCards.length)].i);
-        }
-        else if (ab.type === "onmyo_yo") {
-            const inCards = this.cardPool.map((c, i) => ({c, i})).filter(item => item.c.abilities.some(a => a.type === "onmyo_in"));
-            if (inCards.length > 0) localSyncData.chosenOnmyoIndices.push(inCards[Math.floor(Math.random() * inCards.length)].i);
-        }
+                    else if (ab.type === "onmyo_in") {
+                        const yoCards = this.cardPool.map((c, i) => ({c, i})).filter(item => item.c.abilities.some(a => a.type === "onmyo_yo"));
+                        if (yoCards.length > 0) localSyncData.chosenOnmyoIndices.push(yoCards[Math.floor(Math.random() * yoCards.length)].i);
+                    }
+                    else if (ab.type === "onmyo_yo") {
+                        const inCards = this.cardPool.map((c, i) => ({c, i})).filter(item => item.c.abilities.some(a => a.type === "onmyo_in"));
+                        if (inCards.length > 0) localSyncData.chosenOnmyoIndices.push(inCards[Math.floor(Math.random() * inCards.length)].i);
+                    }
                 });
+            }
+
+            let isFirstCard = isPlayer ? this.p1FirstCardThisTurn : this.cpuFirstCardThisTurn;
+            let attribute = isPlayer ? this.selectedDeckAttribute : this.cpuDeckAttribute;
+            let actualPower = card.power;
+
+            if (isFirstCard && attribute === 'thunder') {
+                actualPower *= 2; 
             }
 
             if (isPlayer) {
                 this.playerCurrentMana -= computedCost;
-
-const pierce = card.abilities.some(
-    ab => ab.type === "keisin" && card.power >= ab.value
-);
-
-if (pierce) {
-    this.cpuHP -= card.power;
-    this.addLog(`🗡️ 【逕侵穿突】聖域を貫通して${card.power}ダメージ！`);
-} else {
-    this.applyDamage(false, card.power);
-}
-
-this.playerPlayedCountThisTurn++;
+                this.playerPlayedCountThisTurn++;
                 
                 const targetIndex = this.playerHand.findIndex(c => c.id === card.id);
                 if (targetIndex !== -1) {
@@ -1356,19 +1414,7 @@ this.playerPlayedCountThisTurn++;
                 this.scrollLog();
             } else {
                 this.cpuCurrentMana -= computedCost;
-
-const pierce = card.abilities.some(
-    ab => ab.type === "keisin" && card.power >= ab.value
-);
-
-if (pierce) {
-    this.playerHP -= card.power;
-    this.addLog(`🗡️ 相手の【逕侵穿突】聖域を貫通して${card.power}ダメージ！`);
-} else {
-    this.applyDamage(true, card.power);
-}
-
-this.cpuPlayedCountThisTurn++;
+                this.cpuPlayedCountThisTurn++;
                 
                 if (this.isCpuMode) {
                     const targetIndex = this.cpuHand.findIndex(c => c.id === card.id || c.name === card.name);
@@ -1383,9 +1429,52 @@ this.cpuPlayedCountThisTurn++;
                 this.scrollLog();
             }
 
-            card.abilities.forEach(ab => {
-                this.triggerAbility(ab, isPlayer, isPlayer ? localSyncData : syncData);
-            });
+            const executeCardEffect = (isSecondTime = false) => {
+                const pierce = card.abilities.some(
+                    ab => ab.type === "keisin" && actualPower >= ab.value
+                );
+
+                if (pierce) {
+                    if (isPlayer) {
+                        this.cpuHP -= actualPower;
+                        this.addLog(`🗡️ 【逕侵穿突】聖域を貫通して${actualPower}ダメージ！` + (isSecondTime ? "(2回目)" : ""));
+                    } else {
+                        this.playerHP -= actualPower;
+                        this.addLog(`🗡️ 相手の【逕侵穿突】聖域を貫通して${actualPower}ダメージ！` + (isSecondTime ? "(2回目)" : ""));
+                    }
+                } else {
+                    this.applyDamage(!isPlayer, actualPower);
+                }
+
+                card.abilities.forEach(ab => {
+                    this.triggerAbility(ab, isPlayer, isPlayer ? localSyncData : syncData);
+                });
+            };
+
+            // 1回目の発動
+            executeCardEffect();
+
+            // 抜刀効果の発動
+            if (isFirstCard) {
+                this.addLog(`⚔️ ${isPlayer ? 'あなた' : '相手'}の抜刀発動！ [${this.getAttributeName(attribute)}]`);
+                
+                if (attribute === 'fire') {
+                    this.addLog(`🔥 火の抜刀：攻撃と能力がもう一度発動！`);
+                    executeCardEffect(true);
+                } else if (attribute === 'water') {
+                    this.addLog(`💧 水の抜刀：攻撃力(${actualPower})分カードをドロー！`);
+                    for (let i = 0; i < actualPower; i++) this.drawCard(isPlayer);
+                } else if (attribute === 'earth') {
+                    this.addLog(`🪨 土の抜刀：聖域1を展開！`);
+                    if (isPlayer) this.playerBarrier += 1; else this.cpuBarrier += 1;
+                }
+
+                if (isPlayer) {
+                    this.p1FirstCardThisTurn = false;
+                } else {
+                    this.cpuFirstCardThisTurn = false;
+                }
+            }
 
             this.reduceCost(isPlayer, card.id);
             this.checkWinLose();
@@ -1394,12 +1483,12 @@ this.cpuPlayedCountThisTurn++;
                 socket.emit('play_card', { card: card, currentMana: this.playerCurrentMana, maxMana: this.playerMaxMana, syncData: localSyncData });
                 this.syncStateToServer(`👤 ${this.userName}が【${card.name}】を召喚！`);
             }
-// カード使用時に逕侵穿突チェック
-card.abilities.forEach(ab => {
-    if (ab.type === "keisin" && card.power >= ab.value) {
-        localSyncData.barrier_pierced = true;
-    }
-});
+            
+            card.abilities.forEach(ab => {
+                if (ab.type === "keisin" && actualPower >= ab.value) {
+                    localSyncData.barrier_pierced = true;
+                }
+            });
         },
         boostZenjiCards(cards, amount) {
             cards.forEach(c => {
@@ -1488,7 +1577,7 @@ card.abilities.forEach(ab => {
                 if (isPlayerTrigger) {
                     this.isSelectingToken = true;
                     this.tokenSelectionCount = value;
-                    this.addLog(`⚙️ 【機巧増幅${value}】山札へ埋め込む機巧を選択してください...`);
+                    this.addLog(`⚙️️ 【機巧増幅${value}】山札へ埋め込む機巧を選択してください...`);
                 } else {
                     if (this.isCpuMode) {
                         const types = ['draw', 'burn', 'heal'];
@@ -1591,18 +1680,16 @@ card.abilities.forEach(ab => {
                     this.addLog(`  └【雄叫び${value}】あなたに ${value} ダメージ！`);
                 }
             } 
-                        else if(type === "manahueru") {
+            else if(type === "manahueru") {
                 if(isPlayerTrigger) this.playerCurrentMana = Math.min(this.playerMaxMana, this.playerCurrentMana + value);
                 else this.cpuCurrentMana = Math.min(this.cpuMaxMana, this.cpuCurrentMana + value);
                 if (isPlayerTrigger) {
                     this.addLog(`  └【還元${value}】マナが ${value} 回復！`);
-                    // ★追加：還元の発動によって自分の灯火を減らす
                     if(this.reduceTomoshibi(true)) {
                         this.addLog(`  └✨ 還元発動により、手札の【灯火】が減少した！`);
                     }
                 } else {
                     this.addLog(`  └【還元${value}】相手のマナが ${value} 回復！`);
-                    // ★追加：還元の発動によって相手（CPU時のみ）の灯火を減らす
                     if(this.isCpuMode && this.reduceTomoshibi(false)) {
                         this.addLog(`  └✨ 還元発動により、相手の手札の【灯火】が減少した！`);
                     }
@@ -1813,106 +1900,95 @@ card.abilities.forEach(ab => {
                     }
                 }
             }
-           // 千刃nの処理
-else if(type === "sennjin") {
-    const hand = isPlayerTrigger ? this.playerHand : (this.isCpuMode ? this.cpuHand : []);
-    hand.forEach(c => {
-        c.power += value;
-    });
-    if (isPlayerTrigger) {
-        this.addLog(`  └【千刃${value}】手札の全カードの攻撃力が ${value} 上がった！`);
-    } else {
-        this.addLog(`  └【千刃${value}】相手の手札の全カードの攻撃力が ${value} 上がった！`);
-    }
-}
-// ▼ 新能力：陰陽（隠/陽）の処理を追加 ▼
-else if (type === "onmyo_in" || type === "onmyo_yo") {
-    const isYin = type === "onmyo_in";
-    const targetType = isYin ? "onmyo_yo" : "onmyo_in";
-    const typeName = isYin ? "陰陽・陰" : "陰陽・陽";
-    const targetName = isYin ? "陰陽・陽" : "陰陽・陰";
-
-    this.addLog(isPlayerTrigger ? `  └【${typeName}${value}】${targetName}のカードを生成！` : `  └【${typeName}${value}】相手が${targetName}のカードを生成！`);
-
-    let targetIndex = -1;
-
-    if (this.isCpuMode) {
-        // CPU戦モード: 完全ランダム
-        const validCards = this.cardPool.map((c, i) => ({c, i})).filter(item => item.c.abilities.some(a => a.type === targetType));
-        if (validCards.length > 0) targetIndex = validCards[Math.floor(Math.random() * validCards.length)].i;
-    } else {
-        // オンライン戦モード: 生成済みの乱数インデックスを消費して完全同期
-        if (syncData && syncData.chosenOnmyoIndices && syncData.chosenOnmyoIndices.length > 0) {
-            targetIndex = syncData.chosenOnmyoIndices.shift();
-        }
-    }
-
-    if (targetIndex !== -1) {
-        let newCard = createCardInstance(this.cardPool[targetIndex]);
-        
-        if (isYin) {
-            // 陰陽・隠の効果：アビリティの数値を強化
-            newCard.abilities.forEach(a => {
-                if (a.value !== undefined) a.value += value;
-            });
-            // テキスト表記も更新
-            if (newCard.abilityText) {
-                newCard.abilityText = newCard.abilityText.replace(/\d+/g, (m) => parseInt(m) + value);
-            }
-        } else {
-            // 陰陽・陽の効果：攻撃力を強化
-            newCard.power += value;
-        }
-
-        // 手札に追加
-        if (isPlayerTrigger) {
-            if (this.playerHand.length < this.maxHandSize) {
-                this.playerHand.push(newCard);
-            } else {
-                this.addLog(`🔥 手札満杯のため生成カードが燃破した！`);
-            }
-        } else {
-            if (!this.isCpuMode) {
-                if (this.cpuHandLength < this.maxHandSize) this.cpuHandLength++;
-                else this.addLog(`🔥 相手の手札が上限(10枚)を超えているため、カードが1枚燃破した！`);
-            } else {
-                if (this.cpuHand.length < this.maxHandSize) this.cpuHand.push(newCard);
-            }
-        }
-    } else {
-        this.addLog(`⚠️ 生成可能な${targetName}のカードがプールに存在しませんでした。`);
-    }
-}
-else if(type === "fuwa") {
-    if (isPlayerTrigger) {
-        let discardedCount = 0;
-        // 配列のズレを防ぐため、デッキの末尾から検索して削除
-        for (let i = this.playerDeck.length - 1; i >= 0 && discardedCount < value; i--) {
-            if (this.playerDeck[i].abilities.some(a => a.type === "fuwa")) {
-                this.playerDeck.splice(i, 1);
-                discardedCount++;
-            }
-        }
-        this.addLog(`  └【不和${value}】デッキから不和を持つカードを ${discardedCount} 枚捨てた！`);
-    } else {
-        if (this.isCpuMode) {
-            let discardedCount = 0;
-            for (let i = this.cpuDeck.length - 1; i >= 0 && discardedCount < value; i--) {
-                if (this.cpuDeck[i].abilities.some(a => a.type === "fuwa")) {
-                    this.cpuDeck.splice(i, 1);
-                    discardedCount++;
+            else if(type === "sennjin") {
+                const hand = isPlayerTrigger ? this.playerHand : (this.isCpuMode ? this.cpuHand : []);
+                hand.forEach(c => {
+                    c.power += value;
+                });
+                if (isPlayerTrigger) {
+                    this.addLog(`  └【千刃${value}】手札の全カードの攻撃力が ${value} 上がった！`);
+                } else {
+                    this.addLog(`  └【千刃${value}】相手の手札の全カードの攻撃力が ${value} 上がった！`);
                 }
             }
-            this.addLog(`  └【不和${value}】相手がデッキから不和を持つカードを ${discardedCount} 枚捨てた！`);
-        } else {
-            // オンライン対戦時の相手側処理（相手の正確なデッキ内容はクライアント側にないため、山札の枚数のみを減らす）
-            const reduction = Math.min(this.cpuDeckLength, value);
-            this.cpuDeckLength = Math.max(0, this.cpuDeckLength - reduction);
-            this.addLog(`  └【不和${value}】相手がデッキから不和を持つカードを捨てた！`);
-        }
-    }
-}
+            else if (type === "onmyo_in" || type === "onmyo_yo") {
+                const isYin = type === "onmyo_in";
+                const targetType = isYin ? "onmyo_yo" : "onmyo_in";
+                const typeName = isYin ? "陰陽・陰" : "陰陽・陽";
+                const targetName = isYin ? "陰陽・陽" : "陰陽・陰";
 
+                this.addLog(isPlayerTrigger ? `  └【${typeName}${value}】${targetName}のカードを生成！` : `  └【${typeName}${value}】相手が${targetName}のカードを生成！`);
+
+                let targetIndex = -1;
+
+                if (this.isCpuMode) {
+                    const validCards = this.cardPool.map((c, i) => ({c, i})).filter(item => item.c.abilities.some(a => a.type === targetType));
+                    if (validCards.length > 0) targetIndex = validCards[Math.floor(Math.random() * validCards.length)].i;
+                } else {
+                    if (syncData && syncData.chosenOnmyoIndices && syncData.chosenOnmyoIndices.length > 0) {
+                        targetIndex = syncData.chosenOnmyoIndices.shift();
+                    }
+                }
+
+                if (targetIndex !== -1) {
+                    let newCard = createCardInstance(this.cardPool[targetIndex]);
+                    
+                    if (isYin) {
+                        newCard.abilities.forEach(a => {
+                            if (a.value !== undefined) a.value += value;
+                        });
+                        if (newCard.abilityText) {
+                            newCard.abilityText = newCard.abilityText.replace(/\d+/g, (m) => parseInt(m) + value);
+                        }
+                    } else {
+                        newCard.power += value;
+                    }
+
+                    if (isPlayerTrigger) {
+                        if (this.playerHand.length < this.maxHandSize) {
+                            this.playerHand.push(newCard);
+                        } else {
+                            this.addLog(`🔥 手札満杯のため生成カードが燃破した！`);
+                        }
+                    } else {
+                        if (!this.isCpuMode) {
+                            if (this.cpuHandLength < this.maxHandSize) this.cpuHandLength++;
+                            else this.addLog(`🔥 相手の手札が上限(10枚)を超えているため、カードが1枚燃破した！`);
+                        } else {
+                            if (this.cpuHand.length < this.maxHandSize) this.cpuHand.push(newCard);
+                        }
+                    }
+                } else {
+                    this.addLog(`⚠️ 生成可能な${targetName}のカードがプールに存在しませんでした。`);
+                }
+            }
+            else if(type === "fuwa") {
+                if (isPlayerTrigger) {
+                    let discardedCount = 0;
+                    for (let i = this.playerDeck.length - 1; i >= 0 && discardedCount < value; i--) {
+                        if (this.playerDeck[i].abilities.some(a => a.type === "fuwa")) {
+                            this.playerDeck.splice(i, 1);
+                            discardedCount++;
+                        }
+                    }
+                    this.addLog(`  └【不和${value}】デッキから不和を持つカードを ${discardedCount} 枚捨てた！`);
+                } else {
+                    if (this.isCpuMode) {
+                        let discardedCount = 0;
+                        for (let i = this.cpuDeck.length - 1; i >= 0 && discardedCount < value; i--) {
+                            if (this.cpuDeck[i].abilities.some(a => a.type === "fuwa")) {
+                                this.cpuDeck.splice(i, 1);
+                                discardedCount++;
+                            }
+                        }
+                        this.addLog(`  └【不和${value}】相手がデッキから不和を持つカードを ${discardedCount} 枚捨てた！`);
+                    } else {
+                        const reduction = Math.min(this.cpuDeckLength, value);
+                        this.cpuDeckLength = Math.max(0, this.cpuDeckLength - reduction);
+                        this.addLog(`  └【不和${value}】相手がデッキから不和を持つカードを捨てた！`);
+                    }
+                }
+            }
         },
         endPlayerTurn() {
             if(!this.isGameStarted || this.isGameOver || this.isSelectingToken) return;
@@ -1921,6 +1997,9 @@ else if(type === "fuwa") {
             this.playerPlayedCountThisTurn = 0;
             this.isSelectingDiscard = false; this.pendingCardToPlay = null;
             this.pendingDiscardIds = [];
+            
+            this.p1FirstCardThisTurn = false;
+            this.cpuFirstCardThisTurn = true;
             
             if (this.isCpuMode) {
                 this.addLog("=== CPUのターン ===");
@@ -1952,17 +2031,19 @@ else if(type === "fuwa") {
         endCpuTurn() {
             if(!this.isGameStarted || this.isGameOver) return;
             this.isPlayerTurn = true;
-            // あなたのターン開始時
-if (this.reduceTomoshibi(true)) {
-    this.addLog(`✨ ターン開始により、手札の【灯火】が減少した！`);
-}
+            
+            if (this.reduceTomoshibi(true)) {
+                this.addLog(`✨ ターン開始により、手札の【灯火】が減少した！`);
+            }
 
-// CPUのターン開始時 (CPUモードの場合)
-if (this.isCpuMode && this.reduceTomoshibi(false)) {
-    this.addLog(`✨ ターン開始により、相手の手札の【灯火】が減少した！`);
-}
+            if (this.isCpuMode && this.reduceTomoshibi(false)) {
+                this.addLog(`✨ ターン開始により、相手の手札の【灯火】が減少した！`);
+            }
 
             this.cpuPlayedCountThisTurn = 0;
+            this.cpuFirstCardThisTurn = false;
+            this.p1FirstCardThisTurn = true;
+            
             this.addLog(`=== あなたのターン ===`);
             
             this.playerMaxMana = Math.min(this.totalMaxManaLimit, this.playerMaxMana + 1);
@@ -1993,7 +2074,8 @@ if (this.isCpuMode && this.reduceTomoshibi(false)) {
                 handLength: this.playerHand.length, deckLength: this.playerDeck.length,
                 name: this.userName, latestLog: latestLog, isP1Turn: this.isPlayerTurn,
                 barrier: this.playerBarrier, 
-                fleshCounter: this.playerFleshCounter
+                fleshCounter: this.playerFleshCounter,
+                attribute: this.selectedDeckAttribute
             });
         },
         openDeckEditor(slotIndex) { 
@@ -2001,6 +2083,7 @@ if (this.isCpuMode && this.reduceTomoshibi(false)) {
             this.editingDeckName = this.customDeckNames[slotIndex] || `デッキ ${slotIndex + 1}`;
             this.searchQuery = ""; 
             this.editingDeck = this.customDecks[slotIndex] ? this.customDecks[slotIndex].map(i => ({ ...cardPool[i], poolIndex: i })) : []; 
+            this.editingDeckAttribute = this.customDeckAttributes[slotIndex] || ""; 
         },
         getCardCountInEditingDeck(poolIndex) { return this.editingDeck.filter(c => c.poolIndex === poolIndex).length; },
         addCardToEditingDeck(poolIndex) { 
@@ -2026,11 +2109,13 @@ if (this.isCpuMode && this.reduceTomoshibi(false)) {
             }
         },
         saveAndCloseEditor() { 
-            if (this.editingDeck.length !== 30) return; 
+            if (this.editingDeck.length !== 30 || !this.editingDeckAttribute) return; 
             this.customDecks[this.currentDeckSlot] = this.editingDeck.map(c => c.poolIndex); 
             this.customDeckNames[this.currentDeckSlot] = this.editingDeckName.trim();
+            this.customDeckAttributes[this.currentDeckSlot] = this.editingDeckAttribute;
             localStorage.setItem("nagiso_custom_decks", JSON.stringify(this.customDecks)); 
             localStorage.setItem("nagiso_custom_deck_names", JSON.stringify(this.customDeckNames)); 
+            localStorage.setItem("nagiso_custom_deck_attributes", JSON.stringify(this.customDeckAttributes)); 
             this.isEditMode = false; 
         },
         cancelEditor() { this.isEditMode = false; },
@@ -2041,18 +2126,21 @@ if (this.isCpuMode && this.reduceTomoshibi(false)) {
                 this.toastTimer = setTimeout(() => { this.editAlert = ""; }, 2500);
                 return;
             }
-            // poolIndexを配列にしてBase64エンコードする
-            const indices = this.editingDeck.map(c => c.poolIndex);
-            const code = btoa(JSON.stringify(indices));
-            
+            const data = {
+                indices: this.editingDeck.map(c => c.poolIndex),
+                attribute: this.editingDeckAttribute
+            };
+            const code = btoa(JSON.stringify(data));
             prompt("以下のデッキコードをコピーしてください:", code);
         },
         importDeckCode() {
             const code = prompt("デッキコードを入力してください:");
             if (!code) return;
             try {
-                // Base64デコードして配列に戻す
-                const indices = JSON.parse(atob(code));
+                const parsed = JSON.parse(atob(code));
+                const indices = Array.isArray(parsed) ? parsed : parsed.indices;
+                const attribute = parsed.attribute || "";
+                
                 if (!Array.isArray(indices)) throw new Error("Invalid format");
                 
                 this.editingDeck = [];
@@ -2061,6 +2149,8 @@ if (this.isCpuMode && this.reduceTomoshibi(false)) {
                         this.editingDeck.push({ ...this.cardPool[idx], poolIndex: idx });
                     }
                 });
+                
+                if (attribute) this.editingDeckAttribute = attribute;
                 
                 if (this.toastTimer) clearTimeout(this.toastTimer);
                 this.editAlert = `✅ デッキを ${this.editingDeck.length} 枚読み込みました。`;
